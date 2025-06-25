@@ -7,6 +7,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Card, Flex, Text, Heading, Separator, Box, Button, IconButton } from "@radix-ui/themes";
+import { Pencil2Icon, PlusIcon } from "@radix-ui/react-icons";
+import { AddLinkDialog } from "./AddLinkDialog";
+import { EditListDialog } from "./EditListDialog";
 
 export interface LinkListItem {
   url: string;
@@ -47,13 +51,9 @@ function SortableLinkItem({
     cursor: "grab",
   };
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-    >
+    <Box ref={setNodeRef} style={style}>
       <LinkItem {...link} globalDisableClick={globalDisableClick} dragHandleProps={listeners} />
-    </div>
+    </Box>
   );
 }
 
@@ -67,30 +67,52 @@ export function LinkList({
 }: LinkListProps) {
   const { setNodeRef } = useDroppable({ id: listId });
   const items = React.useMemo(() => links.map((l) => l.url), [links]);
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [editOpen, setEditOpen] = React.useState(false);
+
+  // Заглушки для onSubmit (реализация зависит от родителя)
+  const handleAddLink = (data: { title: string; url: string }) => {
+    setAddOpen(false);
+    // TODO: вызвать callback из props, если потребуется
+  };
+  const handleEditList = (newTitle: string) => {
+    setEditOpen(false);
+    // TODO: вызвать callback из props, если потребуется
+  };
+
   return (
     <SortableContext
       id={listId}
       items={items}
       strategy={verticalListSortingStrategy}
     >
-      <div
-        ref={setNodeRef}
-        className={
-          "link-list flex flex-col gap-2 " +
-          (className ? className : "")
-        }
-      >
-        <div className="link-list-title">{title}</div>
-        <div className="flex flex-col gap-1">
-          {links.map((link) => (
-            <SortableLinkItem
-              key={link.url}
-              link={link}
-              globalDisableClick={globalDisableClick}
-            />
-          ))}
-        </div>
-      </div>
+      <Card ref={setNodeRef} style={{ minWidth: 320, maxWidth: 400 }}>
+        <Flex direction="column" gap="3">
+          <Flex align="center" justify="between">
+            <Heading size="4" as="h2">{title}</Heading>
+            <Flex gap="2">
+              <IconButton variant="soft" color="gray" size="2" onClick={() => setEditOpen(true)} aria-label="Редактировать список">
+                <Pencil2Icon />
+              </IconButton>
+              <IconButton variant="soft" color="green" size="2" onClick={() => setAddOpen(true)} aria-label="Добавить ссылку">
+                <PlusIcon />
+              </IconButton>
+            </Flex>
+          </Flex>
+          <Separator size="4" />
+          <Flex direction="column" gap="2">
+            {links.map((link) => (
+              <SortableLinkItem
+                key={link.url}
+                link={link}
+                globalDisableClick={globalDisableClick}
+              />
+            ))}
+          </Flex>
+        </Flex>
+        <AddLinkDialog open={addOpen} onOpenChange={setAddOpen} onSubmit={handleAddLink} />
+        <EditListDialog open={editOpen} onOpenChange={setEditOpen} initialTitle={title} onSubmit={handleEditList} />
+      </Card>
     </SortableContext>
   );
 }

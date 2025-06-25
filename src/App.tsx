@@ -16,7 +16,11 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { Flex, Box } from "@radix-ui/themes";
+import { Flex, Box, IconButton } from "@radix-ui/themes";
+import { GearIcon, PlusIcon } from "@radix-ui/react-icons";
+import { Drawer } from "./components/Drawer";
+import { AddListDialog } from "./components/AddListDialog";
+import { Text as RadixText } from "@radix-ui/themes";
 
 const initialFavorites: LinkListItem[] = [
   {
@@ -61,6 +65,8 @@ export const App: React.FC = () => {
   });
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const overIdRef = React.useRef<string | null>(null);
+  const [addListOpen, setAddListOpen] = React.useState(false);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -154,38 +160,58 @@ export const App: React.FC = () => {
   }
   return (
     <Box style={{ minHeight: "100vh", background: "#f9fafb", padding: 32 }}>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        <Flex direction="row" gap="5" width="100%" align="stretch">
-          <LinkList
-            title="Избранное"
-            links={lists.favorites}
-            listId="favorites"
-            activeId={activeId}
-          />
-          <LinkList
-            title="ИИ"
-            links={lists.ai}
-            listId="ai"
-            activeId={activeId}
-          />
+      <Flex direction="column" gap="4">
+        <Flex align="center" justify="start" gap="2">
+          <IconButton variant="soft" color="gray" size="3" onClick={() => setSettingsOpen(true)} aria-label="Настройки">
+            <GearIcon />
+          </IconButton>
+          <IconButton variant="soft" color="green" size="3" onClick={() => setAddListOpen(true)} aria-label="Добавить список">
+            <PlusIcon />
+          </IconButton>
         </Flex>
-        <DragOverlay>
-          {activeId && (() => {
-            const item = lists.favorites.concat(lists.ai).find((l) => l.url === activeId);
-            return item ? (
-              <Box>
-                <LinkItem {...item} />
-              </Box>
-            ) : null;
-          })()}
-        </DragOverlay>
-      </DndContext>
+        <Box mt="5">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <Flex direction="row" gap="5" width="100%" align="stretch">
+              <LinkList
+                title="Избранное"
+                links={lists.favorites}
+                listId="favorites"
+                activeId={activeId}
+              />
+              <LinkList
+                title="ИИ"
+                links={lists.ai}
+                listId="ai"
+                activeId={activeId}
+              />
+            </Flex>
+            <DragOverlay>
+              {activeId && (() => {
+                const item = lists.favorites.concat(lists.ai).find((l) => l.url === activeId);
+                return item ? (
+                  <Box>
+                    <LinkItem {...item} />
+                  </Box>
+                ) : null;
+              })()}
+            </DragOverlay>
+          </DndContext>
+        </Box>
+      </Flex>
+      <Drawer open={settingsOpen} onOpenChange={setSettingsOpen} side="left" width={340}>
+        {/* Здесь разместите содержимое настроек */}
+        <Box p="4">
+          <RadixText size="5" weight="bold">Настройки</RadixText>
+          {/* ...дополнительные настройки... */}
+        </Box>
+      </Drawer>
+      <AddListDialog open={addListOpen} onOpenChange={setAddListOpen} onSubmit={title => { setAddListOpen(false); /* TODO: добавить список */ }} />
     </Box>
   );
 };

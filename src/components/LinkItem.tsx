@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Flex, Text } from "@radix-ui/themes";
 
 interface LinkItemProps {
   url: string;
@@ -39,11 +40,7 @@ export const LinkItem: React.FC<LinkItemProps> = ({ url, title, iconUrl, color, 
   return (
     <a
       href={url}
-      className={
-        "link-item flex items-center gap-2 px-3 py-2 rounded transition-colors" +
-        (className ? ` ${className}` : "")
-      }
-      style={{ color }}
+      style={{ color, textDecoration: "none" }}
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleClick}
@@ -51,12 +48,18 @@ export const LinkItem: React.FC<LinkItemProps> = ({ url, title, iconUrl, color, 
       draggable={false}
       {...dragHandleProps}
     >
-      {iconUrl && (
-        <span className="drag-handle" style={{ cursor: "grab", display: "flex", alignItems: "center" }}>
-          <img src={iconUrl} alt="icon" className="w-5 h-5 rounded" />
-        </span>
-      )}
-      <span className="truncate">{title}</span>
+      <Flex align="center" gap="3" px="3" py="2" tabIndex={0} style={{ transition: "background 0.15s", cursor: "pointer", borderRadius: 9999 }} asChild>
+        <div>
+          {iconUrl && (
+            <span style={{ cursor: "grab", display: "flex", alignItems: "center" }}>
+              <img src={iconUrl} alt="icon" style={{ width: 20, height: 20, borderRadius: 4 }} />
+            </span>
+          )}
+          <Text as="span" size="3" weight="medium" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {title}
+          </Text>
+        </div>
+      </Flex>
     </a>
   );
 };
