@@ -1,42 +1,69 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* Пустой файл для стилей приложения, можно добавить позже */
+
+/* Стили для ссылок и иконок */
+body, html {
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  background: #f9fafb;
+  color: #222;
+}
+
+.link-list {
+  max-width: 300px;
+  background: #f3f4f6;
+  border-radius: 1rem;
+  padding: 1.25rem 1rem;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+  font-family: inherit;
+}
+
+.link-list-title {
   text-align: center;
+  color: #6366f1;
+  font-weight: bold;
+  font-size: 1.15rem;
+  margin-bottom: 1rem;
+  letter-spacing: 0.01em;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.link-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: none;
+  text-decoration: none;
+  background: transparent;
+  color: #374151;
+  font-weight: 500;
+  box-shadow: none;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.link-item:hover {
+  background: transparent;
+  color: #111827;
+  text-decoration: underline;
 }
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.link-item:active {
+  background: transparent;
 }
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.link-item:visited {
+  color: #6b7280;
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.link-item img {
+  width: 1.2em;
+  height: 1.2em;
+  min-width: 1.2em;
+  min-height: 1.2em;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+  background: #fff;
+  border-radius: 50%;
+  padding: 0.25em;
+  box-shadow: 0 1px 4px 0 rgba(0,0,0,0.04);
 }
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.link-item span {
+  line-height: 1.25em;
+  display: inline-block;
+  vertical-align: middle;
 }
