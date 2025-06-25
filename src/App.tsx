@@ -16,6 +16,7 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+import { Flex, Box } from "@radix-ui/themes";
 
 const initialFavorites: LinkListItem[] = [
   {
@@ -152,7 +153,7 @@ export const App: React.FC = () => {
     setActiveId(null);
   }
   return (
-    <div className="app p-8 min-h-screen bg-gray-50 flex flex-col md:flex-row gap-8">
+    <Box style={{ minHeight: "100vh", background: "#f9fafb", padding: 32 }}>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -160,29 +161,31 @@ export const App: React.FC = () => {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex-1">
+        <Flex direction="row" gap="5" width="100%" align="stretch">
           <LinkList
             title="Избранное"
             links={lists.favorites}
             listId="favorites"
             activeId={activeId}
           />
-        </div>
-        <div className="flex-1">
           <LinkList
             title="ИИ"
             links={lists.ai}
             listId="ai"
             activeId={activeId}
           />
-        </div>
+        </Flex>
         <DragOverlay>
           {activeId && (() => {
             const item = lists.favorites.concat(lists.ai).find((l) => l.url === activeId);
-            return item ? <div className="drag-overlay"><LinkItem {...item} /></div> : null;
+            return item ? (
+              <Box>
+                <LinkItem {...item} />
+              </Box>
+            ) : null;
           })()}
         </DragOverlay>
       </DndContext>
-    </div>
+    </Box>
   );
 };
