@@ -7,9 +7,10 @@ interface LinkItemProps {
   color?: string;
   className?: string;
   globalDisableClick?: boolean;
+  dragHandleProps?: React.HTMLAttributes<HTMLSpanElement>;
 }
 
-export const LinkItem: React.FC<LinkItemProps> = ({ url, title, iconUrl, color, className, globalDisableClick }) => {
+export const LinkItem: React.FC<LinkItemProps> = ({ url, title, iconUrl, color, className, globalDisableClick, dragHandleProps }) => {
   // Флаг, был ли drag
   const dragRef = React.useRef(false);
 
@@ -20,20 +21,16 @@ export const LinkItem: React.FC<LinkItemProps> = ({ url, title, iconUrl, color, 
 
   const handleMouseDown = React.useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
-      if (globalDisableClick) {
-        dragRef.current = true;
-        // Не блокируем событие, чтобы dnd-kit работал корректно
-      }
+      // Не блокируем событие, чтобы dnd-kit работал корректно
     },
-    [globalDisableClick]
+    []
   );
 
   const handleClick = React.useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
-      if (globalDisableClick || dragRef.current) {
+      if (globalDisableClick) {
         e.preventDefault();
         e.stopPropagation();
-        dragRef.current = false;
       }
     },
     [globalDisableClick]
@@ -52,9 +49,12 @@ export const LinkItem: React.FC<LinkItemProps> = ({ url, title, iconUrl, color, 
       onClick={handleClick}
       onMouseDown={handleMouseDown}
       draggable={false}
+      {...dragHandleProps}
     >
       {iconUrl && (
-        <img src={iconUrl} alt="icon" className="w-5 h-5 rounded" />
+        <span className="drag-handle" style={{ cursor: "grab", display: "flex", alignItems: "center" }}>
+          <img src={iconUrl} alt="icon" className="w-5 h-5 rounded" />
+        </span>
       )}
       <span className="truncate">{title}</span>
     </a>

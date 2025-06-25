@@ -62,7 +62,11 @@ export const App: React.FC = () => {
   const overIdRef = React.useRef<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // drag начнётся только если мышь сместилась на 5px
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -147,7 +151,6 @@ export const App: React.FC = () => {
     }
     setActiveId(null);
   }
-
   return (
     <div className="app p-8 min-h-screen bg-gray-50 flex flex-col md:flex-row gap-8">
       <DndContext

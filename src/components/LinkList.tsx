@@ -51,21 +51,20 @@ function SortableLinkItem({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
     >
-      <LinkItem {...link} globalDisableClick={globalDisableClick} />
+      <LinkItem {...link} globalDisableClick={globalDisableClick} dragHandleProps={listeners} />
     </div>
   );
 }
 
-export const LinkList: React.FC<LinkListProps> = ({
+export function LinkList({
   title,
   links,
   className,
   globalDisableClick,
   listId,
   activeId,
-}) => {
+}: LinkListProps) {
   const { setNodeRef } = useDroppable({ id: listId });
   const items = React.useMemo(() => links.map((l) => l.url), [links]);
   return (
@@ -74,7 +73,12 @@ export const LinkList: React.FC<LinkListProps> = ({
       items={items}
       strategy={verticalListSortingStrategy}
     >
-      <div ref={setNodeRef} className={"link-list flex flex-col gap-2 " + (className ? className : "")}
+      <div
+        ref={setNodeRef}
+        className={
+          "link-list flex flex-col gap-2 " +
+          (className ? className : "")
+        }
       >
         <div className="link-list-title">{title}</div>
         <div className="flex flex-col gap-1">
@@ -89,7 +93,7 @@ export const LinkList: React.FC<LinkListProps> = ({
       </div>
     </SortableContext>
   );
-};
+}
 
 // Для DragOverlay используем LinkItem напрямую
 export { LinkItem };
