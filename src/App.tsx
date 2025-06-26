@@ -2,7 +2,14 @@ import * as React from "react";
 import "./App.css";
 import { LinkList } from "./components/LinkList";
 import { LinkItem } from "./components/LinkList";
-import type { LinkListItem } from "./components/LinkList";
+import { LinkListItem } from "./entities/list/list.types";
+import { generateLinkId } from "./store/linkId";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import { addList, editListTitle, addLinkToList, reorderLinksInList, moveLinkToList, deleteList, setListColor, editLink, deleteLink, setLinkColor } from "./store/listsSlice";
+import { createList } from "./entities/list/list.utils";
+import { getFaviconUrl } from "./utils/favicon";
+import { Clock } from "./components/Clock";
+import { Background } from "./components/Background";
 import {
   DndContext,
   DragOverlay,
@@ -13,58 +20,20 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { Flex, Box, IconButton } from "@radix-ui/themes";
+import { Flex, Box } from "@radix-ui/themes";
 import { GearIcon, PlusIcon } from "@radix-ui/react-icons";
-import { Drawer } from "./components/Drawer";
+import { ActionIconButton } from "./components/ActionButtons";
 import { AddListDialog } from "./components/AddListDialog";
-import { Text as RadixText } from "@radix-ui/themes";
+import Settings from "./components/settings";
 
-const initialFavorites: LinkListItem[] = [
-  {
-    url: "https://www.google.com/",
-    title: "Google",
-    iconUrl: "https://www.google.com/favicon.ico",
-  },
-  {
-    url: "https://www.youtube.com/",
-    title: "YouTube",
-    iconUrl: "https://www.youtube.com/favicon.ico",
-  },
-  {
-    url: "https://github.com/",
-    title: "GitHub",
-    iconUrl: "https://github.com/favicon.ico",
-  },
-];
 
-const initialAI: LinkListItem[] = [
-  {
-    url: "https://gemini.google.com/",
-    title: "Gemini",
-    iconUrl: "https://gemini.google.com/favicon.ico",
-  },
-  {
-    url: "https://chat.openai.com/",
-    title: "ChatGPT",
-    iconUrl: "https://chat.openai.com/favicon.ico",
-  },
-  {
-    url: "https://copilot.microsoft.com/",
-    title: "Copilot",
-    iconUrl: "https://copilot.microsoft.com/favicon.ico",
-  },
-];
 
 export const App: React.FC = () => {
-  const [lists, setLists] = React.useState({
-    favorites: initialFavorites,
-    ai: initialAI,
-  });
+  const dispatch = useAppDispatch();
+  const lists = useAppSelector((state) => state.lists);
   const [activeId, setActiveId] = React.useState<string | null>(null);
-  const overIdRef = React.useRef<string | null>(null);
   const [addListOpen, setAddListOpen] = React.useState(false);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
 
@@ -79,11 +48,19 @@ export const App: React.FC = () => {
     })
   );
 
-  function findContainer(id: string) {
-    if (id in lists) {
+  function findContainer(id: string): string | undefined {
+    // Проверяем, является ли id идентификатором списка
+    const listExists = lists.find(list => list.id === id);
+    if (listExists) {
       return id;
     }
-    return Object.keys(lists).find((key) => lists[key].some((item) => item.url === id));
+
+    // Ищем список, содержащий элемент с данным id
+    const containerList = lists.find(list =>
+      list.links.some((item: LinkListItem) => item.id === id)
+    );
+
+    return containerList?.id;
   }
 
   function handleDragStart(event: any) {
@@ -94,124 +71,197 @@ export const App: React.FC = () => {
     const { active, over, draggingRect } = event;
     const activeId = active.id;
     const overId = over?.id;
+
     const activeContainer = findContainer(activeId);
     const overContainer = findContainer(overId);
+
     if (!activeContainer || !overContainer || activeContainer === overContainer) {
       return;
     }
-    
-    setLists((prev) => {
-      const activeItems = prev[activeContainer];
-      const overItems = prev[overContainer];
-      const activeIndex = activeItems.findIndex((item) => item.url === activeId);
-      const overIndex = overItems.findIndex((item) => item.url === overId);
-      let newIndex;
-      if (overId in prev) {
-        newIndex = overItems.length + 1;
-      } else {
-        // draggingRect и over.rect могут быть undefined, поэтому нужна проверка
-        let isBelowLastItem = false;
-        if (
-          over &&
-          overIndex === overItems.length - 1 &&
-          draggingRect &&
-          over.rect &&
-          draggingRect.offsetTop > over.rect.offsetTop + over.rect.height
-        ) {
-          isBelowLastItem = true;
-        }
-        const modifier = isBelowLastItem ? 1 : 0;
-        newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
+
+    const activeList = lists.find(list => list.id === activeContainer);
+    const overList = lists.find(list => list.id === overContainer);
+
+    if (!activeList || !overList) return;
+
+    const activeItems = activeList.links;
+    const overItems = overList.links;
+    const activeIndex = activeItems.findIndex((item: LinkListItem) => item.id === activeId);
+    const overIndex = overItems.findIndex((item: LinkListItem) => item.id === overId);
+
+    let newIndex: number;
+    // Проверяем, перетаскиваем ли мы в пустую область списка
+    const isDroppableContainer = lists.some(list => list.id === overId);
+    if (isDroppableContainer) {
+      // Перетаскиваем в пустую область списка
+      newIndex = overItems.length;
+    } else {
+      // Перетаскиваем на конкретный элемент
+      let isBelowLastItem = false;
+      if (
+        over &&
+        overIndex === overItems.length - 1 &&
+        draggingRect &&
+        over.rect &&
+        draggingRect.offsetTop > over.rect.offsetTop + over.rect.height
+      ) {
+        isBelowLastItem = true;
       }
-      if (activeIndex === -1) return prev;
-      const moved = activeItems[activeIndex];
-      return {
-        ...prev,
-        [activeContainer]: activeItems.filter((item) => item.url !== activeId),
-        [overContainer]: [
-          ...overItems.slice(0, newIndex),
-          moved,
-          ...overItems.slice(newIndex, overItems.length),
-        ],
-      };
-    });
+      const modifier = isBelowLastItem ? 1 : 0;
+      newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length;
+    }
+
+    if (activeIndex === -1) return;
+
+    // Используем Redux action для перемещения между списками
+    dispatch(moveLinkToList({
+      fromListId: activeContainer,
+      toListId: overContainer,
+      linkId: activeId,
+      toIndex: newIndex
+    }));
   }
 
   function handleDragEnd(event: any) {
     const { active, over } = event;
     const activeId = active.id;
     const overId = over?.id;
+
     const activeContainer = findContainer(activeId);
     const overContainer = findContainer(overId);
-    if (!activeContainer || !overContainer || activeContainer !== overContainer) {
+
+    if (!activeContainer || !overContainer) {
       setActiveId(null);
       return;
     }
-    const items = lists[activeContainer];
-    const oldIndex = items.findIndex((item) => item.url === activeId);
-    const newIndex = items.findIndex((item) => item.url === overId);
-    if (oldIndex !== newIndex && newIndex !== -1) {
-      setLists((items) => ({
-        ...items,
-        [overContainer]: arrayMove(items[overContainer], oldIndex, newIndex),
-      }));
+
+    // Если перетаскиваем в пределах одного списка
+    if (activeContainer === overContainer) {
+      const activeList = lists.find(list => list.id === activeContainer);
+      if (!activeList) {
+        setActiveId(null);
+        return;
+      }
+
+      const items = activeList.links;
+      const oldIndex = items.findIndex((item: LinkListItem) => item.id === activeId);
+      const newIndex = items.findIndex((item: LinkListItem) => item.id === overId);
+
+      if (oldIndex !== newIndex && newIndex !== -1) {
+        dispatch(reorderLinksInList({
+          listId: overContainer,
+          from: oldIndex,
+          to: newIndex
+        }));
+      }
     }
+
     setActiveId(null);
   }
+
+  const handleAddLink = (listId: string) => (data: { title: string; url: string }) => {
+    const newLink: LinkListItem = {
+      id: generateLinkId(),
+      ...data,
+      iconUrl: getFaviconUrl(data.url)
+    };
+
+    dispatch(addLinkToList({
+      listId,
+      link: newLink
+    }));
+  };
+
+  const handleEditList = (listId: string) => (newTitle: string) => {
+    dispatch(editListTitle({
+      id: listId,
+      title: newTitle
+    }));
+  };
+
+  const handleDeleteList = (listId: string) => () => {
+    dispatch(deleteList(listId));
+  };
+
+  const handleAddList = (title: string) => {
+    const newList = createList(title);
+    dispatch(addList(newList));
+    setAddListOpen(false);
+  };
+
   return (
-    <Box style={{ minHeight: "100vh", background: "#f9fafb", padding: 32 }}>
-      <Flex direction="column" gap="4">
-        <Flex align="center" justify="start" gap="2">
-          <IconButton variant="soft" color="gray" size="3" onClick={() => setSettingsOpen(true)} aria-label="Настройки">
-            <GearIcon />
-          </IconButton>
-          <IconButton variant="soft" color="green" size="3" onClick={() => setAddListOpen(true)} aria-label="Добавить список">
-            <PlusIcon />
-          </IconButton>
-        </Flex>
-        <Box mt="5">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <Flex direction="row" gap="5" width="100%" align="stretch">
-              <LinkList
-                title="Избранное"
-                links={lists.favorites}
-                listId="favorites"
-                activeId={activeId}
-              />
-              <LinkList
-                title="ИИ"
-                links={lists.ai}
-                listId="ai"
-                activeId={activeId}
-              />
-            </Flex>
-            <DragOverlay>
-              {activeId && (() => {
-                const item = lists.favorites.concat(lists.ai).find((l) => l.url === activeId);
-                return item ? (
-                  <Box>
-                    <LinkItem {...item} />
-                  </Box>
-                ) : null;
-              })()}
-            </DragOverlay>
-          </DndContext>
-        </Box>
+    <>
+      <Background />
+      <Box style={{
+        minHeight: "100vh",
+        background: "transparent",
+        display: "flex",
+        flexDirection: "column"
+      }}>
+        {/* Верхняя панель с кнопками */}
+      <Flex align="center" justify="start" gap="2" p="4">
+        <ActionIconButton variant="soft" size="3" onClick={() => setSettingsOpen(true)} aria-label="Настройки">
+          <GearIcon />
+        </ActionIconButton>
+        <ActionIconButton variant="solid" size="3" onClick={() => setAddListOpen(true)} aria-label="Добавить список">
+          <PlusIcon />
+        </ActionIconButton>
       </Flex>
-      <Drawer open={settingsOpen} onOpenChange={setSettingsOpen} side="left" width={340}>
-        {/* Здесь разместите содержимое настроек */}
-        <Box p="4">
-          <RadixText size="5" weight="bold">Настройки</RadixText>
-          {/* ...дополнительные настройки... */}
-        </Box>
-      </Drawer>
-      <AddListDialog open={addListOpen} onOpenChange={setAddListOpen} onSubmit={title => { setAddListOpen(false); /* TODO: добавить список */ }} />
-    </Box>
+
+      {/* Центральная область с часами */}
+      <Flex direction="column" align="center" justify="center" style={{ flex: 1 }}>
+        <Clock />
+      </Flex>
+
+      {/* Нижняя область со списками */}
+      <Box pb="6">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        >
+          <Flex
+            direction="row"
+            gap="5"
+            justify="center"
+            align="stretch"
+            wrap="wrap"
+            px="4"
+          >
+            {lists.map((list) => (
+              <LinkList
+                key={list.id}
+                title={list.title}
+                links={list.links}
+                listId={list.id}
+                customColor={list.customColor}
+                activeId={activeId}
+                onAddLink={handleAddLink(list.id)}
+                onEditList={handleEditList(list.id)}
+                onDeleteList={handleDeleteList(list.id)}
+              />
+            ))}
+          </Flex>
+          <DragOverlay>
+            {activeId && (() => {
+              const allLinks = lists.flatMap(list => list.links);
+              const item = allLinks.find((l) => l.id === activeId);
+              // Показывать DragOverlay только если элемент ещё есть в списках
+              return item ? (
+                <Box>
+                  <LinkItem {...item} />
+                </Box>
+              ) : null;
+            })()}
+          </DragOverlay>
+        </DndContext>
+      </Box>
+
+        <Settings open={settingsOpen} onOpenChange={setSettingsOpen} />
+        <AddListDialog open={addListOpen} onOpenChange={setAddListOpen} onSubmit={handleAddList} />
+      </Box>
+    </>
   );
 };

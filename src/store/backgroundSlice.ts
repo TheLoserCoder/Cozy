@@ -1,0 +1,265 @@
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+export interface BackgroundImage {
+  id: string;
+  url: string;
+  addedAt: number;
+}
+
+export interface BackgroundFilters {
+  blur: number;
+  brightness: number;
+  contrast: number;
+  saturate: number;
+  hueRotate: number;
+  sepia: number;
+  grayscale: number;
+  invert: number;
+  opacity: number;
+}
+
+export type BackgroundType = 'image' | 'solid' | 'gradient';
+
+export interface SolidBackground {
+  color: string;
+}
+
+export interface GradientBackground {
+  type: 'linear' | 'radial';
+  colors: string[];
+  direction?: string; // для linear: "to right", "45deg", etc.
+  position?: string; // для radial: "center", "top left", etc.
+}
+
+interface BackgroundState {
+  images: BackgroundImage[];
+  currentBackground: string | null;
+  isLoading: boolean;
+  filters: BackgroundFilters;
+  backgroundType: BackgroundType;
+  solidBackground: SolidBackground;
+  gradientBackground: GradientBackground;
+}
+
+// Функции для работы с localStorage
+const STORAGE_KEY = 'background-images';
+const CURRENT_BG_KEY = 'current-background';
+const FILTERS_KEY = 'background-filters';
+const BG_TYPE_KEY = 'background-type';
+const SOLID_BG_KEY = 'solid-background';
+const GRADIENT_BG_KEY = 'gradient-background';
+
+const defaultFilters: BackgroundFilters = {
+  blur: 0,
+  brightness: 100,
+  contrast: 100,
+  saturate: 100,
+  hueRotate: 0,
+  sepia: 0,
+  grayscale: 0,
+  invert: 0,
+  opacity: 100
+};
+
+const defaultSolidBackground: SolidBackground = {
+  color: '#1a1a1a'
+};
+
+const defaultGradientBackground: GradientBackground = {
+  type: 'linear',
+  colors: ['#667eea', '#764ba2'],
+  direction: 'to right'
+};
+
+function getImagesFromStorage(): BackgroundImage[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getFiltersFromStorage(): BackgroundFilters {
+  try {
+    const stored = localStorage.getItem(FILTERS_KEY);
+    return stored ? JSON.parse(stored) : defaultFilters;
+  } catch {
+    return defaultFilters;
+  }
+}
+
+function saveFiltersToStorage(filters: BackgroundFilters): void {
+  try {
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(filters));
+  } catch {
+    // Игнорируем ошибки сохранения
+  }
+}
+
+function getBackgroundTypeFromStorage(): BackgroundType {
+  try {
+    const stored = localStorage.getItem(BG_TYPE_KEY);
+    return stored ? (stored as BackgroundType) : 'image';
+  } catch {
+    return 'image';
+  }
+}
+
+function saveBackgroundTypeToStorage(type: BackgroundType): void {
+  try {
+    localStorage.setItem(BG_TYPE_KEY, type);
+  } catch {
+    // Игнорируем ошибки сохранения
+  }
+}
+
+function getSolidBackgroundFromStorage(): SolidBackground {
+  try {
+    const stored = localStorage.getItem(SOLID_BG_KEY);
+    return stored ? JSON.parse(stored) : defaultSolidBackground;
+  } catch {
+    return defaultSolidBackground;
+  }
+}
+
+function saveSolidBackgroundToStorage(solid: SolidBackground): void {
+  try {
+    localStorage.setItem(SOLID_BG_KEY, JSON.stringify(solid));
+  } catch {
+    // Игнорируем ошибки сохранения
+  }
+}
+
+function getGradientBackgroundFromStorage(): GradientBackground {
+  try {
+    const stored = localStorage.getItem(GRADIENT_BG_KEY);
+    return stored ? JSON.parse(stored) : defaultGradientBackground;
+  } catch {
+    return defaultGradientBackground;
+  }
+}
+
+function saveGradientBackgroundToStorage(gradient: GradientBackground): void {
+  try {
+    localStorage.setItem(GRADIENT_BG_KEY, JSON.stringify(gradient));
+  } catch {
+    // Игнорируем ошибки сохранения
+  }
+}
+
+function saveImagesToStorage(images: BackgroundImage[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(images));
+  } catch (error) {
+    console.error('Failed to save images to localStorage:', error);
+  }
+}
+
+function getCurrentBackgroundFromStorage(): string | null {
+  try {
+    return localStorage.getItem(CURRENT_BG_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveCurrentBackgroundToStorage(url: string | null): void {
+  try {
+    if (url) {
+      localStorage.setItem(CURRENT_BG_KEY, url);
+    } else {
+      localStorage.removeItem(CURRENT_BG_KEY);
+    }
+  } catch (error) {
+    console.error('Failed to save current background to localStorage:', error);
+  }
+}
+
+const initialState: BackgroundState = {
+  images: getImagesFromStorage(),
+  currentBackground: getCurrentBackgroundFromStorage(),
+  isLoading: false,
+  filters: getFiltersFromStorage(),
+  backgroundType: getBackgroundTypeFromStorage(),
+  solidBackground: getSolidBackgroundFromStorage(),
+  gradientBackground: getGradientBackgroundFromStorage()
+};
+
+const backgroundSlice = createSlice({
+  name: "background",
+  initialState,
+  reducers: {
+    addImage: (state, action: PayloadAction<BackgroundImage>) => {
+      console.log("Redux: Adding image", action.payload);
+      // Проверяем, что изображение еще не добавлено
+      const exists = state.images.some(img => img.url === action.payload.url);
+      if (!exists) {
+        state.images.unshift(action.payload); // Добавляем в начало массива
+        saveImagesToStorage(state.images);
+        console.log("Redux: Image added, total images:", state.images.length);
+      } else {
+        console.log("Redux: Image already exists");
+      }
+    },
+    removeImage: (state, action: PayloadAction<string>) => {
+      state.images = state.images.filter(img => img.id !== action.payload);
+      saveImagesToStorage(state.images);
+      
+      // Если удаляемое изображение было текущим фоном, сбрасываем фон
+      const removedImage = state.images.find(img => img.id === action.payload);
+      if (removedImage && state.currentBackground === removedImage.url) {
+        state.currentBackground = null;
+        saveCurrentBackgroundToStorage(null);
+      }
+    },
+    setCurrentBackground: (state, action: PayloadAction<string | null>) => {
+      state.currentBackground = action.payload;
+      saveCurrentBackgroundToStorage(action.payload);
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+    clearAllImages: (state) => {
+      state.images = [];
+      state.currentBackground = null;
+      saveImagesToStorage([]);
+      saveCurrentBackgroundToStorage(null);
+    },
+    setFilter: (state, action: PayloadAction<{ key: keyof BackgroundFilters; value: number }>) => {
+      state.filters[action.payload.key] = action.payload.value;
+      saveFiltersToStorage(state.filters);
+    },
+    resetFilters: (state) => {
+      state.filters = { ...defaultFilters };
+      saveFiltersToStorage(state.filters);
+    },
+    setBackgroundType: (state, action: PayloadAction<BackgroundType>) => {
+      state.backgroundType = action.payload;
+      saveBackgroundTypeToStorage(action.payload);
+    },
+    setSolidBackground: (state, action: PayloadAction<SolidBackground>) => {
+      state.solidBackground = action.payload;
+      saveSolidBackgroundToStorage(action.payload);
+    },
+    setGradientBackground: (state, action: PayloadAction<GradientBackground>) => {
+      state.gradientBackground = action.payload;
+      saveGradientBackgroundToStorage(action.payload);
+    }
+  },
+});
+
+export const {
+  addImage,
+  removeImage,
+  setCurrentBackground,
+  setLoading,
+  clearAllImages,
+  setFilter,
+  resetFilters,
+  setBackgroundType,
+  setSolidBackground,
+  setGradientBackground
+} = backgroundSlice.actions;
+
+export default backgroundSlice.reducer;

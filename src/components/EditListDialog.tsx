@@ -1,20 +1,38 @@
 import * as React from "react";
-import { Button, TextField, Flex, Text, Box } from "@radix-ui/themes";
+import { TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
+import { ColorPicker } from "./ColorPicker";
+import { DeleteButton, CancelButton, PrimaryButton } from "./ActionButtons";
+import { useAppDispatch } from "../store/hooks";
+import { setListColor } from "../store/listsSlice";
 
 interface EditListDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialTitle: string;
+  listId: string;
+  initialColor?: string;
   onSubmit: (title: string) => void;
+  onDelete?: () => void;
 }
 
-export const EditListDialog: React.FC<EditListDialogProps> = ({ open, onOpenChange, initialTitle, onSubmit }) => {
+export const EditListDialog: React.FC<EditListDialogProps> = ({
+  open,
+  onOpenChange,
+  initialTitle,
+  listId,
+  initialColor,
+  onSubmit,
+  onDelete
+}) => {
+  const dispatch = useAppDispatch();
   const [title, setTitle] = React.useState(initialTitle);
+  const [customColor, setCustomColor] = React.useState(initialColor || "");
 
   React.useEffect(() => {
     setTitle(initialTitle);
-  }, [initialTitle, open]);
+    setCustomColor(initialColor || "");
+  }, [initialTitle, initialColor, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +44,25 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({ open, onOpenChan
 
   const handleClose = () => {
     setTitle(initialTitle);
+    setCustomColor(initialColor || "");
     onOpenChange(false);
+  };
+
+  const handleDelete = () => {
+    if (onDelete && confirm('Вы уверены, что хотите удалить этот список? Это действие нельзя отменить.')) {
+      onDelete();
+      onOpenChange(false);
+    }
+  };
+
+  const handleColorChange = (color: string) => {
+    setCustomColor(color);
+    dispatch(setListColor({ id: listId, color }));
+  };
+
+  const handleColorReset = () => {
+    setCustomColor("");
+    dispatch(setListColor({ id: listId, color: undefined }));
   };
 
   return (
@@ -66,13 +102,29 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({ open, onOpenChan
                 autoFocus
               />
             </label>
-            <Flex gap="3" justify="end" mt="2">
-              <Button variant="soft" color="gray" type="button" onClick={handleClose}>
-                Отмена
-              </Button>
-              <Button type="submit" variant="solid" color="mint">
-                Сохранить
-              </Button>
+
+            <ColorPicker
+              label="Цвет заголовка"
+              value={customColor}
+              onChange={handleColorChange}
+              onReset={handleColorReset}
+              showReset={true}
+              disableAlpha={false}
+            />
+            <Flex gap="3" justify="between" mt="2">
+              {onDelete && (
+                <DeleteButton onClick={handleDelete}>
+                  Удалить
+                </DeleteButton>
+              )}
+              <Flex gap="3" ml="auto">
+                <CancelButton onClick={handleClose}>
+                  Отмена
+                </CancelButton>
+                <PrimaryButton type="submit">
+                  Сохранить
+                </PrimaryButton>
+              </Flex>
             </Flex>
           </Flex>
         </form>

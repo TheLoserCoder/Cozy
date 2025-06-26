@@ -7,10 +7,10 @@ import { AppThemeProvider } from "./components/ThemeProvider";
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <AppThemeProvider>
-      <Provider store={store}>
+    <Provider store={store}>
+      <AppThemeProvider>
         <App />
-      </Provider>
-    </AppThemeProvider>
+      </AppThemeProvider>
+    </Provider>
   </React.StrictMode>
 );

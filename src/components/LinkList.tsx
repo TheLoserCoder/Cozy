@@ -7,34 +7,33 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Card, Flex, Text, Heading, Separator, Box, Button, IconButton } from "@radix-ui/themes";
+import { Card, Flex, Text, Heading, Separator, Box, IconButton } from "@radix-ui/themes";
 import { Pencil2Icon, PlusIcon } from "@radix-ui/react-icons";
 import { AddLinkDialog } from "./AddLinkDialog";
 import { EditListDialog } from "./EditListDialog";
-
-export interface LinkListItem {
-  url: string;
-  title: string;
-  iconUrl?: string;
-  color?: string;
-  className?: string;
-}
+import { LinkListItem } from "../entities/list/list.types";
+import { useAppSelector } from "../store/hooks";
 
 interface LinkListProps {
   title: string;
   links: LinkListItem[];
   listId: string;
+  customColor?: string;
   className?: string;
-  globalDisableClick?: boolean;
   activeId?: string | null;
+  onAddLink?: (data: { title: string; url: string }) => void;
+  onEditList?: (newTitle: string) => void;
+  onDeleteList?: () => void;
 }
 
 function SortableLinkItem({
   link,
-  globalDisableClick,
+  activeId,
+  listId,
 }: {
   link: LinkListItem;
-  globalDisableClick?: boolean;
+  activeId?: string | null;
+  listId: string;
 }) {
   const {
     attributes,
@@ -43,16 +42,27 @@ function SortableLinkItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: link.url });
+  } = useSortable({ id: link.id });
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
-    cursor: "grab",
+    zIndex: isDragging ? 1000 : 1,
   };
+
+  const isActive = activeId === link.id;
+
   return (
     <Box ref={setNodeRef} style={style}>
-      <LinkItem {...link} globalDisableClick={globalDisableClick} dragHandleProps={listeners} />
+      <LinkItem
+        {...link}
+        listId={listId}
+        isDragging={isDragging || isActive}
+        dragHandleProps={{
+          ...attributes,
+          ...listeners,
+        }}
+      />
     </Box>
   );
 }
@@ -61,23 +71,30 @@ export function LinkList({
   title,
   links,
   className,
-  globalDisableClick,
+  customColor,
   listId,
   activeId,
+  onAddLink,
+  onEditList,
+  onDeleteList,
 }: LinkListProps) {
   const { setNodeRef } = useDroppable({ id: listId });
-  const items = React.useMemo(() => links.map((l) => l.url), [links]);
+  const { colors } = useAppSelector((state) => state.theme);
+  const items = React.useMemo(() => links.map((l) => l.id), [links]);
   const [addOpen, setAddOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
 
-  // Заглушки для onSubmit (реализация зависит от родителя)
+  // Определяем цвет заголовка: кастомный цвет списка или акцентный цвет
+  const titleColor = customColor || colors.accent;
+
   const handleAddLink = (data: { title: string; url: string }) => {
     setAddOpen(false);
-    // TODO: вызвать callback из props, если потребуется
+    onAddLink?.(data);
   };
+
   const handleEditList = (newTitle: string) => {
     setEditOpen(false);
-    // TODO: вызвать callback из props, если потребуется
+    onEditList?.(newTitle);
   };
 
   return (
@@ -89,12 +106,12 @@ export function LinkList({
       <Card ref={setNodeRef} style={{ minWidth: 320, maxWidth: 400 }}>
         <Flex direction="column" gap="3">
           <Flex align="center" justify="between">
-            <Heading size="4" as="h2">{title}</Heading>
+            <Heading size="4" as="h2" style={{ color: titleColor }}>{title}</Heading>
             <Flex gap="2">
-              <IconButton variant="soft" color="gray" size="2" onClick={() => setEditOpen(true)} aria-label="Редактировать список">
+              <IconButton variant="soft" size="2" onClick={() => setEditOpen(true)} aria-label="Редактировать список">
                 <Pencil2Icon />
               </IconButton>
-              <IconButton variant="soft" color="green" size="2" onClick={() => setAddOpen(true)} aria-label="Добавить ссылку">
+              <IconButton variant="soft" size="2" onClick={() => setAddOpen(true)} aria-label="Добавить ссылку">
                 <PlusIcon />
               </IconButton>
             </Flex>
@@ -103,15 +120,24 @@ export function LinkList({
           <Flex direction="column" gap="2">
             {links.map((link) => (
               <SortableLinkItem
-                key={link.url}
+                key={link.id}
                 link={link}
-                globalDisableClick={globalDisableClick}
+                activeId={activeId}
+                listId={listId}
               />
             ))}
           </Flex>
         </Flex>
         <AddLinkDialog open={addOpen} onOpenChange={setAddOpen} onSubmit={handleAddLink} />
-        <EditListDialog open={editOpen} onOpenChange={setEditOpen} initialTitle={title} onSubmit={handleEditList} />
+        <EditListDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          initialTitle={title}
+          listId={listId}
+          initialColor={customColor}
+          onSubmit={handleEditList}
+          onDelete={onDeleteList}
+        />
       </Card>
     </SortableContext>
   );
@@ -119,4 +145,3 @@ export function LinkList({
 
 // Для DragOverlay используем LinkItem напрямую
 export { LinkItem };
-

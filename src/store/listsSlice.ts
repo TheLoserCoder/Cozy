@@ -1,8 +1,62 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { LinkList, LinkListItem } from "../entities/list/list.types";
 import { getListsFromStorage, saveListsToStorage } from "../entities/list/list.storage";
+import { getFaviconUrl } from "../utils/favicon";
 
-const initialState: LinkList[] = getListsFromStorage();
+// Дефолтные списки, если localStorage пуст
+const defaultLists: LinkList[] = [
+  {
+    id: "favorites",
+    title: "Избранное",
+    links: [
+      {
+        id: "google",
+        url: "https://www.google.com/",
+        title: "Google",
+        iconUrl: getFaviconUrl("https://www.google.com/"),
+      },
+      {
+        id: "youtube",
+        url: "https://www.youtube.com/",
+        title: "YouTube",
+        iconUrl: getFaviconUrl("https://www.youtube.com/"),
+      },
+      {
+        id: "github",
+        url: "https://github.com/",
+        title: "GitHub",
+        iconUrl: getFaviconUrl("https://github.com/"),
+      },
+    ],
+  },
+  {
+    id: "ai",
+    title: "ИИ",
+    links: [
+      {
+        id: "gemini",
+        url: "https://gemini.google.com/",
+        title: "Gemini",
+        iconUrl: getFaviconUrl("https://gemini.google.com/"),
+      },
+      {
+        id: "chatgpt",
+        url: "https://chat.openai.com/",
+        title: "ChatGPT",
+        iconUrl: getFaviconUrl("https://chat.openai.com/"),
+      },
+      {
+        id: "copilot",
+        url: "https://copilot.microsoft.com/",
+        title: "Copilot",
+        iconUrl: getFaviconUrl("https://copilot.microsoft.com/"),
+      },
+    ],
+  },
+];
+
+const storedLists = getListsFromStorage();
+const initialState: LinkList[] = storedLists.length > 0 ? storedLists : defaultLists;
 
 const listsSlice = createSlice({
   name: "lists",
@@ -22,6 +76,13 @@ const listsSlice = createSlice({
         saveListsToStorage(state);
       }
     },
+    setListColor(state, action: PayloadAction<{ id: string; color?: string }>) {
+      const list = state.find(l => l.id === action.payload.id);
+      if (list) {
+        list.customColor = action.payload.color;
+        saveListsToStorage(state);
+      }
+    },
     deleteList(state, action: PayloadAction<string>) {
       const idx = state.findIndex(l => l.id === action.payload);
       if (idx !== -1) {
@@ -34,6 +95,33 @@ const listsSlice = createSlice({
       if (list) {
         list.links.push(action.payload.link);
         saveListsToStorage(state);
+      }
+    },
+    editLink(state, action: PayloadAction<{ listId: string; linkId: string; updates: Partial<LinkListItem> }>) {
+      const list = state.find(l => l.id === action.payload.listId);
+      if (list) {
+        const link = list.links.find(l => l.id === action.payload.linkId);
+        if (link) {
+          Object.assign(link, action.payload.updates);
+          saveListsToStorage(state);
+        }
+      }
+    },
+    deleteLink(state, action: PayloadAction<{ listId: string; linkId: string }>) {
+      const list = state.find(l => l.id === action.payload.listId);
+      if (list) {
+        list.links = list.links.filter(l => l.id !== action.payload.linkId);
+        saveListsToStorage(state);
+      }
+    },
+    setLinkColor(state, action: PayloadAction<{ listId: string; linkId: string; color?: string }>) {
+      const list = state.find(l => l.id === action.payload.listId);
+      if (list) {
+        const link = list.links.find(l => l.id === action.payload.linkId);
+        if (link) {
+          link.customColor = action.payload.color;
+          saveListsToStorage(state);
+        }
       }
     },
     reorderLinksInList(state, action: PayloadAction<{ listId: string; from: number; to: number }>) {
@@ -58,5 +146,17 @@ const listsSlice = createSlice({
   },
 });
 
-export const { addList, setLists, editListTitle, deleteList, addLinkToList, reorderLinksInList, moveLinkToList } = listsSlice.actions;
+export const {
+  addList,
+  setLists,
+  editListTitle,
+  deleteList,
+  setListColor,
+  addLinkToList,
+  editLink,
+  deleteLink,
+  setLinkColor,
+  reorderLinksInList,
+  moveLinkToList
+} = listsSlice.actions;
 export default listsSlice.reducer;

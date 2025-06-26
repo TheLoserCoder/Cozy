@@ -1,6 +1,7 @@
 import * as React from "react";
-import { Button, TextField, Flex, Text, Box } from "@radix-ui/themes";
+import { TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
+import { CancelButton, PrimaryButton } from "./ActionButtons";
 
 interface AddLinkDialogProps {
   open: boolean;
@@ -97,12 +98,12 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
               />
             </label>
             <Flex gap="3" justify="end" mt="2">
-              <Button variant="soft" color="gray" type="button" onClick={handleClose}>
+              <CancelButton onClick={handleClose}>
                 Отмена
-              </Button>
-              <Button type="submit" variant="solid" color="mint">
+              </CancelButton>
+              <PrimaryButton type="submit">
                 Добавить
-              </Button>
+              </PrimaryButton>
             </Flex>
           </Flex>
         </form>
