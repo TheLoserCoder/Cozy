@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Box, Flex, Text } from "@radix-ui/themes";
-import { Cross2Icon } from "@radix-ui/react-icons";
+import { UpdateIcon } from "@radix-ui/react-icons";
 import { ActionIconButton } from "./ActionButtons";
 import { SketchPicker, ColorResult } from "react-color";
 
@@ -11,6 +11,7 @@ interface ColorPickerProps {
   label?: string;
   showReset?: boolean;
   disableAlpha?: boolean;
+  disabled?: boolean;
 }
 
 export const ColorPicker: React.FC<ColorPickerProps> = ({
@@ -19,7 +20,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   onReset,
   label,
   showReset = false,
-  disableAlpha = false
+  disableAlpha = false,
+  disabled = false
 }) => {
   const [showPicker, setShowPicker] = React.useState(false);
   const [pickerPosition, setPickerPosition] = React.useState({ top: 0, left: 0 });
@@ -68,23 +70,24 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
   return (
     <Box style={{ position: "relative" }}>
-      {label && (
-        <Text size="2" weight="medium" mb="2" as="div">
-          {label}
-        </Text>
-      )}
+      <Flex align="center" justify="between" gap="3" style={{ opacity: disabled ? 0.5 : 1 }}>
+        {label && (
+          <Text size="2" weight="medium" as="div" style={{ flex: 1 }}>
+            {label}
+          </Text>
+        )}
 
-      <Flex align="center" gap="2">
+        <Flex align="center" gap="2">
         <Box
           ref={triggerRef}
-          onClick={handleTriggerClick}
+          onClick={disabled ? undefined : handleTriggerClick}
           style={{
             width: "32px",
             height: "32px",
             backgroundColor: value,
             border: "2px solid var(--gray-6)",
-            borderRadius: "6px",
-            cursor: "pointer",
+            borderRadius: "50%",
+            cursor: disabled ? "not-allowed" : "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center"
@@ -97,10 +100,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
           )}
         </Box>
 
-        <Text size="2" style={{ fontFamily: "monospace", minWidth: "120px", fontSize: "11px" }}>
-          {value.toUpperCase()}
-        </Text>
-
         {showReset && onReset && (
           <ActionIconButton
             variant="soft"
@@ -108,9 +107,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             onClick={onReset}
             aria-label="Сбросить цвет"
           >
-            <Cross2Icon />
+            <UpdateIcon />
           </ActionIconButton>
         )}
+        </Flex>
       </Flex>
 
       {showPicker && (

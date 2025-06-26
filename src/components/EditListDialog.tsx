@@ -3,7 +3,7 @@ import { TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
 import { ColorPicker } from "./ColorPicker";
 import { DeleteButton, CancelButton, PrimaryButton } from "./ActionButtons";
-import { useAppDispatch } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setListColor } from "../store/listsSlice";
 
 interface EditListDialogProps {
@@ -26,6 +26,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
   onDelete
 }) => {
   const dispatch = useAppDispatch();
+  const { lists } = useAppSelector((state) => state.theme);
   const [title, setTitle] = React.useState(initialTitle);
   const [customColor, setCustomColor] = React.useState(initialColor || "");
 
@@ -88,6 +89,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
           minWidth: 320,
           maxWidth: 400,
           zIndex: 1010,
+          border: lists.hideBackground ? 'none' : undefined,
         }}
       >
         <form onSubmit={handleSubmit} aria-describedby="edit-list-desc">

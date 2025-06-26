@@ -3,7 +3,7 @@ import { TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
 import { ColorPicker } from "./ColorPicker";
 import { DeleteButton, CancelButton, PrimaryButton } from "./ActionButtons";
-import { useAppDispatch } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { editLink, deleteLink, setLinkColor } from "../store/listsSlice";
 import { getFaviconUrl } from "../utils/favicon";
 
@@ -27,6 +27,7 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
   initialColor
 }) => {
   const dispatch = useAppDispatch();
+  const { lists, radixTheme } = useAppSelector((state) => state.theme);
   const [title, setTitle] = React.useState(initialTitle);
   const [url, setUrl] = React.useState(initialUrl);
   const [customColor, setCustomColor] = React.useState(initialColor || "");
@@ -122,6 +123,7 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
           minWidth: 320,
           maxWidth: 400,
           zIndex: 1010,
+          border: lists.hideBackground ? 'none' : undefined,
         }}
       >
         <form onSubmit={handleSubmit} aria-describedby="edit-link-desc">
@@ -150,7 +152,7 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
             
             <ColorPicker
               label="Цвет ссылки"
-              value={customColor}
+              value={customColor || lists.linkColor || `color-mix(in srgb, ${radixTheme} 70%, var(--gray-12) 30%)`}
               onChange={handleColorChange}
               onReset={handleColorReset}
               showReset={true}

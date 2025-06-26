@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Flex, Text, ContextMenu, IconButton } from "@radix-ui/themes";
-import { Pencil2Icon } from "@radix-ui/react-icons";
+import { Flex, Text, IconButton } from "@radix-ui/themes";
+import { Pencil2Icon, TrashIcon } from "@radix-ui/react-icons";
 import { useAppSelector } from "../store/hooks";
 import { EditLinkDialog } from "./EditLinkDialog";
 
@@ -16,7 +16,10 @@ interface LinkItemProps {
   style?: React.CSSProperties;
   dragHandleProps?: any;
   listId?: string; // Для редактирования
+  onDelete?: () => void; // Для удаления
 }
+
+
 
 export const LinkItem: React.FC<LinkItemProps> = ({
   id,
@@ -29,13 +32,24 @@ export const LinkItem: React.FC<LinkItemProps> = ({
   isDragging = false,
   style = {},
   dragHandleProps = {},
-  listId
+  listId,
+  onDelete
 }) => {
-  const { colors } = useAppSelector((state) => state.theme);
+  const { lists, radixTheme } = useAppSelector((state) => state.theme);
   const [editOpen, setEditOpen] = React.useState(false);
+  const [showButtons, setShowButtons] = React.useState(false);
 
-  // Определяем цвет ссылки: кастомный цвет ссылки, общий цвет ссылок или дефолтный
-  const linkColor = customColor || colors.links || color;
+  // Функции для открытия ссылок
+  const openInNewWindow = () => {
+    window.open(url, '_blank');
+  };
+
+  const openInCurrentTab = () => {
+    window.location.href = url;
+  };
+
+  // Определяем цвет ссылки: кастомный, настройки списков, или менее насыщенный акцентный
+  const linkColor = customColor || lists.linkColor || `color-mix(in srgb, ${radixTheme} 70%, var(--gray-12) 30%)`;
 
   const linkStyle = {
     color: linkColor,
@@ -47,96 +61,107 @@ export const LinkItem: React.FC<LinkItemProps> = ({
 
   return (
     <>
-      <ContextMenu.Root>
-        <ContextMenu.Trigger>
-          <a
-            href={url}
-            style={linkStyle}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={className}
-            draggable={false}
-            {...dragHandleProps}
-          >
-            <Flex
-              align="center"
-              gap="3"
-              px="3"
-              py="2"
-              style={{
-                borderRadius: 9999,
-                transition: "background-color 0.2s ease",
-                position: "relative"
-              }}
-            >
-              {iconUrl && (
-                <span style={{
-                  cursor: "grab",
-                  display: "flex",
-                  alignItems: "center",
-                  flexShrink: 0
-                }}>
-                  <img
-                    src={iconUrl}
-                    alt="icon"
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: 4,
-                      objectFit: "contain"
-                    }}
-                  />
-                </span>
-              )}
-              <Text
-                as="span"
-                size="3"
-                weight="medium"
+      <div
+        style={linkStyle}
+        className={className}
+        {...dragHandleProps}
+        onMouseEnter={() => setShowButtons(true)}
+        onMouseLeave={() => setShowButtons(false)}
+      >
+        <Flex
+          align="center"
+          gap="3"
+          px="3"
+          py="2"
+          style={{
+            borderRadius: 9999,
+            transition: "background-color 0.2s ease",
+            position: "relative",
+            background: "transparent"
+          }}
+        >
+          {iconUrl && !lists.hideIcons && (
+            <span style={{
+              cursor: "grab",
+              display: "flex",
+              alignItems: "center",
+              flexShrink: 0
+            }}>
+              <img
+                src={iconUrl}
+                alt="icon"
                 style={{
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  flex: 1
+                  width: 20,
+                  height: 20,
+                  borderRadius: 4,
+                  objectFit: "contain",
+                  background: "transparent"
+                }}
+              />
+            </span>
+          )}
+          <Text
+            as="span"
+            size="3"
+            weight="medium"
+            style={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              flex: 1,
+              background: "transparent",
+              color: linkColor,
+              cursor: "pointer"
+            }}
+            onClick={openInNewWindow}
+            onDoubleClick={openInCurrentTab}
+          >
+            {title}
+          </Text>
+
+          {/* Кнопки редактирования и удаления */}
+          {listId && (
+            <Flex
+              gap="1"
+              style={{
+                opacity: showButtons ? 1 : 0,
+                transition: "opacity 0.2s",
+                position: "absolute",
+                right: "4px",
+                top: "50%",
+                transform: "translateY(-50%)"
+              }}
+              className="edit-link-btn"
+            >
+              <IconButton
+                variant="soft"
+                size="1"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setEditOpen(true);
                 }}
               >
-                {title}
-              </Text>
-
-              {/* Кнопка редактирования */}
-              {listId && (
+                <Pencil2Icon />
+              </IconButton>
+              {onDelete && (
                 <IconButton
-                  variant="ghost"
+                  variant="soft"
+                  color="red"
                   size="1"
-                  style={{
-                    opacity: 0,
-                    transition: "opacity 0.2s",
-                    position: "absolute",
-                    right: "8px",
-                    top: "50%",
-                    transform: "translateY(-50%)"
-                  }}
-                  className="edit-link-btn"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    setEditOpen(true);
+                    onDelete();
                   }}
                 >
-                  <Pencil2Icon />
+                  <TrashIcon />
                 </IconButton>
               )}
             </Flex>
-          </a>
-        </ContextMenu.Trigger>
-
-        {listId && (
-          <ContextMenu.Content>
-            <ContextMenu.Item onClick={() => setEditOpen(true)}>
-              Редактировать
-            </ContextMenu.Item>
-          </ContextMenu.Content>
-        )}
-      </ContextMenu.Root>
+          )}
+        </Flex>
+      </div>
 
       {/* Диалог редактирования */}
       {listId && (
@@ -154,25 +179,4 @@ export const LinkItem: React.FC<LinkItemProps> = ({
   );
 };
 
-// Добавляем стили для hover эффекта
-const style = document.createElement('style');
-style.textContent = `
-  .edit-link-btn {
-    opacity: 0 !important;
-    transition: opacity 0.2s ease !important;
-  }
 
-  .edit-link-btn:hover,
-  .edit-link-btn:focus {
-    opacity: 1 !important;
-  }
-
-  a:hover .edit-link-btn {
-    opacity: 1 !important;
-  }
-`;
-
-if (!document.head.querySelector('style[data-link-item-hover]')) {
-  style.setAttribute('data-link-item-hover', 'true');
-  document.head.appendChild(style);
-}

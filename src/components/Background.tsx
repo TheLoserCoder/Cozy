@@ -5,7 +5,7 @@ import { setLoading } from "../store/backgroundSlice";
 import { useAutoSwitch } from "../hooks/useAutoSwitch";
 
 export const Background: React.FC = () => {
-  const { currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled } = useAppSelector((state) => state.background);
+  const { currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, shadowOverlay } = useAppSelector((state) => state.background);
   const dispatch = useAppDispatch();
 
   // Используем хук автоматического переключения
@@ -240,9 +240,21 @@ export const Background: React.FC = () => {
         />
       )}
 
-
-
-
+      {/* Градиентное затенение снизу вверх */}
+      {shadowOverlay.enabled && backgroundType === 'image' && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: `linear-gradient(to top, rgba(0, 0, 0, ${shadowOverlay.intensity / 100 * 0.7}) 0%, rgba(0, 0, 0, ${shadowOverlay.intensity / 100 * 0.3}) ${shadowOverlay.height / 2}%, transparent ${shadowOverlay.height}%)`,
+            zIndex: 3,
+            pointerEvents: "none"
+          }}
+        />
+      )}
 
       {/* Сообщение об ошибке */}
       {false && (

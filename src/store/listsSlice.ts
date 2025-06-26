@@ -143,6 +143,18 @@ const listsSlice = createSlice({
       toList.links.splice(action.payload.toIndex, 0, link);
       saveListsToStorage(state);
     },
+    // Сброс всех индивидуальных цветов списков и ссылок
+    resetAllCustomColors(state) {
+      state.forEach(list => {
+        // Сбрасываем цвет списка
+        list.customColor = undefined;
+        // Сбрасываем цвета всех ссылок в списке
+        list.links.forEach(link => {
+          link.customColor = undefined;
+        });
+      });
+      saveListsToStorage(state);
+    },
   },
 });
 
@@ -157,6 +169,7 @@ export const {
   deleteLink,
   setLinkColor,
   reorderLinksInList,
-  moveLinkToList
+  moveLinkToList,
+  resetAllCustomColors
 } = listsSlice.actions;
 export default listsSlice.reducer;

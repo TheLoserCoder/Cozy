@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Button, TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
+import { useAppSelector } from "../store/hooks";
 
 interface AddListDialogProps {
   open: boolean;
@@ -10,6 +11,7 @@ interface AddListDialogProps {
 
 export const AddListDialog: React.FC<AddListDialogProps> = ({ open, onOpenChange, onSubmit }) => {
   const [title, setTitle] = React.useState("");
+  const { lists } = useAppSelector((state) => state.theme);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +50,7 @@ export const AddListDialog: React.FC<AddListDialogProps> = ({ open, onOpenChange
           minWidth: 320,
           maxWidth: 400,
           zIndex: 1010,
+          border: lists.hideBackground ? 'none' : undefined,
         }}
       >
         <form onSubmit={handleSubmit} aria-describedby="add-list-desc">
@@ -66,7 +69,7 @@ export const AddListDialog: React.FC<AddListDialogProps> = ({ open, onOpenChange
               <Button variant="soft" color="gray" type="button" onClick={handleClose}>
                 Отмена
               </Button>
-              <Button type="submit" variant="solid">
+              <Button type="submit" variant="solid" color="indigo">
                 Создать
               </Button>
             </Flex>

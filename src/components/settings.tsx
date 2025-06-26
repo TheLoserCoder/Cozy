@@ -3,14 +3,16 @@ import { TextField, Flex, Text, Box, Switch, Slider, Separator, Tabs, Select } f
 import { SimpleTooltip } from "./SimpleTooltip";
 import { GalleryImage } from "./GalleryImage";
 import { Drawer } from "./Drawer";
-import { Cross2Icon, ChevronDownIcon, ChevronUpIcon, GlobeIcon, PlusIcon, TrashIcon, PlayIcon, PauseIcon } from "@radix-ui/react-icons";
-import { PrimaryButton, SecondaryButton, ActionIconButton } from "./ActionButtons";
+import { Cross2Icon, ChevronDownIcon, ChevronUpIcon, GlobeIcon, PlusIcon, TrashIcon, PlayIcon, PauseIcon, UpdateIcon } from "@radix-ui/react-icons";
+import { PrimaryButton, ActionIconButton } from "./ActionButtons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { addImage, removeImage, setCurrentBackground, setFilter, resetFilters, setBackgroundType, setSolidBackground, setGradientBackground, setParallaxEnabled, setAutoSwitchEnabled, setAutoSwitchMode, switchToRandomImage } from "../store/backgroundSlice";
-import { setLinksColor, setClockColor, setClockEnabled, setClockShowSeconds, setClockShowDate, setClockSize, setRadixTheme } from "../store/themeSlice";
+import { addImage, removeImage, setCurrentBackground, setFilter, resetFilters, setBackgroundType, setSolidBackground, setGradientBackground, setParallaxEnabled, setShadowOverlayEnabled, setShadowOverlayIntensity, setShadowOverlayHeight, setAutoSwitchEnabled, setAutoSwitchMode, switchToRandomImage } from "../store/backgroundSlice";
+import { setClockColor, setClockEnabled, setClockShowSeconds, setClockShowDate, setClockSize, setRadixTheme, setListBackgroundColor, setListBackdropBlur, setListTitleColor, setListLinkColor, setListHideBackground, setListSeparatorColor, setListSeparatorHidden, setListSeparatorThickness, setListBorderColor, setListBorderHidden, setListBorderThickness, setListHideIcons, resetToDefaultTheme } from "../store/themeSlice";
+import { resetAllCustomColors } from "../store/listsSlice";
 import { validateImageUrl } from "../utils/imageValidation";
 import { ColorPicker } from "./ColorPicker";
 import { RadixThemePicker } from "./RadixThemePicker";
+import { AutoColorButton } from "./AutoColorButton";
 import { nanoid } from "nanoid";
 
 interface SettingsProps {
@@ -20,8 +22,8 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
   const dispatch = useAppDispatch();
-  const { images, currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, autoSwitch } = useAppSelector((state) => state.background);
-  const { colors, clock, radixTheme } = useAppSelector((state) => state.theme);
+  const { images, currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, shadowOverlay, autoSwitch } = useAppSelector((state) => state.background);
+  const { colors, clock, lists, radixTheme } = useAppSelector((state) => state.theme);
   const [imageUrl, setImageUrl] = React.useState("");
   const [isValidating, setIsValidating] = React.useState(false);
   const [error, setError] = React.useState("");
@@ -122,20 +124,31 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
               </Text>
 
               <Flex direction="column" gap="3">
-                <RadixThemePicker
-                  label="Акцентный цвет (кнопки, заголовки списков)"
-                  value={radixTheme}
-                  onChange={(theme) => dispatch(setRadixTheme(theme))}
-                />
-
-
-
-                <ColorPicker
-                  label="Цвет ссылок (общий)"
-                  value={colors.links}
-                  onChange={(color) => dispatch(setLinksColor(color))}
-                  disableAlpha={false}
-                />
+                <Flex align="center" gap="2">
+                  <Box style={{ flex: 1 }}>
+                    <RadixThemePicker
+                      label="Акцентный цвет (кнопки, заголовки списков)"
+                      value={radixTheme}
+                      onChange={(theme) => dispatch(setRadixTheme(theme))}
+                    />
+                  </Box>
+                  <AutoColorButton size="2" />
+                  <ActionIconButton
+                    variant="soft"
+                    color="gray"
+                    size="2"
+                    type="button"
+                    onClick={() => {
+                      // Сбрасываем все цветовые настройки к стандартным
+                      dispatch(resetToDefaultTheme());
+                      // Сбрасываем все индивидуальные цвета списков и ссылок
+                      dispatch(resetAllCustomColors());
+                    }}
+                    aria-label="Сбросить все цветовые настройки"
+                  >
+                    <UpdateIcon />
+                  </ActionIconButton>
+                </Flex>
               </Flex>
             </Box>
 
@@ -197,7 +210,7 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
                     value={[clock.size]}
                     onValueChange={(value) => dispatch(setClockSize(value[0]))}
                     min={0.5}
-                    max={2.0}
+                    max={2.5}
                     step={0.1}
                     disabled={!clock.enabled}
                   />
@@ -210,6 +223,176 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
                   onChange={(color) => dispatch(setClockColor(color))}
                   disableAlpha={false}
                 />
+              </Flex>
+            </Box>
+
+            <Separator size="4" />
+
+            {/* Настройки списков */}
+            <Box>
+              <Text size="4" weight="bold" mb="3">
+                Настройки списков
+              </Text>
+
+              <Flex direction="column" gap="4">
+                {/* Группа: Фон списков */}
+                <Box>
+                  <Text size="3" weight="medium" mb="2" color="gray">
+                    Фон списков
+                  </Text>
+                  <Flex direction="column" gap="2">
+                    <ColorPicker
+                      label="Цвет фона"
+                      value={lists.backgroundColor}
+                      onChange={(color) => dispatch(setListBackgroundColor(color))}
+                      disableAlpha={false}
+                    />
+
+                    <ColorPicker
+                      label="Цвет границы"
+                      value={lists.borderColor || radixTheme}
+                      onChange={(color) => dispatch(setListBorderColor(color))}
+                      disableAlpha={false}
+                      disabled={lists.borderHidden}
+                    />
+
+                    <Flex align="center" justify="between">
+                      <Text size="2" weight="medium" style={{ opacity: lists.borderHidden ? 0.5 : 1 }}>
+                        Толщина границы
+                      </Text>
+                      <Flex align="center" gap="2" style={{ width: '120px' }}>
+                        <Text size="1" color="gray" style={{ opacity: lists.borderHidden ? 0.5 : 1, minWidth: '24px' }}>
+                          {lists.borderThickness}px
+                        </Text>
+                        <Slider
+                          value={[lists.borderThickness]}
+                          onValueChange={(value) => dispatch(setListBorderThickness(value[0]))}
+                          min={1}
+                          max={5}
+                          step={1}
+                          disabled={lists.borderHidden}
+                          style={{
+                            flex: 1,
+                            opacity: lists.borderHidden ? 0.5 : 1
+                          }}
+                        />
+                      </Flex>
+                    </Flex>
+
+                    <Flex align="center" justify="between">
+                      <Text size="2" weight="medium">
+                        Скрыть границу
+                      </Text>
+                      <Switch
+                        checked={lists.borderHidden}
+                        onCheckedChange={(checked) => dispatch(setListBorderHidden(checked))}
+                      />
+                    </Flex>
+
+                    <Flex align="center" justify="between">
+                      <Text size="2" weight="medium">
+                        Размытие фона
+                      </Text>
+                      <Switch
+                        checked={lists.backdropBlur}
+                        onCheckedChange={(checked) => dispatch(setListBackdropBlur(checked))}
+                      />
+                    </Flex>
+
+                    <Flex align="center" justify="between">
+                      <Text size="2" weight="medium">
+                        Скрыть фон
+                      </Text>
+                      <Switch
+                        checked={lists.hideBackground}
+                        onCheckedChange={(checked) => dispatch(setListHideBackground(checked))}
+                      />
+                    </Flex>
+                  </Flex>
+                </Box>
+
+                {/* Группа: Разделитель */}
+                <Box>
+                  <Text size="3" weight="medium" mb="2" color="gray">
+                    Разделитель
+                  </Text>
+                  <Flex direction="column" gap="2">
+                    <ColorPicker
+                      label="Цвет разделителя"
+                      value={lists.separatorColor || radixTheme}
+                      onChange={(color) => dispatch(setListSeparatorColor(color))}
+                      disableAlpha={false}
+                      disabled={lists.separatorHidden}
+                    />
+
+                    <Flex align="center" justify="between">
+                      <Text size="2" weight="medium" style={{ opacity: lists.separatorHidden ? 0.5 : 1 }}>
+                        Толщина разделителя
+                      </Text>
+                      <Flex align="center" gap="2" style={{ width: '120px' }}>
+                        <Text size="1" color="gray" style={{ opacity: lists.separatorHidden ? 0.5 : 1, minWidth: '24px' }}>
+                          {lists.separatorThickness}px
+                        </Text>
+                        <Slider
+                          value={[lists.separatorThickness]}
+                          onValueChange={(value) => dispatch(setListSeparatorThickness(value[0]))}
+                          min={1}
+                          max={10}
+                          step={1}
+                          disabled={lists.separatorHidden}
+                          style={{
+                            flex: 1,
+                            opacity: lists.separatorHidden ? 0.5 : 1
+                          }}
+                        />
+                      </Flex>
+                    </Flex>
+
+                    <Flex align="center" justify="between">
+                      <Text size="2" weight="medium">
+                        Скрыть разделитель
+                      </Text>
+                      <Switch
+                        checked={lists.separatorHidden}
+                        onCheckedChange={(checked) => dispatch(setListSeparatorHidden(checked))}
+                      />
+                    </Flex>
+                  </Flex>
+                </Box>
+
+                {/* Группа: Содержимое */}
+                <Box>
+                  <Text size="3" weight="medium" mb="2" color="gray">
+                    Содержимое
+                  </Text>
+                  <Flex direction="column" gap="2">
+                    <ColorPicker
+                      label="Цвет заголовков (переопределяет акцентный)"
+                      value={lists.titleColor || radixTheme}
+                      onChange={(color) => dispatch(setListTitleColor(color))}
+                      disableAlpha={false}
+                    />
+
+                    <ColorPicker
+                      label="Цвет ссылок (переопределяет акцентный)"
+                      value={lists.linkColor || `color-mix(in srgb, ${radixTheme} 70%, var(--gray-12) 30%)`}
+                      onChange={(color) => dispatch(setListLinkColor(color))}
+                      disableAlpha={false}
+                    />
+
+                    <Flex align="center" justify="between">
+                      <Text size="2" weight="medium">
+                        Скрыть иконки ссылок
+                      </Text>
+                      <Switch
+                        checked={lists.hideIcons}
+                        onCheckedChange={(checked) => dispatch(setListHideIcons(checked))}
+                      />
+                    </Flex>
+
+
+                  </Flex>
+                </Box>
               </Flex>
             </Box>
 
@@ -288,6 +471,60 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
                         Фоновое изображение будет следовать за движением мышки
                       </Text>
                     </Box>
+
+                    {/* Настройки затенения */}
+                    <Box>
+                      <Flex align="center" gap="2" mb="2">
+                        <Switch
+                          checked={shadowOverlay.enabled}
+                          onCheckedChange={(checked) => dispatch(setShadowOverlayEnabled(checked))}
+                        />
+                        <Text size="2" weight="medium">
+                          Затенение снизу
+                        </Text>
+                      </Flex>
+                      <Text size="1" color="gray" mb="3">
+                        Градиентное затенение для лучшей видимости списков
+                      </Text>
+
+                      {shadowOverlay.enabled && (
+                        <Box>
+                          <Flex align="center" gap="2" mb="2">
+                            <Text size="1" color="gray" style={{ minWidth: '100px' }}>
+                              Интенсивность:
+                            </Text>
+                            <Slider
+                              value={[shadowOverlay.intensity]}
+                              onValueChange={(value) => dispatch(setShadowOverlayIntensity(value[0]))}
+                              max={200}
+                              min={0}
+                              step={5}
+                              style={{ flex: 1, width: '120px' }}
+                            />
+                            <Text size="1" color="gray" style={{ minWidth: '40px' }}>
+                              {shadowOverlay.intensity}%
+                            </Text>
+                          </Flex>
+
+                          <Flex align="center" gap="2" mb="2">
+                            <Text size="1" color="gray" style={{ minWidth: '100px' }}>
+                              Высота:
+                            </Text>
+                            <Slider
+                              value={[shadowOverlay.height]}
+                              onValueChange={(value) => dispatch(setShadowOverlayHeight(value[0]))}
+                              max={100}
+                              min={20}
+                              step={5}
+                              style={{ flex: 1, width: '120px' }}
+                            />
+                            <Text size="1" color="gray" style={{ minWidth: '40px' }}>
+                              {shadowOverlay.height}%
+                            </Text>
+                          </Flex>
+                        </Box>
+                      )}
+                    </Box>
                   </Flex>
 
             {/* Мини-галерея */}
@@ -305,6 +542,7 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
                         onClick={() => dispatch(setAutoSwitchEnabled(!autoSwitch.enabled))}
                         variant="soft"
                         size="1"
+                        type="button"
                       >
                         {autoSwitch.enabled ? <PauseIcon /> : <PlayIcon />}
                       </ActionIconButton>
@@ -359,6 +597,7 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
                       >
                         <ActionIconButton
                           variant="solid"
+                          color="red"
                           size="1"
                           onClick={(e) => {
                             e?.stopPropagation();
@@ -366,7 +605,7 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
                           }}
                           aria-label="Удалить изображение"
                         >
-                          <Cross2Icon />
+                          <TrashIcon />
                         </ActionIconButton>
                       </div>
                     </Box>
@@ -534,27 +773,61 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
             </Tabs.Root>
 
             {/* Фильтры фона */}
-            <Box mt="4">
+            <Box mt="4" id="filters-section">
               <Flex
                 align="center"
                 justify="between"
                 style={{ cursor: "pointer" }}
-                onClick={() => setFiltersExpanded(!filtersExpanded)}
+                onClick={() => {
+                  setFiltersExpanded(!filtersExpanded);
+                  // Автоматическая прокрутка к фильтрам при раскрытии
+                  if (!filtersExpanded) {
+                    setTimeout(() => {
+                      document.getElementById('filters-section')?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }, 100);
+                  }
+                }}
               >
                 <Text size="3" weight="medium">
                   Фильтры фона
                 </Text>
-                <ActionIconButton
-                  variant="ghost"
-                  size="1"
-                  onClick={(e) => {
-                    e?.stopPropagation();
-                    setFiltersExpanded(!filtersExpanded);
-                  }}
-                  aria-label={filtersExpanded ? "Свернуть фильтры" : "Развернуть фильтры"}
-                >
-                  {filtersExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                </ActionIconButton>
+                <Flex align="center" gap="1">
+                  <ActionIconButton
+                    variant="soft"
+                    color="gray"
+                    size="1"
+                    onClick={(e) => {
+                      e?.stopPropagation();
+                      dispatch(resetFilters());
+                    }}
+                    aria-label="Сбросить фильтры"
+                  >
+                    <UpdateIcon />
+                  </ActionIconButton>
+                  <ActionIconButton
+                    variant="ghost"
+                    size="1"
+                    onClick={(e) => {
+                      e?.stopPropagation();
+                      setFiltersExpanded(!filtersExpanded);
+                      // Автоматическая прокрутка к фильтрам при раскрытии
+                      if (!filtersExpanded) {
+                        setTimeout(() => {
+                          document.getElementById('filters-section')?.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                          });
+                        }, 100);
+                      }
+                    }}
+                    aria-label={filtersExpanded ? "Свернуть фильтры" : "Развернуть фильтры"}
+                  >
+                    {filtersExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                  </ActionIconButton>
+                </Flex>
               </Flex>
 
               {filtersExpanded && (
@@ -661,10 +934,7 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
 
 
 
-                    {/* Кнопка сброса */}
-                    <SecondaryButton onClick={() => dispatch(resetFilters())}>
-                      Сбросить фильтры
-                    </SecondaryButton>
+
                   </Flex>
                 </Box>
               )}

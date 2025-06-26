@@ -30,13 +30,25 @@ export const Clock: React.FC = () => {
     return null;
   }
 
+  // Вычисляем смещение вверх для больших размеров часов
+  const getVerticalOffset = (size: number) => {
+    if (size >= 2.0) {
+      // При размере 200% и больше смещаем вверх
+      const offsetFactor = (size - 2.0) * 60; // 60px смещения на каждые 0.1 увеличения размера
+      return -offsetFactor;
+    }
+    return 0;
+  };
+
+  const verticalOffset = getVerticalOffset(clock.size);
+
   return (
     <Box
       mb="6"
       p="4"
       style={{
         textAlign: "center",
-        transform: `scale(${clock.size})`,
+        transform: `scale(${clock.size}) translateY(${verticalOffset}px)`,
         transformOrigin: "center",
         transition: "transform 0.3s ease"
       }}

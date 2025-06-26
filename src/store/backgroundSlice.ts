@@ -42,6 +42,11 @@ interface BackgroundState {
   solidBackground: SolidBackground;
   gradientBackground: GradientBackground;
   parallaxEnabled: boolean;
+  shadowOverlay: {
+    enabled: boolean;
+    intensity: number; // 0-100, интенсивность затенения
+    height: number; // 0-100, высота распространения затенения
+  };
   autoSwitch: {
     enabled: boolean;
     mode: AutoSwitchMode;
@@ -57,6 +62,7 @@ const BG_TYPE_KEY = 'background-type';
 const SOLID_BG_KEY = 'solid-background';
 const GRADIENT_BG_KEY = 'gradient-background';
 const PARALLAX_KEY = 'parallax-enabled';
+const SHADOW_OVERLAY_KEY = 'shadow-overlay';
 const AUTO_SWITCH_KEY = 'auto-switch';
 
 const defaultFilters: BackgroundFilters = {
@@ -175,6 +181,31 @@ function saveParallaxToStorage(enabled: boolean): void {
   }
 }
 
+function getShadowOverlayFromStorage() {
+  try {
+    const stored = localStorage.getItem(SHADOW_OVERLAY_KEY);
+    return stored ? JSON.parse(stored) : {
+      enabled: false,
+      intensity: 50,
+      height: 60
+    };
+  } catch {
+    return {
+      enabled: false,
+      intensity: 50,
+      height: 60
+    };
+  }
+}
+
+function saveShadowOverlayToStorage(shadowOverlay: { enabled: boolean; intensity: number; height: number }): void {
+  try {
+    localStorage.setItem(SHADOW_OVERLAY_KEY, JSON.stringify(shadowOverlay));
+  } catch {
+    // Игнорируем ошибки сохранения
+  }
+}
+
 function getAutoSwitchFromStorage() {
   try {
     const stored = localStorage.getItem(AUTO_SWITCH_KEY);
@@ -229,6 +260,7 @@ const initialState: BackgroundState = {
   solidBackground: getSolidBackgroundFromStorage(),
   gradientBackground: getGradientBackgroundFromStorage(),
   parallaxEnabled: getParallaxFromStorage(),
+  shadowOverlay: getShadowOverlayFromStorage(),
   autoSwitch: getAutoSwitchFromStorage()
 };
 
@@ -247,6 +279,13 @@ const backgroundSlice = createSlice({
         // Автоматически устанавливаем новое изображение как текущий фон
         state.currentBackground = action.payload.url;
         saveCurrentBackgroundToStorage(action.payload.url);
+
+        // Сбрасываем дату последнего переключения для автопроигрывания
+        // чтобы очередь начиналась с нового изображения
+        if (state.autoSwitch.enabled && state.autoSwitch.mode === 'daily') {
+          state.autoSwitch.lastSwitchDate = new Date().toDateString();
+          saveAutoSwitchToStorage(state.autoSwitch);
+        }
 
         console.log("Redux: Image added and set as current background, total images:", state.images.length);
       } else {
@@ -317,6 +356,18 @@ const backgroundSlice = createSlice({
       state.parallaxEnabled = action.payload;
       saveParallaxToStorage(action.payload);
     },
+    setShadowOverlayEnabled: (state, action: PayloadAction<boolean>) => {
+      state.shadowOverlay.enabled = action.payload;
+      saveShadowOverlayToStorage(state.shadowOverlay);
+    },
+    setShadowOverlayIntensity: (state, action: PayloadAction<number>) => {
+      state.shadowOverlay.intensity = action.payload;
+      saveShadowOverlayToStorage(state.shadowOverlay);
+    },
+    setShadowOverlayHeight: (state, action: PayloadAction<number>) => {
+      state.shadowOverlay.height = action.payload;
+      saveShadowOverlayToStorage(state.shadowOverlay);
+    },
     setAutoSwitchEnabled: (state, action: PayloadAction<boolean>) => {
       state.autoSwitch.enabled = action.payload;
       saveAutoSwitchToStorage(state.autoSwitch);
@@ -340,6 +391,13 @@ const backgroundSlice = createSlice({
           saveCurrentBackgroundToStorage(randomImage.url);
         }
       }
+    },
+    resetAutoSwitchQueue: (state) => {
+      // Сбрасываем очередь автопроигрывания
+      if (state.autoSwitch.mode === 'daily') {
+        state.autoSwitch.lastSwitchDate = new Date().toDateString();
+        saveAutoSwitchToStorage(state.autoSwitch);
+      }
     }
   },
 });
@@ -356,10 +414,14 @@ export const {
   setSolidBackground,
   setGradientBackground,
   setParallaxEnabled,
+  setShadowOverlayEnabled,
+  setShadowOverlayIntensity,
+  setShadowOverlayHeight,
   setAutoSwitchEnabled,
   setAutoSwitchMode,
   setAutoSwitchLastDate,
-  switchToRandomImage
+  switchToRandomImage,
+  resetAutoSwitchQueue
 } = backgroundSlice.actions;
 
 export default backgroundSlice.reducer;

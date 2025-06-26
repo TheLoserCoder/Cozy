@@ -7,8 +7,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Card, Flex, Text, Heading, Separator, Box, IconButton } from "@radix-ui/themes";
-import { Pencil2Icon, PlusIcon } from "@radix-ui/react-icons";
+import { Card, Flex, Text, Heading, Box, IconButton } from "@radix-ui/themes";
+import { Pencil2Icon, PlusIcon, ExternalLinkIcon } from "@radix-ui/react-icons";
 import { AddLinkDialog } from "./AddLinkDialog";
 import { EditListDialog } from "./EditListDialog";
 import { LinkListItem } from "../entities/list/list.types";
@@ -24,16 +24,19 @@ interface LinkListProps {
   onAddLink?: (data: { title: string; url: string }) => void;
   onEditList?: (newTitle: string) => void;
   onDeleteList?: () => void;
+  onDeleteLink?: (linkId: string) => void;
 }
 
 function SortableLinkItem({
   link,
   activeId,
   listId,
+  onDelete,
 }: {
   link: LinkListItem;
   activeId?: string | null;
   listId: string;
+  onDelete?: (linkId: string) => void;
 }) {
   const {
     attributes,
@@ -53,7 +56,7 @@ function SortableLinkItem({
   const isActive = activeId === link.id;
 
   return (
-    <Box ref={setNodeRef} style={style}>
+    <Box ref={setNodeRef} style={{ ...style, background: 'transparent' }}>
       <LinkItem
         {...link}
         listId={listId}
@@ -62,6 +65,7 @@ function SortableLinkItem({
           ...attributes,
           ...listeners,
         }}
+        onDelete={onDelete ? () => onDelete(link.id) : undefined}
       />
     </Box>
   );
@@ -77,15 +81,16 @@ export function LinkList({
   onAddLink,
   onEditList,
   onDeleteList,
+  onDeleteLink
 }: LinkListProps) {
   const { setNodeRef } = useDroppable({ id: listId });
-  const { colors } = useAppSelector((state) => state.theme);
+  const { lists, radixTheme } = useAppSelector((state) => state.theme);
   const items = React.useMemo(() => links.map((l) => l.id), [links]);
   const [addOpen, setAddOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
 
-  // Определяем цвет заголовка: кастомный цвет списка или акцентный цвет
-  const titleColor = customColor || colors.accent;
+  // Определяем цвет заголовка: кастомный цвет списка, цвет заголовков из настроек списков или акцентный цвет
+  const titleColor = customColor || lists.titleColor || radixTheme;
 
   const handleAddLink = (data: { title: string; url: string }) => {
     setAddOpen(false);
@@ -97,17 +102,66 @@ export function LinkList({
     onEditList?.(newTitle);
   };
 
+  // Функция для открытия ссылок в новых вкладках
+  const openAllLinksInNewTabs = () => {
+    links.forEach(link => {
+      window.open(link.url, '_blank');
+    });
+  };
+
+  // Обработчики событий мыши для списка
+  const handleListMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 1) { // Средняя кнопка мыши (колесико)
+      e.preventDefault();
+      openAllLinksInNewTabs();
+    }
+  };
+
+  const handleListDoubleClick = () => {
+    openAllLinksInNewTabs();
+  };
+
+  // Стили для карточки списка
+  const cardStyle = {
+    minWidth: 320,
+    maxWidth: 400,
+    backgroundColor: lists.hideBackground ? 'transparent' : lists.backgroundColor,
+    backdropFilter: lists.hideBackground ? 'none' : (lists.backdropBlur ? 'blur(10px)' : 'none'),
+    WebkitBackdropFilter: lists.hideBackground ? 'none' : (lists.backdropBlur ? 'blur(10px)' : 'none'), // Для Safari
+    // Убираем дефолтный фон Radix Card
+    '--card-background': 'transparent',
+    '--card-background-hover': 'transparent',
+    // Границы: скрываем когда фон скрыт или когда границы отключены
+    border: lists.hideBackground || lists.borderHidden ? 'none' :
+      `${lists.borderThickness}px solid ${lists.borderColor || 'var(--accent-9)'}`,
+    boxShadow: lists.hideBackground ? 'none' : undefined,
+  } as React.CSSProperties;
+
   return (
     <SortableContext
       id={listId}
       items={items}
       strategy={verticalListSortingStrategy}
     >
-      <Card ref={setNodeRef} style={{ minWidth: 320, maxWidth: 400 }}>
-        <Flex direction="column" gap="3">
-          <Flex align="center" justify="between">
-            <Heading size="4" as="h2" style={{ color: titleColor }}>{title}</Heading>
-            <Flex gap="2">
+      <Card
+        ref={setNodeRef}
+        style={cardStyle}
+        variant="surface"
+        onMouseDown={handleListMouseDown}
+        onDoubleClick={handleListDoubleClick}
+      >
+        <Flex direction="column" gap="3" style={{ background: 'transparent' }}>
+          <Flex align="center" justify="between" style={{ background: 'transparent' }}>
+            <Heading size="4" as="h2" style={{ color: titleColor, background: 'transparent' }}>{title}</Heading>
+            <Flex gap="2" style={{ background: 'transparent' }}>
+              <IconButton
+                variant="soft"
+                size="2"
+                onClick={openAllLinksInNewTabs}
+                aria-label="Открыть все ссылки в новых вкладках"
+              >
+                <ExternalLinkIcon />
+              </IconButton>
               <IconButton variant="soft" size="2" onClick={() => setEditOpen(true)} aria-label="Редактировать список">
                 <Pencil2Icon />
               </IconButton>
@@ -116,14 +170,25 @@ export function LinkList({
               </IconButton>
             </Flex>
           </Flex>
-          <Separator size="4" />
-          <Flex direction="column" gap="2">
+          {!lists.separatorHidden && (
+            <div
+              style={{
+                width: '100%',
+                height: `${lists.separatorThickness}px`,
+                backgroundColor: lists.separatorColor || 'var(--accent-9)',
+                borderRadius: '1px',
+                margin: '8px 0'
+              }}
+            />
+          )}
+          <Flex direction="column" gap="2" style={{ background: 'transparent' }}>
             {links.map((link) => (
               <SortableLinkItem
                 key={link.id}
                 link={link}
                 activeId={activeId}
                 listId={listId}
+                onDelete={onDeleteLink}
               />
             ))}
           </Flex>

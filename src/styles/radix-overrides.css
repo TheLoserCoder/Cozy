@@ -1,0 +1,18 @@
+/* Переопределение цветов Radix Themes согласно официальной документации */
+/* https://www.radix-ui.com/themes/docs/theme/color#customization */
+
+.radix-themes {
+  /* Кастомный цвет бренда устанавливается через JavaScript в ThemeProvider */
+  /* Переопределяем только шаг 9 цветовой шкалы indigo */
+  --indigo-9: var(--my-brand-color);
+  --indigo-a9: var(--my-brand-color);
+}
+
+/* Убираем границы карточек когда фон скрыт */
+.rt-Card:where(.rt-variant-surface) {
+  --card-border-width: 1px;
+}
+
+.hide-card-borders .rt-Card:where(.rt-variant-surface) {
+  --card-border-width: 0px;
+}

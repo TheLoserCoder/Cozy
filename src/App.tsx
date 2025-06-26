@@ -33,6 +33,7 @@ import Settings from "./components/settings";
 export const App: React.FC = () => {
   const dispatch = useAppDispatch();
   const lists = useAppSelector((state) => state.lists);
+  const { lists: listsSettings } = useAppSelector((state) => state.theme);
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const [addListOpen, setAddListOpen] = React.useState(false);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
@@ -47,6 +48,15 @@ export const App: React.FC = () => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Управление CSS классом для скрытия границ карточек
+  React.useEffect(() => {
+    if (listsSettings.hideBackground) {
+      document.body.classList.add('hide-card-borders');
+    } else {
+      document.body.classList.remove('hide-card-borders');
+    }
+  }, [listsSettings.hideBackground]);
 
   function findContainer(id: string): string | undefined {
     // Проверяем, является ли id идентификатором списка
@@ -183,6 +193,10 @@ export const App: React.FC = () => {
     dispatch(deleteList(listId));
   };
 
+  const handleDeleteLink = (listId: string) => (linkId: string) => {
+    dispatch(deleteLink({ listId, linkId }));
+  };
+
   const handleAddList = (title: string) => {
     const newList = createList(title);
     dispatch(addList(newList));
@@ -211,13 +225,12 @@ export const App: React.FC = () => {
         </ActionIconButton>
       </Flex>
 
-      {/* Центральная область с часами */}
-      <Flex direction="column" align="center" justify="center" style={{ flex: 1 }}>
+      {/* Центральная область с часами и списками */}
+      <Flex direction="column" align="center" justify="center" style={{ flex: 1 }} gap="6">
         <Clock />
-      </Flex>
 
-      {/* Нижняя область со списками */}
-      <Box pb="6">
+        {/* Списки под часами */}
+        <Box>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -244,6 +257,7 @@ export const App: React.FC = () => {
                 onAddLink={handleAddLink(list.id)}
                 onEditList={handleEditList(list.id)}
                 onDeleteList={handleDeleteList(list.id)}
+                onDeleteLink={handleDeleteLink(list.id)}
               />
             ))}
           </Flex>
@@ -260,7 +274,8 @@ export const App: React.FC = () => {
             })()}
           </DragOverlay>
         </DndContext>
-      </Box>
+        </Box>
+      </Flex>
 
         <Settings open={settingsOpen} onOpenChange={setSettingsOpen} />
         <AddListDialog open={addListOpen} onOpenChange={setAddListOpen} onSubmit={handleAddList} />

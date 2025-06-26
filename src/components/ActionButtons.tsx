@@ -56,6 +56,7 @@ export const CancelButton: React.FC<CancelButtonProps> = ({
   return (
     <Button
       variant="soft"
+      color="indigo"
       onClick={onClick}
       disabled={disabled}
       type={type}
@@ -85,6 +86,7 @@ export const EditButton: React.FC<EditButtonProps> = ({
   return (
     <Button
       variant="soft"
+      color="indigo"
       onClick={onClick}
       disabled={disabled}
       type={type}
@@ -114,6 +116,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   return (
     <Button
       variant="solid"
+      color="indigo"
       onClick={onClick}
       disabled={disabled}
       type={type}
@@ -143,6 +146,7 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
   return (
     <Button
       variant="soft"
+      color="indigo"
       onClick={onClick}
       disabled={disabled}
       type={type}
@@ -158,8 +162,10 @@ interface ActionIconButtonProps {
   onClick: (e?: React.MouseEvent) => void;
   children: React.ReactNode;
   variant?: "solid" | "soft" | "outline" | "ghost";
+  color?: "red" | "green" | "blue" | "yellow" | "purple" | "gray" | "orange" | "indigo" | "cyan" | "pink" | "lime" | "amber" | "teal" | "sky" | "violet" | "ruby" | "brown" | "crimson" | "gold";
   size?: "1" | "2" | "3" | "4";
   disabled?: boolean;
+  type?: "button" | "submit" | "reset";
   "aria-label"?: string;
 }
 
@@ -167,16 +173,20 @@ export const ActionIconButton: React.FC<ActionIconButtonProps> = ({
   onClick,
   children,
   variant = "soft",
+  color,
   size,
   disabled = false,
+  type = "button",
   "aria-label": ariaLabel
 }) => {
   return (
     <IconButton
       variant={variant}
+      color={color}
       onClick={onClick}
       disabled={disabled}
       size={size}
+      type={type}
       aria-label={ariaLabel}
     >
       {children}
