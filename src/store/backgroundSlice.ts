@@ -20,6 +20,8 @@ export interface BackgroundFilters {
 
 export type BackgroundType = 'image' | 'solid' | 'gradient';
 
+export type AutoSwitchMode = 'off' | 'onLoad' | 'daily';
+
 export interface SolidBackground {
   color: string;
 }
@@ -39,6 +41,12 @@ interface BackgroundState {
   backgroundType: BackgroundType;
   solidBackground: SolidBackground;
   gradientBackground: GradientBackground;
+  parallaxEnabled: boolean;
+  autoSwitch: {
+    enabled: boolean;
+    mode: AutoSwitchMode;
+    lastSwitchDate?: string; // для режима daily
+  };
 }
 
 // Функции для работы с localStorage
@@ -48,6 +56,8 @@ const FILTERS_KEY = 'background-filters';
 const BG_TYPE_KEY = 'background-type';
 const SOLID_BG_KEY = 'solid-background';
 const GRADIENT_BG_KEY = 'gradient-background';
+const PARALLAX_KEY = 'parallax-enabled';
+const AUTO_SWITCH_KEY = 'auto-switch';
 
 const defaultFilters: BackgroundFilters = {
   blur: 0,
@@ -148,6 +158,40 @@ function saveGradientBackgroundToStorage(gradient: GradientBackground): void {
   }
 }
 
+function getParallaxFromStorage(): boolean {
+  try {
+    const stored = localStorage.getItem(PARALLAX_KEY);
+    return stored ? JSON.parse(stored) : false;
+  } catch {
+    return false;
+  }
+}
+
+function saveParallaxToStorage(enabled: boolean): void {
+  try {
+    localStorage.setItem(PARALLAX_KEY, JSON.stringify(enabled));
+  } catch {
+    // Игнорируем ошибки сохранения
+  }
+}
+
+function getAutoSwitchFromStorage() {
+  try {
+    const stored = localStorage.getItem(AUTO_SWITCH_KEY);
+    return stored ? JSON.parse(stored) : { enabled: false, mode: 'onLoad' as AutoSwitchMode };
+  } catch {
+    return { enabled: false, mode: 'onLoad' as AutoSwitchMode };
+  }
+}
+
+function saveAutoSwitchToStorage(autoSwitch: { enabled: boolean; mode: AutoSwitchMode; lastSwitchDate?: string }): void {
+  try {
+    localStorage.setItem(AUTO_SWITCH_KEY, JSON.stringify(autoSwitch));
+  } catch {
+    // Игнорируем ошибки сохранения
+  }
+}
+
 function saveImagesToStorage(images: BackgroundImage[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(images));
@@ -183,7 +227,9 @@ const initialState: BackgroundState = {
   filters: getFiltersFromStorage(),
   backgroundType: getBackgroundTypeFromStorage(),
   solidBackground: getSolidBackgroundFromStorage(),
-  gradientBackground: getGradientBackgroundFromStorage()
+  gradientBackground: getGradientBackgroundFromStorage(),
+  parallaxEnabled: getParallaxFromStorage(),
+  autoSwitch: getAutoSwitchFromStorage()
 };
 
 const backgroundSlice = createSlice({
@@ -197,20 +243,41 @@ const backgroundSlice = createSlice({
       if (!exists) {
         state.images.unshift(action.payload); // Добавляем в начало массива
         saveImagesToStorage(state.images);
-        console.log("Redux: Image added, total images:", state.images.length);
+
+        // Автоматически устанавливаем новое изображение как текущий фон
+        state.currentBackground = action.payload.url;
+        saveCurrentBackgroundToStorage(action.payload.url);
+
+        console.log("Redux: Image added and set as current background, total images:", state.images.length);
       } else {
         console.log("Redux: Image already exists");
       }
     },
     removeImage: (state, action: PayloadAction<string>) => {
+      // Находим удаляемое изображение до фильтрации
+      const removedImage = state.images.find(img => img.id === action.payload);
+      const removedImageIndex = state.images.findIndex(img => img.id === action.payload);
+
+      // Удаляем изображение
       state.images = state.images.filter(img => img.id !== action.payload);
       saveImagesToStorage(state.images);
-      
-      // Если удаляемое изображение было текущим фоном, сбрасываем фон
-      const removedImage = state.images.find(img => img.id === action.payload);
+
+      // Если удаляемое изображение было текущим фоном
       if (removedImage && state.currentBackground === removedImage.url) {
-        state.currentBackground = null;
-        saveCurrentBackgroundToStorage(null);
+        if (state.images.length > 0) {
+          // Выбираем следующее изображение
+          // Если удалили последнее, берем предыдущее, иначе берем то что на том же индексе
+          const nextIndex = removedImageIndex >= state.images.length
+            ? state.images.length - 1
+            : removedImageIndex;
+
+          state.currentBackground = state.images[nextIndex].url;
+          saveCurrentBackgroundToStorage(state.images[nextIndex].url);
+        } else {
+          // Если изображений не осталось, сбрасываем фон
+          state.currentBackground = null;
+          saveCurrentBackgroundToStorage(null);
+        }
       }
     },
     setCurrentBackground: (state, action: PayloadAction<string | null>) => {
@@ -245,6 +312,34 @@ const backgroundSlice = createSlice({
     setGradientBackground: (state, action: PayloadAction<GradientBackground>) => {
       state.gradientBackground = action.payload;
       saveGradientBackgroundToStorage(action.payload);
+    },
+    setParallaxEnabled: (state, action: PayloadAction<boolean>) => {
+      state.parallaxEnabled = action.payload;
+      saveParallaxToStorage(action.payload);
+    },
+    setAutoSwitchEnabled: (state, action: PayloadAction<boolean>) => {
+      state.autoSwitch.enabled = action.payload;
+      saveAutoSwitchToStorage(state.autoSwitch);
+    },
+    setAutoSwitchMode: (state, action: PayloadAction<AutoSwitchMode>) => {
+      state.autoSwitch.mode = action.payload;
+      saveAutoSwitchToStorage(state.autoSwitch);
+    },
+    setAutoSwitchLastDate: (state, action: PayloadAction<string>) => {
+      state.autoSwitch.lastSwitchDate = action.payload;
+      saveAutoSwitchToStorage(state.autoSwitch);
+    },
+    switchToRandomImage: (state) => {
+      if (state.images.length > 1) {
+        // Находим случайное изображение, отличное от текущего
+        const availableImages = state.images.filter(img => img.url !== state.currentBackground);
+        if (availableImages.length > 0) {
+          const randomIndex = Math.floor(Math.random() * availableImages.length);
+          const randomImage = availableImages[randomIndex];
+          state.currentBackground = randomImage.url;
+          saveCurrentBackgroundToStorage(randomImage.url);
+        }
+      }
     }
   },
 });
@@ -259,7 +354,12 @@ export const {
   resetFilters,
   setBackgroundType,
   setSolidBackground,
-  setGradientBackground
+  setGradientBackground,
+  setParallaxEnabled,
+  setAutoSwitchEnabled,
+  setAutoSwitchMode,
+  setAutoSwitchLastDate,
+  switchToRandomImage
 } = backgroundSlice.actions;
 
 export default backgroundSlice.reducer;

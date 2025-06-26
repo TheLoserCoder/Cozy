@@ -40,10 +40,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
   const handleTriggerClick = () => {
     if (!showPicker && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
+      // Простое позиционирование относительно триггера
       setPickerPosition({
-        top: rect.bottom + 4,
-        left: rect.left
+        top: 40, // Фиксированное расстояние от триггера
+        left: 0
       });
     }
     setShowPicker(!showPicker);
@@ -116,7 +116,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
       {showPicker && (
         <Box
           style={{
-            position: "fixed",
+            position: "absolute",
             top: pickerPosition.top,
             left: pickerPosition.left,
             zIndex: 2147483649,

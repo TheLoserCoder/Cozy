@@ -1,11 +1,15 @@
 import * as React from "react";
-import { Box, Flex, Text } from "@radix-ui/themes";
+import { Flex, Text } from "@radix-ui/themes";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { setLoading } from "../store/backgroundSlice";
+import { useAutoSwitch } from "../hooks/useAutoSwitch";
 
 export const Background: React.FC = () => {
-  const { currentBackground, filters, backgroundType, solidBackground, gradientBackground } = useAppSelector((state) => state.background);
+  const { currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled } = useAppSelector((state) => state.background);
   const dispatch = useAppDispatch();
+
+  // Используем хук автоматического переключения
+  useAutoSwitch();
 
   // Состояние для двух слоев изображений
   const [primaryImage, setPrimaryImage] = React.useState<string | null>(null);
@@ -13,6 +17,10 @@ export const Background: React.FC = () => {
   const [primaryLoaded, setPrimaryLoaded] = React.useState(false);
   const [secondaryLoaded, setSecondaryLoaded] = React.useState(false);
   const [isTransitioning, setIsTransitioning] = React.useState(false);
+
+  // Состояние для параллакса
+  const [mouseX, setMouseX] = React.useState(0);
+  const [mouseY, setMouseY] = React.useState(0);
 
   // Создаем CSS фильтр из настроек
   const createFilterString = () => {
@@ -60,10 +68,7 @@ export const Background: React.FC = () => {
         };
       case 'image':
       default:
-        return {
-          backgroundImage: currentBackground ? `url(${currentBackground})` : "none",
-          backgroundColor: 'transparent'
-        };
+        return {}; // Для изображений используем img элементы
     }
   };
 
@@ -118,27 +123,64 @@ export const Background: React.FC = () => {
     setIsTransitioning(false);
   };
 
+  // Эффект параллакса при движении мышки
+  React.useEffect(() => {
+    if (!parallaxEnabled) return;
+
+    let animationFrameId: number;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Отменяем предыдущий кадр анимации если он есть
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      // Планируем обновление на следующий кадр
+      animationFrameId = requestAnimationFrame(() => {
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+
+        // Вычисляем смещение от центра экрана в процентах (уменьшили чувствительность)
+        const offsetX = ((e.clientX - centerX) / centerX) * 30;
+        const offsetY = ((e.clientY - centerY) / centerY) * 30;
+
+        setMouseX(offsetX);
+        setMouseY(offsetY);
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [parallaxEnabled]);
+
   // Показываем фон только если есть изображение или выбран другой тип фона
   if (backgroundType === 'image' && !currentBackground) {
     return null;
   }
 
   return (
-    <Box
+    <div
       style={{
         position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
+        top: parallaxEnabled ? "-5%" : "-1px",
+        left: parallaxEnabled ? "-5%" : 0,
+        width: parallaxEnabled ? "110vw" : "100vw",
+        height: parallaxEnabled ? "110vh" : "calc(100vh + 2px)",
         zIndex: -1,
         overflow: "hidden",
-        filter: createFilterString(),
-        transform: `scale(${getScaleForBlur()})`,
-        ...getBackgroundStyle(),
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat"
+        backgroundColor: "#000",
+        margin: 0,
+        padding: 0,
+        border: "none",
+        outline: "none",
+        filter: backgroundType === 'image' ? "none" : createFilterString(),
+        transform: backgroundType === 'image' ? "none" : `scale(${getScaleForBlur()})`,
+        ...getBackgroundStyle()
       }}
     >
       {/* Основное изображение (всегда видимое) */}
@@ -148,13 +190,22 @@ export const Background: React.FC = () => {
           alt="Background"
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
+            top: "50%",
+            left: "50%",
             width: "100%",
             height: "100%",
             objectFit: "cover",
             opacity: isTransitioning && secondaryLoaded ? 0 : 1,
-            transition: "opacity 0.8s ease-in-out",
+            transition: isTransitioning ? "opacity 0.8s ease-in-out" : "none", // Анимация только при переходе
+            filter: createFilterString(),
+            transform: parallaxEnabled
+              ? `translate(-50%, -50%) scale(${getScaleForBlur()}) translate(${mouseX * -1.2}px, ${mouseY * -1.2}px)`
+              : `translate(-50%, -50%) scale(${getScaleForBlur()})`,
+            ...(parallaxEnabled && {
+              transition: isTransitioning
+                ? "opacity 0.8s ease-in-out, transform 0.15s ease-out"
+                : "transform 0.15s ease-out" // Только параллакс анимация когда нет перехода
+            }),
             zIndex: 1
           }}
           onLoad={handlePrimaryLoad}
@@ -169,13 +220,19 @@ export const Background: React.FC = () => {
           alt="New Background"
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
+            top: "50%",
+            left: "50%",
             width: "100%",
             height: "100%",
             objectFit: "cover",
             opacity: secondaryLoaded ? 1 : 0,
-            transition: "opacity 0.8s ease-in-out",
+            transition: parallaxEnabled
+              ? "opacity 0.8s ease-in-out, transform 0.15s ease-out"
+              : "opacity 0.8s ease-in-out",
+            filter: createFilterString(),
+            transform: parallaxEnabled
+              ? `translate(-50%, -50%) scale(${getScaleForBlur()}) translate(${mouseX * -1.2}px, ${mouseY * -1.2}px)`
+              : `translate(-50%, -50%) scale(${getScaleForBlur()})`,
             zIndex: 2
           }}
           onLoad={handleSecondaryLoad}
@@ -212,7 +269,7 @@ export const Background: React.FC = () => {
           </Flex>
         </Flex>
       )}
-    </Box>
+    </div>
   );
 };
 

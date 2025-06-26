@@ -1,12 +1,12 @@
 import * as React from "react";
-import { TextField, Flex, Text, Box, Switch, Slider, Separator, Tabs, Select, Button } from "@radix-ui/themes";
+import { TextField, Flex, Text, Box, Switch, Slider, Separator, Tabs, Select } from "@radix-ui/themes";
 import { SimpleTooltip } from "./SimpleTooltip";
 import { GalleryImage } from "./GalleryImage";
 import { Drawer } from "./Drawer";
-import { Cross2Icon, ChevronDownIcon, ChevronUpIcon, GlobeIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
+import { Cross2Icon, ChevronDownIcon, ChevronUpIcon, GlobeIcon, PlusIcon, TrashIcon, PlayIcon, PauseIcon } from "@radix-ui/react-icons";
 import { PrimaryButton, SecondaryButton, ActionIconButton } from "./ActionButtons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { addImage, removeImage, setCurrentBackground, setFilter, resetFilters, setBackgroundType, setSolidBackground, setGradientBackground } from "../store/backgroundSlice";
+import { addImage, removeImage, setCurrentBackground, setFilter, resetFilters, setBackgroundType, setSolidBackground, setGradientBackground, setParallaxEnabled, setAutoSwitchEnabled, setAutoSwitchMode, switchToRandomImage } from "../store/backgroundSlice";
 import { setLinksColor, setClockColor, setClockEnabled, setClockShowSeconds, setClockShowDate, setClockSize, setRadixTheme } from "../store/themeSlice";
 import { validateImageUrl } from "../utils/imageValidation";
 import { ColorPicker } from "./ColorPicker";
@@ -20,7 +20,7 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
   const dispatch = useAppDispatch();
-  const { images, currentBackground, filters, backgroundType, solidBackground, gradientBackground } = useAppSelector((state) => state.background);
+  const { images, currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, autoSwitch } = useAppSelector((state) => state.background);
   const { colors, clock, radixTheme } = useAppSelector((state) => state.theme);
   const [imageUrl, setImageUrl] = React.useState("");
   const [isValidating, setIsValidating] = React.useState(false);
@@ -66,6 +66,8 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
   const handleRemoveImage = (imageId: string) => {
     dispatch(removeImage(imageId));
   };
+
+
 
   const handleSetBackground = (imageUrl: string) => {
     dispatch(setCurrentBackground(imageUrl));
@@ -125,6 +127,8 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
                   value={radixTheme}
                   onChange={(theme) => dispatch(setRadixTheme(theme))}
                 />
+
+
 
                 <ColorPicker
                   label="Цвет ссылок (общий)"
@@ -268,14 +272,57 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
                         </ActionIconButton>
                       </SimpleTooltip>
                     </Flex>
+
+                    {/* Переключатель параллакса */}
+                    <Box>
+                      <Flex align="center" gap="2">
+                        <Switch
+                          checked={parallaxEnabled}
+                          onCheckedChange={(checked) => dispatch(setParallaxEnabled(checked))}
+                        />
+                        <Text size="2" weight="medium">
+                          Эффект параллакса
+                        </Text>
+                      </Flex>
+                      <Text size="1" color="gray" mt="1">
+                        Фоновое изображение будет следовать за движением мышки
+                      </Text>
+                    </Box>
                   </Flex>
 
             {/* Мини-галерея */}
             {images.length > 0 && (
               <Box mt="4">
-                <Text size="3" weight="medium" mb="3">
-                  Галерея ({images.length})
-                </Text>
+                <Flex align="center" justify="between" mb="3">
+                  <Text size="3" weight="medium">
+                    Галерея ({images.length})
+                  </Text>
+
+                  {/* Автоматическое переключение */}
+                  <Flex align="center" gap="2">
+                    <SimpleTooltip content={autoSwitch.enabled ? "Остановить автоматическое переключение" : "Запустить автоматическое переключение"}>
+                      <ActionIconButton
+                        onClick={() => dispatch(setAutoSwitchEnabled(!autoSwitch.enabled))}
+                        variant="soft"
+                        size="1"
+                      >
+                        {autoSwitch.enabled ? <PauseIcon /> : <PlayIcon />}
+                      </ActionIconButton>
+                    </SimpleTooltip>
+
+                    <Select.Root
+                      value={autoSwitch.mode}
+                      onValueChange={(value) => dispatch(setAutoSwitchMode(value as any))}
+                      size="1"
+                    >
+                      <Select.Trigger style={{ minWidth: "120px" }} />
+                      <Select.Content style={{ zIndex: 10000 }}>
+                        <Select.Item value="onLoad">При загрузке</Select.Item>
+                        <Select.Item value="daily">Раз в день</Select.Item>
+                      </Select.Content>
+                    </Select.Root>
+                  </Flex>
+                </Flex>
                 <Box
                   style={{
                     display: "grid",
@@ -723,6 +770,22 @@ scrollStyle.textContent = `
 
   .gallery-item:active img {
     transform: scale(1.05) !important;
+  }
+
+  /* Анимация для кнопки автоподбора цветов */
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 `;
 

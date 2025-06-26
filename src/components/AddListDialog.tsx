@@ -66,7 +66,7 @@ export const AddListDialog: React.FC<AddListDialogProps> = ({ open, onOpenChange
               <Button variant="soft" color="gray" type="button" onClick={handleClose}>
                 Отмена
               </Button>
-              <Button type="submit" variant="solid" color="mint">
+              <Button type="submit" variant="solid">
                 Создать
               </Button>
             </Flex>

@@ -196,7 +196,10 @@ export const App: React.FC = () => {
         minHeight: "100vh",
         background: "transparent",
         display: "flex",
-        flexDirection: "column"
+        flexDirection: "column",
+        margin: 0,
+        padding: 0,
+        position: "relative"
       }}>
         {/* Верхняя панель с кнопками */}
       <Flex align="center" justify="start" gap="2" p="4">

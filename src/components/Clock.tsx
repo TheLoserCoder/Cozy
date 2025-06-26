@@ -46,7 +46,7 @@ export const Clock: React.FC = () => {
         mb={clock.showDate ? "3" : "0"}
         style={{
           fontSize: "4rem",
-          fontWeight: "300",
+          fontWeight: "700",
           letterSpacing: "-0.02em",
           color: clock.color,
           transition: "all 0.3s ease"
