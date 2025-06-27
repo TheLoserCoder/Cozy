@@ -2,9 +2,10 @@ import * as React from "react";
 import { TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
 import { ColorPicker } from "./ColorPicker";
-import { DeleteButton, CancelButton, PrimaryButton } from "./ActionButtons";
+import { IconPicker } from "./IconPicker";
+import { DeleteIconButton, CancelButton, PrimaryButton } from "./ActionButtons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setListColor } from "../store/listsSlice";
+import { setListColor, setListSeparatorColor, setListLinkColor, setListIcon, setListIconColor } from "../store/listsSlice";
 
 interface EditListDialogProps {
   open: boolean;
@@ -12,6 +13,10 @@ interface EditListDialogProps {
   initialTitle: string;
   listId: string;
   initialColor?: string;
+  initialSeparatorColor?: string;
+  initialLinkColor?: string;
+  initialIcon?: string;
+  initialIconColor?: string;
   onSubmit: (title: string) => void;
   onDelete?: () => void;
 }
@@ -22,22 +27,41 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
   initialTitle,
   listId,
   initialColor,
+  initialSeparatorColor,
+  initialLinkColor,
+  initialIcon,
+  initialIconColor,
   onSubmit,
   onDelete
 }) => {
   const dispatch = useAppDispatch();
-  const { lists } = useAppSelector((state) => state.theme);
+  const { lists, radixTheme } = useAppSelector((state) => state.theme);
   const [title, setTitle] = React.useState(initialTitle);
   const [customColor, setCustomColor] = React.useState(initialColor || "");
+  const [customSeparatorColor, setCustomSeparatorColor] = React.useState(initialSeparatorColor || "");
+  const [customLinkColor, setCustomLinkColor] = React.useState(initialLinkColor || "");
+  const [icon, setIcon] = React.useState(initialIcon || "");
+  const [iconColor, setIconColor] = React.useState(initialIconColor || "");
 
   React.useEffect(() => {
     setTitle(initialTitle);
     setCustomColor(initialColor || "");
-  }, [initialTitle, initialColor, open]);
+    setCustomSeparatorColor(initialSeparatorColor || "");
+    setCustomLinkColor(initialLinkColor || "");
+    setIcon(initialIcon || "");
+    setIconColor(initialIconColor || "");
+  }, [initialTitle, initialColor, initialSeparatorColor, initialLinkColor, initialIcon, initialIconColor, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim()) {
+      // Применяем все изменения при сохранении
+      dispatch(setListColor({ id: listId, color: customColor || undefined }));
+      dispatch(setListSeparatorColor({ id: listId, color: customSeparatorColor || undefined }));
+      dispatch(setListLinkColor({ id: listId, color: customLinkColor || undefined }));
+      dispatch(setListIcon({ id: listId, icon: icon || undefined }));
+      dispatch(setListIconColor({ id: listId, color: iconColor || undefined }));
+
       onSubmit(title.trim());
       onOpenChange(false);
     }
@@ -46,6 +70,10 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
   const handleClose = () => {
     setTitle(initialTitle);
     setCustomColor(initialColor || "");
+    setCustomSeparatorColor(initialSeparatorColor || "");
+    setCustomLinkColor(initialLinkColor || "");
+    setIcon(initialIcon || "");
+    setIconColor(initialIconColor || "");
     onOpenChange(false);
   };
 
@@ -58,12 +86,42 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
 
   const handleColorChange = (color: string) => {
     setCustomColor(color);
-    dispatch(setListColor({ id: listId, color }));
   };
 
   const handleColorReset = () => {
     setCustomColor("");
-    dispatch(setListColor({ id: listId, color: undefined }));
+  };
+
+  const handleSeparatorColorChange = (color: string) => {
+    setCustomSeparatorColor(color);
+  };
+
+  const handleSeparatorColorReset = () => {
+    setCustomSeparatorColor("");
+  };
+
+  const handleLinkColorChange = (color: string) => {
+    setCustomLinkColor(color);
+  };
+
+  const handleLinkColorReset = () => {
+    setCustomLinkColor("");
+  };
+
+  const handleIconChange = (iconName: string | undefined) => {
+    setIcon(iconName || "");
+  };
+
+  const handleIconReset = () => {
+    setIcon("");
+  };
+
+  const handleIconColorChange = (color: string) => {
+    setIconColor(color);
+  };
+
+  const handleIconColorReset = () => {
+    setIconColor("");
   };
 
   return (
@@ -107,17 +165,53 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
 
             <ColorPicker
               label="Цвет заголовка"
-              value={customColor}
+              value={customColor || lists.titleColor || radixTheme}
               onChange={handleColorChange}
               onReset={handleColorReset}
               showReset={true}
               disableAlpha={false}
             />
+
+            <ColorPicker
+              label="Цвет разделителя"
+              value={customSeparatorColor || lists.separatorColor || radixTheme}
+              onChange={handleSeparatorColorChange}
+              onReset={handleSeparatorColorReset}
+              showReset={true}
+              disableAlpha={false}
+            />
+
+            <ColorPicker
+              label="Цвет ссылок"
+              value={customLinkColor || lists.linkColor || `color-mix(in srgb, ${radixTheme} 70%, var(--gray-12) 30%)`}
+              onChange={handleLinkColorChange}
+              onReset={handleLinkColorReset}
+              showReset={true}
+              disableAlpha={false}
+            />
+
+            <IconPicker
+              label="Иконка списка"
+              value={icon || undefined}
+              onChange={handleIconChange}
+              onReset={handleIconReset}
+              showReset={true}
+            />
+
+            {icon && (
+              <ColorPicker
+                label="Цвет иконки"
+                value={iconColor || customColor || lists.titleColor || radixTheme}
+                onChange={handleIconColorChange}
+                onReset={handleIconColorReset}
+                showReset={true}
+                disableAlpha={false}
+              />
+            )}
+
             <Flex gap="3" justify="between" mt="2">
               {onDelete && (
-                <DeleteButton onClick={handleDelete}>
-                  Удалить
-                </DeleteButton>
+                <DeleteIconButton onClick={handleDelete} aria-label="Удалить список" />
               )}
               <Flex gap="3" ml="auto">
                 <CancelButton onClick={handleClose}>

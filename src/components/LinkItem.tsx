@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Flex, Text, IconButton } from "@radix-ui/themes";
+import { Flex, IconButton, Link } from "@radix-ui/themes";
 import { Pencil2Icon, TrashIcon } from "@radix-ui/react-icons";
 import { useAppSelector } from "../store/hooks";
 import { EditLinkDialog } from "./EditLinkDialog";
@@ -11,6 +11,7 @@ interface LinkItemProps {
   iconUrl?: string;
   color?: string;
   customColor?: string;
+  listLinkColor?: string; // Индивидуальный цвет ссылок списка
   className?: string;
   isDragging?: boolean;
   style?: React.CSSProperties;
@@ -28,6 +29,7 @@ export const LinkItem: React.FC<LinkItemProps> = ({
   iconUrl,
   color,
   customColor,
+  listLinkColor,
   className,
   isDragging = false,
   style = {},
@@ -39,17 +41,10 @@ export const LinkItem: React.FC<LinkItemProps> = ({
   const [editOpen, setEditOpen] = React.useState(false);
   const [showButtons, setShowButtons] = React.useState(false);
 
-  // Функции для открытия ссылок
-  const openInNewWindow = () => {
-    window.open(url, '_blank');
-  };
 
-  const openInCurrentTab = () => {
-    window.location.href = url;
-  };
 
-  // Определяем цвет ссылки: кастомный, настройки списков, или менее насыщенный акцентный
-  const linkColor = customColor || lists.linkColor || `color-mix(in srgb, ${radixTheme} 70%, var(--gray-12) 30%)`;
+  // Определяем цвет ссылки: кастомный цвет ссылки, индивидуальный цвет ссылок списка, настройки списков, или менее насыщенный акцентный
+  const linkColor = customColor || listLinkColor || lists.linkColor || `color-mix(in srgb, ${radixTheme} 70%, var(--gray-12) 30%)`;
 
   const linkStyle = {
     color: linkColor,
@@ -69,6 +64,7 @@ export const LinkItem: React.FC<LinkItemProps> = ({
         onMouseLeave={() => setShowButtons(false)}
       >
         <Flex
+          className="list-item"
           align="center"
           gap="3"
           px="3"
@@ -100,8 +96,9 @@ export const LinkItem: React.FC<LinkItemProps> = ({
               />
             </span>
           )}
-          <Text
-            as="span"
+          <Link
+            href={url}
+            target="_self"
             size="3"
             weight="medium"
             style={{
@@ -111,13 +108,12 @@ export const LinkItem: React.FC<LinkItemProps> = ({
               flex: 1,
               background: "transparent",
               color: linkColor,
-              cursor: "pointer"
+              textDecoration: "none",
+              fontFamily: "var(--app-font-family, inherit)"
             }}
-            onClick={openInNewWindow}
-            onDoubleClick={openInCurrentTab}
           >
             {title}
-          </Text>
+          </Link>
 
           {/* Кнопки редактирования и удаления */}
           {listId && (

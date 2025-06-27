@@ -6,28 +6,37 @@ import { Drawer } from "./Drawer";
 import { Cross2Icon, ChevronDownIcon, ChevronUpIcon, GlobeIcon, PlusIcon, TrashIcon, PlayIcon, PauseIcon, UpdateIcon } from "@radix-ui/react-icons";
 import { PrimaryButton, ActionIconButton } from "./ActionButtons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { addImage, removeImage, setCurrentBackground, setFilter, resetFilters, setBackgroundType, setSolidBackground, setGradientBackground, setParallaxEnabled, setShadowOverlayEnabled, setShadowOverlayIntensity, setShadowOverlayHeight, setAutoSwitchEnabled, setAutoSwitchMode, switchToRandomImage } from "../store/backgroundSlice";
-import { setClockColor, setClockEnabled, setClockShowSeconds, setClockShowDate, setClockSize, setRadixTheme, setListBackgroundColor, setListBackdropBlur, setListTitleColor, setListLinkColor, setListHideBackground, setListSeparatorColor, setListSeparatorHidden, setListSeparatorThickness, setListBorderColor, setListBorderHidden, setListBorderThickness, setListHideIcons, resetToDefaultTheme } from "../store/themeSlice";
-import { resetAllCustomColors } from "../store/listsSlice";
+import { addImage, removeImage, setCurrentBackground, setFilter, resetFilters, setBackgroundType, setSolidBackground, setGradientBackground, setCustomGradientCSS, setParallaxEnabled, setShadowOverlayEnabled, setShadowOverlayIntensity, setShadowOverlayHeight, setAutoSwitchEnabled, setAutoSwitchMode, switchToRandomImage } from "../store/backgroundSlice";
+import { setClockColor, setClockEnabled, setClockShowSeconds, setClockShowDate, setClockSize, setRadixTheme, setListBackgroundColor, setListBackdropBlur, setListTitleColor, setListLinkColor, setListHideBackground, setListSeparatorColor, setListSeparatorHidden, setListSeparatorThickness, setListBorderColor, setListBorderHidden, setListBorderThickness, setListHideIcons, setSearchVisible, setSearchBackgroundColor, setSearchBorderColor, setSearchTextColor, setSearchEngine, setSearchSize, setSearchBackdropBlur, setFontFamily, resetToDefaultTheme } from "../store/themeSlice";
+
+import { resetAllCustomColors, toggleListEnabled } from "../store/listsSlice";
 import { validateImageUrl } from "../utils/imageValidation";
 import { ColorPicker } from "./ColorPicker";
 import { RadixThemePicker } from "./RadixThemePicker";
 import { AutoColorButton } from "./AutoColorButton";
+import { FontSelector } from "./FontSelector";
+import { PresetManager } from "./PresetManager";
+import { SEARCH_ENGINES } from "../data/searchEngines";
 import { nanoid } from "nanoid";
 
 interface SettingsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAddList?: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
+const Settings: React.FC<SettingsProps> = ({ open, onOpenChange, onAddList }) => {
+  const [presetDialogOpen, setPresetDialogOpen] = React.useState(false);
   const dispatch = useAppDispatch();
   const { images, currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, shadowOverlay, autoSwitch } = useAppSelector((state) => state.background);
-  const { colors, clock, lists, radixTheme } = useAppSelector((state) => state.theme);
+  const { colors, clock, lists, search, font, radixTheme } = useAppSelector((state) => state.theme);
+
+  const allLists = useAppSelector((state) => state.lists);
   const [imageUrl, setImageUrl] = React.useState("");
   const [isValidating, setIsValidating] = React.useState(false);
   const [error, setError] = React.useState("");
   const [filtersExpanded, setFiltersExpanded] = React.useState(false);
+  const [customGradientCSS, setCustomGradientCSSLocal] = React.useState(gradientBackground.customCSS || "");
 
   console.log("Settings component - images:", images, "currentBackground:", currentBackground, "colors:", colors, "clock:", clock, "radixTheme:", radixTheme);
 
@@ -89,7 +98,13 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} side="left" width={420}>
+    <>
+      <Drawer
+        open={open}
+        onOpenChange={onOpenChange}
+        side="left"
+        width={420}
+      >
       <Box p="4" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
         <Flex justify="between" align="center" mb="4">
           <Text size="5" weight="bold">
@@ -117,6 +132,13 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
             }}
             className="settings-scroll"
           >
+            {/* Пресеты */}
+            <Box>
+              <PresetManager onDialogOpenChange={setPresetDialogOpen} />
+            </Box>
+
+            <Separator size="4" />
+
             {/* Настройки цветов */}
             <Box>
               <Text size="4" weight="bold" mb="3">
@@ -129,7 +151,9 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
                     <RadixThemePicker
                       label="Акцентный цвет (кнопки, заголовки списков)"
                       value={radixTheme}
-                      onChange={(theme) => dispatch(setRadixTheme(theme))}
+                      onChange={(theme) => {
+                        dispatch(setRadixTheme(theme));
+                      }}
                     />
                   </Box>
                   <AutoColorButton size="2" />
@@ -393,10 +417,163 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
 
                   </Flex>
                 </Box>
+
+                {/* Группа: Управление списками */}
+                <Box>
+                  <Text size="3" weight="medium" mb="2" color="gray">
+                    Управление списками
+                  </Text>
+                  <Flex direction="column" gap="2">
+                    {/* Кнопка добавления списка */}
+                    <Flex align="center" justify="between">
+                      <Text size="2" weight="medium">
+                        Добавить новый список
+                      </Text>
+                      <ActionIconButton
+                        variant="soft"
+                        size="2"
+                        onClick={() => onAddList?.()}
+                        aria-label="Добавить список"
+                      >
+                        <PlusIcon />
+                      </ActionIconButton>
+                    </Flex>
+
+                    {/* Список всех списков с переключателями */}
+                    {allLists.map((list) => (
+                      <Flex key={list.id} align="center" justify="between">
+                        <Text size="2" weight="medium" style={{ opacity: list.enabled === false ? 0.5 : 1 }}>
+                          {list.title}
+                        </Text>
+                        <Switch
+                          checked={list.enabled !== false}
+                          onCheckedChange={() => dispatch(toggleListEnabled(list.id))}
+                        />
+                      </Flex>
+                    ))}
+                  </Flex>
+                </Box>
               </Flex>
             </Box>
 
             <Separator size="4" />
+
+            {/* Настройки поиска */}
+            <Box>
+              <Text size="4" weight="bold" mb="3">
+                Поисковик
+              </Text>
+
+              <Flex direction="column" gap="3">
+                {/* Видимость поисковика */}
+                <Flex align="center" justify="between">
+                  <Text size="2" weight="medium">
+                    Показать поисковик
+                  </Text>
+                  <Switch
+                    checked={search.visible}
+                    onCheckedChange={(checked) => dispatch(setSearchVisible(checked))}
+                  />
+                </Flex>
+
+                {search.visible && (
+                  <>
+                    {/* Выбор поисковой системы */}
+                    <Box>
+                      <Text size="2" mb="2" weight="medium" as="div">
+                        Поисковая система
+                      </Text>
+                      <Select.Root
+                        value={search.searchEngine}
+                        onValueChange={(value) => dispatch(setSearchEngine(value))}
+                      >
+                        <Select.Trigger style={{ width: '100%' }} />
+                        <Select.Content style={{ zIndex: 10000 }}>
+                          {SEARCH_ENGINES.map((engine) => (
+                            <Select.Item key={engine.id} value={engine.id}>
+                              {engine.name}
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Root>
+                    </Box>
+
+                    {/* Цветовые настройки */}
+                    <ColorPicker
+                      label="Цвет фона"
+                      value={search.backgroundColor || 'rgba(255, 255, 255, 0.1)'}
+                      onChange={(color) => dispatch(setSearchBackgroundColor(color))}
+                      disableAlpha={false}
+                    />
+
+                    <ColorPicker
+                      label="Цвет границы"
+                      value={search.borderColor || radixTheme}
+                      onChange={(color) => dispatch(setSearchBorderColor(color))}
+                      disableAlpha={false}
+                    />
+
+                    <ColorPicker
+                      label="Цвет текста"
+                      value={search.textColor || '#FFFFFF'}
+                      onChange={(color) => dispatch(setSearchTextColor(color))}
+                      disableAlpha={false}
+                    />
+
+                    {/* Размытие фона */}
+                    <Flex align="center" justify="between">
+                      <Text size="2" weight="medium">
+                        Размытие фона
+                      </Text>
+                      <Switch
+                        checked={search.backdropBlur}
+                        onCheckedChange={(checked) => dispatch(setSearchBackdropBlur(checked))}
+                      />
+                    </Flex>
+
+                    {/* Размер поисковика */}
+                    <Box>
+                      <Flex align="center" justify="between" mb="2">
+                        <Text size="2" weight="medium">
+                          Размер поисковика
+                        </Text>
+                        <Text size="1" color="gray">
+                          {Math.round(search.size * 100)}%
+                        </Text>
+                      </Flex>
+                      <Slider
+                        value={[search.size]}
+                        onValueChange={([value]) => dispatch(setSearchSize(value))}
+                        min={0.8}
+                        max={1.5}
+                        step={0.1}
+                        style={{ width: '100%' }}
+                      />
+                    </Box>
+                  </>
+                )}
+              </Flex>
+            </Box>
+
+            <Separator size="4" />
+
+            {/* Настройки шрифтов */}
+            <Box>
+              <Text size="4" weight="bold" mb="3">
+                Шрифты
+              </Text>
+
+              <Flex direction="column" gap="3">
+                <FontSelector
+                  value={font.fontFamily}
+                  onValueChange={(fontId) => dispatch(setFontFamily(fontId))}
+                />
+              </Flex>
+            </Box>
+
+            <Separator size="4" />
+
+
 
             <Text size="4" weight="bold" mb="2">
               Фон
@@ -767,6 +944,29 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
                         </Select.Root>
                       </Box>
                     )}
+
+                    {/* Поле для кастомного CSS градиента */}
+                    <Box>
+                      <Text size="2" mb="2" weight="medium" as="div">
+                        CSS градиент (необязательно)
+                      </Text>
+                      <TextField.Root
+                        value={customGradientCSS}
+                        onChange={(e) => {
+                          setCustomGradientCSSLocal(e.target.value);
+                          dispatch(setCustomGradientCSS(e.target.value));
+                        }}
+                        placeholder="linear-gradient(45deg, #ff0000, #0000ff)"
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: "12px",
+                          width: "100%"
+                        }}
+                      />
+                      <Text size="1" color="gray" mt="1" as="div">
+                        Введите CSS строку градиента для применения вместо ручной настройки
+                      </Text>
+                    </Box>
                   </Flex>
                 </Box>
               </Tabs.Content>
@@ -943,6 +1143,22 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange }) => {
         </form>
       </Box>
     </Drawer>
+
+    {/* CSS для управления z-index настроек */}
+    <style>
+      {`
+        /* Уменьшаем z-index настроек когда открыт диалог пресета */
+        ${presetDialogOpen ? `
+          [data-radix-drawer-content] {
+            z-index: 5000 !important;
+          }
+          [data-radix-drawer-overlay] {
+            z-index: 4999 !important;
+          }
+        ` : ''}
+      `}
+    </style>
+  </>
   );
 };
 

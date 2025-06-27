@@ -5,10 +5,13 @@ import { LinkItem } from "./components/LinkList";
 import { LinkListItem } from "./entities/list/list.types";
 import { generateLinkId } from "./store/linkId";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
+import { useFontLoader } from "./hooks/useFontLoader";
 import { addList, editListTitle, addLinkToList, reorderLinksInList, moveLinkToList, deleteList, setListColor, editLink, deleteLink, setLinkColor } from "./store/listsSlice";
 import { createList } from "./entities/list/list.utils";
 import { getFaviconUrl } from "./utils/favicon";
 import { Clock } from "./components/Clock";
+import { SearchBox } from "./components/SearchBox";
+
 import { Background } from "./components/Background";
 import {
   DndContext,
@@ -23,7 +26,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { Flex, Box } from "@radix-ui/themes";
-import { GearIcon, PlusIcon } from "@radix-ui/react-icons";
+import { GearIcon } from "@radix-ui/react-icons";
 import { ActionIconButton } from "./components/ActionButtons";
 import { AddListDialog } from "./components/AddListDialog";
 import Settings from "./components/settings";
@@ -37,6 +40,9 @@ export const App: React.FC = () => {
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const [addListOpen, setAddListOpen] = React.useState(false);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+
+  // Загружаем и применяем выбранный шрифт
+  useFontLoader();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -220,16 +226,18 @@ export const App: React.FC = () => {
         <ActionIconButton variant="soft" size="3" onClick={() => setSettingsOpen(true)} aria-label="Настройки">
           <GearIcon />
         </ActionIconButton>
-        <ActionIconButton variant="solid" size="3" onClick={() => setAddListOpen(true)} aria-label="Добавить список">
-          <PlusIcon />
-        </ActionIconButton>
       </Flex>
 
       {/* Центральная область с часами и списками */}
       <Flex direction="column" align="center" justify="center" style={{ flex: 1 }} gap="6">
         <Clock />
 
-        {/* Списки под часами */}
+        {/* Поисковик между часами и списками */}
+        <SearchBox />
+
+
+
+        {/* Списки под быстрыми ссылками */}
         <Box>
         <DndContext
           sensors={sensors}
@@ -246,7 +254,7 @@ export const App: React.FC = () => {
             wrap="wrap"
             px="4"
           >
-            {lists.map((list) => (
+            {lists.filter(list => list.enabled !== false).map((list) => (
               <LinkList
                 key={list.id}
                 title={list.title}
@@ -277,7 +285,11 @@ export const App: React.FC = () => {
         </Box>
       </Flex>
 
-        <Settings open={settingsOpen} onOpenChange={setSettingsOpen} />
+        <Settings
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          onAddList={() => setAddListOpen(true)}
+        />
         <AddListDialog open={addListOpen} onOpenChange={setAddListOpen} onSubmit={handleAddList} />
       </Box>
     </>

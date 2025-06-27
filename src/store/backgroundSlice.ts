@@ -31,6 +31,7 @@ export interface GradientBackground {
   colors: string[];
   direction?: string; // для linear: "to right", "45deg", etc.
   position?: string; // для radial: "center", "top left", etc.
+  customCSS?: string; // Пользовательская CSS строка градиента
 }
 
 interface BackgroundState {
@@ -352,6 +353,10 @@ const backgroundSlice = createSlice({
       state.gradientBackground = action.payload;
       saveGradientBackgroundToStorage(action.payload);
     },
+    setCustomGradientCSS: (state, action: PayloadAction<string>) => {
+      state.gradientBackground.customCSS = action.payload;
+      saveGradientBackgroundToStorage(state.gradientBackground);
+    },
     setParallaxEnabled: (state, action: PayloadAction<boolean>) => {
       state.parallaxEnabled = action.payload;
       saveParallaxToStorage(action.payload);
@@ -398,6 +403,70 @@ const backgroundSlice = createSlice({
         state.autoSwitch.lastSwitchDate = new Date().toDateString();
         saveAutoSwitchToStorage(state.autoSwitch);
       }
+    },
+    // Применение фона из пресета
+    applyPresetBackground: (state, action: PayloadAction<{
+      type: 'image' | 'solid' | 'gradient';
+      value: string;
+      filters?: any;
+      images?: any[];
+      parallaxEnabled?: boolean;
+      shadowOverlay?: any;
+      autoSwitch?: any;
+    }>) => {
+      const { type, value, filters, images, parallaxEnabled, shadowOverlay, autoSwitch } = action.payload;
+
+      state.backgroundType = type;
+
+      switch (type) {
+        case 'image':
+          state.currentBackground = value;
+          break;
+        case 'solid':
+          state.solidBackground.color = value;
+          break;
+        case 'gradient':
+          // Для градиентов value содержит CSS градиент
+          // Простая реализация - сохраняем как есть
+          state.gradientBackground = {
+            type: 'linear',
+            colors: [value], // Упрощенно
+            direction: 'to right'
+          };
+          break;
+      }
+
+      // Применяем фильтры
+      if (filters) {
+        state.filters = { ...filters };
+        saveFiltersToStorage(state.filters);
+      }
+
+      // Применяем изображения
+      if (images) {
+        state.images = [...images];
+        saveImagesToStorage(state.images);
+      }
+
+      // Применяем настройки параллакса
+      if (parallaxEnabled !== undefined) {
+        state.parallaxEnabled = parallaxEnabled;
+        saveParallaxToStorage(state.parallaxEnabled);
+      }
+
+      // Применяем настройки затенения
+      if (shadowOverlay) {
+        state.shadowOverlay = { ...shadowOverlay };
+        saveShadowOverlayToStorage(state.shadowOverlay);
+      }
+
+      // Применяем настройки автопереключения
+      if (autoSwitch) {
+        state.autoSwitch = { ...autoSwitch };
+        saveAutoSwitchToStorage(state.autoSwitch);
+      }
+
+      saveBackgroundTypeToStorage(state.backgroundType);
     }
   },
 });
@@ -413,6 +482,7 @@ export const {
   setBackgroundType,
   setSolidBackground,
   setGradientBackground,
+  setCustomGradientCSS,
   setParallaxEnabled,
   setShadowOverlayEnabled,
   setShadowOverlayIntensity,
@@ -421,7 +491,8 @@ export const {
   setAutoSwitchMode,
   setAutoSwitchLastDate,
   switchToRandomImage,
-  resetAutoSwitchQueue
+  resetAutoSwitchQueue,
+  applyPresetBackground
 } = backgroundSlice.actions;
 
 export default backgroundSlice.reducer;

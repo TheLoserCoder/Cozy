@@ -83,6 +83,34 @@ const listsSlice = createSlice({
         saveListsToStorage(state);
       }
     },
+    setListSeparatorColor(state, action: PayloadAction<{ id: string; color?: string }>) {
+      const list = state.find(l => l.id === action.payload.id);
+      if (list) {
+        list.customSeparatorColor = action.payload.color;
+        saveListsToStorage(state);
+      }
+    },
+    setListLinkColor(state, action: PayloadAction<{ id: string; color?: string }>) {
+      const list = state.find(l => l.id === action.payload.id);
+      if (list) {
+        list.customLinkColor = action.payload.color;
+        saveListsToStorage(state);
+      }
+    },
+    setListIcon(state, action: PayloadAction<{ id: string; icon?: string }>) {
+      const list = state.find(l => l.id === action.payload.id);
+      if (list) {
+        list.icon = action.payload.icon;
+        saveListsToStorage(state);
+      }
+    },
+    setListIconColor(state, action: PayloadAction<{ id: string; color?: string }>) {
+      const list = state.find(l => l.id === action.payload.id);
+      if (list) {
+        list.iconColor = action.payload.color;
+        saveListsToStorage(state);
+      }
+    },
     deleteList(state, action: PayloadAction<string>) {
       const idx = state.findIndex(l => l.id === action.payload);
       if (idx !== -1) {
@@ -148,10 +176,49 @@ const listsSlice = createSlice({
       state.forEach(list => {
         // Сбрасываем цвет списка
         list.customColor = undefined;
+        // Сбрасываем цвет разделителя списка
+        list.customSeparatorColor = undefined;
+        // Сбрасываем цвет ссылок списка
+        list.customLinkColor = undefined;
+        // Сбрасываем цвет иконки списка
+        list.iconColor = undefined;
+        // НЕ сбрасываем саму иконку списка - только цвета!
+        // list.icon остается без изменений
         // Сбрасываем цвета всех ссылок в списке
         list.links.forEach(link => {
           link.customColor = undefined;
         });
+      });
+      saveListsToStorage(state);
+    },
+    resetAllCustomStyles(state) {
+      state.forEach(list => {
+        // Сбрасываем ВСЕ индивидуальные стили включая иконки
+        list.customColor = undefined;
+        list.customSeparatorColor = undefined;
+        list.customLinkColor = undefined;
+        list.iconColor = undefined;
+        list.icon = undefined; // Сбрасываем и саму иконку
+        // Сбрасываем цвета всех ссылок в списке
+        list.links.forEach(link => {
+          link.customColor = undefined;
+        });
+      });
+      saveListsToStorage(state);
+    },
+    toggleListEnabled(state, action: PayloadAction<string>) {
+      const list = state.find(l => l.id === action.payload);
+      if (list) {
+        list.enabled = list.enabled === false ? true : false;
+        saveListsToStorage(state);
+      }
+    },
+    applyListStates(state, action: PayloadAction<{ [listId: string]: boolean }>) {
+      const listStates = action.payload;
+      state.forEach(list => {
+        if (listStates.hasOwnProperty(list.id)) {
+          list.enabled = listStates[list.id];
+        }
       });
       saveListsToStorage(state);
     },
@@ -164,12 +231,19 @@ export const {
   editListTitle,
   deleteList,
   setListColor,
+  setListSeparatorColor,
+  setListLinkColor,
+  setListIcon,
+  setListIconColor,
   addLinkToList,
   editLink,
   deleteLink,
   setLinkColor,
   reorderLinksInList,
   moveLinkToList,
-  resetAllCustomColors
+  resetAllCustomColors,
+  resetAllCustomStyles,
+  toggleListEnabled,
+  applyListStates
 } = listsSlice.actions;
 export default listsSlice.reducer;

@@ -9,6 +9,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Card, Flex, Text, Heading, Box, IconButton } from "@radix-ui/themes";
 import { Pencil2Icon, PlusIcon, ExternalLinkIcon } from "@radix-ui/react-icons";
+import * as RadixIcons from "@radix-ui/react-icons";
 import { AddLinkDialog } from "./AddLinkDialog";
 import { EditListDialog } from "./EditListDialog";
 import { LinkListItem } from "../entities/list/list.types";
@@ -31,11 +32,13 @@ function SortableLinkItem({
   link,
   activeId,
   listId,
+  listLinkColor,
   onDelete,
 }: {
   link: LinkListItem;
   activeId?: string | null;
   listId: string;
+  listLinkColor?: string;
   onDelete?: (linkId: string) => void;
 }) {
   const {
@@ -60,6 +63,7 @@ function SortableLinkItem({
       <LinkItem
         {...link}
         listId={listId}
+        listLinkColor={listLinkColor}
         isDragging={isDragging || isActive}
         dragHandleProps={{
           ...attributes,
@@ -85,6 +89,8 @@ export function LinkList({
 }: LinkListProps) {
   const { setNodeRef } = useDroppable({ id: listId });
   const { lists, radixTheme } = useAppSelector((state) => state.theme);
+  const allLists = useAppSelector((state) => state.lists);
+  const currentList = allLists.find(list => list.id === listId);
   const items = React.useMemo(() => links.map((l) => l.id), [links]);
   const [addOpen, setAddOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
@@ -147,12 +153,38 @@ export function LinkList({
         ref={setNodeRef}
         style={cardStyle}
         variant="surface"
-        onMouseDown={handleListMouseDown}
-        onDoubleClick={handleListDoubleClick}
       >
         <Flex direction="column" gap="3" style={{ background: 'transparent' }}>
           <Flex align="center" justify="between" style={{ background: 'transparent' }}>
-            <Heading size="4" as="h2" style={{ color: titleColor, background: 'transparent' }}>{title}</Heading>
+            <Flex
+              align="center"
+              gap="2"
+              style={{
+                background: 'transparent',
+                cursor: 'pointer'
+              }}
+              onMouseDown={handleListMouseDown}
+              onDoubleClick={handleListDoubleClick}
+            >
+              {currentList?.icon && (() => {
+                const IconComponent = (RadixIcons as any)[currentList.icon];
+                if (IconComponent) {
+                  const iconColor = currentList.iconColor || titleColor;
+                  return (
+                    <IconComponent
+                      style={{
+                        width: 20,
+                        height: 20,
+                        color: iconColor,
+                        flexShrink: 0
+                      }}
+                    />
+                  );
+                }
+                return null;
+              })()}
+              <Heading className="list-title" size="4" as="h2" style={{ color: titleColor, background: 'transparent', fontFamily: "var(--app-font-family, inherit)" }}>{title}</Heading>
+            </Flex>
             <Flex gap="2" style={{ background: 'transparent' }}>
               <IconButton
                 variant="soft"
@@ -175,7 +207,7 @@ export function LinkList({
               style={{
                 width: '100%',
                 height: `${lists.separatorThickness}px`,
-                backgroundColor: lists.separatorColor || 'var(--accent-9)',
+                backgroundColor: currentList?.customSeparatorColor || lists.separatorColor || 'var(--accent-9)',
                 borderRadius: '1px',
                 margin: '8px 0'
               }}
@@ -188,6 +220,7 @@ export function LinkList({
                 link={link}
                 activeId={activeId}
                 listId={listId}
+                listLinkColor={currentList?.customLinkColor}
                 onDelete={onDeleteLink}
               />
             ))}
@@ -199,7 +232,11 @@ export function LinkList({
           onOpenChange={setEditOpen}
           initialTitle={title}
           listId={listId}
-          initialColor={customColor}
+          initialColor={currentList?.customColor}
+          initialSeparatorColor={currentList?.customSeparatorColor}
+          initialLinkColor={currentList?.customLinkColor}
+          initialIcon={currentList?.icon}
+          initialIconColor={currentList?.iconColor}
           onSubmit={handleEditList}
           onDelete={onDeleteList}
         />

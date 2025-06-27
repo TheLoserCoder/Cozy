@@ -2,7 +2,7 @@ import * as React from "react";
 import { TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
 import { ColorPicker } from "./ColorPicker";
-import { DeleteButton, CancelButton, PrimaryButton } from "./ActionButtons";
+import { DeleteIconButton, CancelButton, PrimaryButton } from "./ActionButtons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { editLink, deleteLink, setLinkColor } from "../store/listsSlice";
 import { getFaviconUrl } from "../utils/favicon";
@@ -43,7 +43,8 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
     if (title.trim() && url.trim()) {
       // Автоматически извлекаем домен для заголовка, если заголовок пустой
       const finalTitle = title.trim() || extractDomainFromUrl(url.trim());
-      
+
+      // Применяем изменения ссылки
       dispatch(editLink({
         listId,
         linkId,
@@ -53,6 +54,10 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
           iconUrl: getFaviconUrl(url.trim())
         }
       }));
+
+      // Применяем изменения цвета
+      dispatch(setLinkColor({ listId, linkId, color: customColor || undefined }));
+
       onOpenChange(false);
     }
   };
@@ -73,12 +78,10 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
 
   const handleColorChange = (color: string) => {
     setCustomColor(color);
-    dispatch(setLinkColor({ listId, linkId, color }));
   };
 
   const handleColorReset = () => {
     setCustomColor("");
-    dispatch(setLinkColor({ listId, linkId, color: undefined }));
   };
 
   const extractDomainFromUrl = (url: string): string => {
@@ -160,9 +163,7 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
             />
             
             <Flex gap="3" justify="between" mt="2">
-              <DeleteButton onClick={handleDelete}>
-                Удалить
-              </DeleteButton>
+              <DeleteIconButton onClick={handleDelete} aria-label="Удалить ссылку" />
 
               <Flex gap="3" ml="auto">
                 <CancelButton onClick={handleClose}>

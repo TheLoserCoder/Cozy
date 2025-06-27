@@ -101,7 +101,10 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
               <CancelButton onClick={handleClose}>
                 Отмена
               </CancelButton>
-              <PrimaryButton type="submit">
+              <PrimaryButton
+                type="submit"
+                disabled={!title.trim() || !url.trim()}
+              >
                 Добавить
               </PrimaryButton>
             </Flex>

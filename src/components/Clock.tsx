@@ -44,6 +44,7 @@ export const Clock: React.FC = () => {
 
   return (
     <Box
+      className="clock-component"
       mb="6"
       p="4"
       style={{
@@ -61,7 +62,8 @@ export const Clock: React.FC = () => {
           fontWeight: "700",
           letterSpacing: "-0.02em",
           color: clock.color,
-          transition: "all 0.3s ease"
+          transition: "all 0.3s ease",
+          fontFamily: "var(--app-font-family, inherit)"
         }}
       >
         {formattedTime}
@@ -74,7 +76,8 @@ export const Clock: React.FC = () => {
             fontWeight: "400",
             color: clock.color,
             opacity: 0.8,
-            transition: "all 0.3s ease"
+            transition: "all 0.3s ease",
+            fontFamily: "var(--app-font-family, inherit)"
           }}
         >
           {time.toLocaleDateString("ru-RU", {

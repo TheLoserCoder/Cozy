@@ -3,6 +3,7 @@ import { Box, Flex, Text } from "@radix-ui/themes";
 import { UpdateIcon } from "@radix-ui/react-icons";
 import { ActionIconButton } from "./ActionButtons";
 import { SketchPicker, ColorResult } from "react-color";
+import { createPortal } from "react-dom";
 
 interface ColorPickerProps {
   value: string;
@@ -40,16 +41,71 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     }
   };
 
+  const calculatePosition = () => {
+    if (!triggerRef.current) return { top: 0, left: 0 };
+
+    const rect = triggerRef.current.getBoundingClientRect();
+    const pickerHeight = 300;
+    const pickerWidth = 225;
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const margin = 8;
+
+    // Начальная позиция - под триггером, центрированная
+    let top = rect.bottom + margin;
+    let left = rect.left + (rect.width / 2) - (pickerWidth / 2);
+
+    // Проверяем, помещается ли пикер снизу
+    if (top + pickerHeight > viewportHeight - margin) {
+      // Если не помещается снизу, размещаем сверху
+      top = rect.top - pickerHeight - margin;
+    }
+
+    // Проверяем горизонтальные границы
+    if (left + pickerWidth > viewportWidth - margin) {
+      left = viewportWidth - pickerWidth - margin;
+    }
+
+    if (left < margin) {
+      left = margin;
+    }
+
+    // Если все еще не помещается сверху, размещаем в видимой области
+    if (top < margin) {
+      top = margin;
+    }
+
+    return { top, left };
+  };
+
   const handleTriggerClick = () => {
-    if (!showPicker && triggerRef.current) {
-      // Простое позиционирование относительно триггера
-      setPickerPosition({
-        top: 40, // Фиксированное расстояние от триггера
-        left: 0
-      });
+    if (!showPicker) {
+      const position = calculatePosition();
+      setPickerPosition(position);
     }
     setShowPicker(!showPicker);
   };
+
+  // Обновление позиции при изменении размера окна или прокрутке
+  React.useEffect(() => {
+    if (!showPicker) return;
+
+    const updatePosition = () => {
+      const position = calculatePosition();
+      setPickerPosition(position);
+    };
+
+    const handleResize = () => updatePosition();
+    const handleScroll = () => updatePosition();
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [showPicker]);
 
   // Закрытие при клике вне компонента
   React.useEffect(() => {
@@ -113,14 +169,14 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         </Flex>
       </Flex>
 
-      {showPicker && (
+      {showPicker && createPortal(
         <Box
           style={{
-            position: "absolute",
+            position: "fixed",
             top: pickerPosition.top,
             left: pickerPosition.left,
             zIndex: 2147483649,
-            marginTop: "4px"
+            pointerEvents: "auto"
           }}
         >
           <SketchPicker
@@ -128,7 +184,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             onChange={handleColorChange}
             disableAlpha={disableAlpha}
           />
-        </Box>
+        </Box>,
+        document.body
       )}
     </Box>
   );

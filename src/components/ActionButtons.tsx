@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Button, IconButton } from "@radix-ui/themes";
+import { TrashIcon } from "@radix-ui/react-icons";
 
 // Кнопка удаления (красная)
 interface DeleteButtonProps {
@@ -34,6 +35,43 @@ export const DeleteButton: React.FC<DeleteButtonProps> = ({
     >
       {children}
     </Button>
+  );
+};
+
+// Иконка удаления (красная мусорка)
+interface DeleteIconButtonProps {
+  onClick: () => void;
+  variant?: "solid" | "soft";
+  size?: "1" | "2" | "3" | "4";
+  disabled?: boolean;
+  type?: "button" | "submit" | "reset";
+  "aria-label"?: string;
+}
+
+export const DeleteIconButton: React.FC<DeleteIconButtonProps> = ({
+  onClick,
+  variant = "soft",
+  size,
+  disabled = false,
+  type = "button",
+  "aria-label": ariaLabel = "Удалить"
+}) => {
+  return (
+    <IconButton
+      variant={variant}
+      onClick={onClick}
+      disabled={disabled}
+      type={type}
+      size={size}
+      aria-label={ariaLabel}
+      style={{
+        backgroundColor: variant === "solid" ? "#E5484D" : "rgba(229, 72, 77, 0.1)",
+        color: variant === "solid" ? "white" : "#E5484D",
+        borderColor: "#E5484D"
+      }}
+    >
+      <TrashIcon />
+    </IconButton>
   );
 };
 

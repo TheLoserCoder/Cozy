@@ -45,7 +45,14 @@ export const Background: React.FC = () => {
 
   // Создаем CSS для градиента
   const createGradientCSS = () => {
-    const { type, colors, direction, position } = gradientBackground;
+    const { type, colors, direction, position, customCSS } = gradientBackground;
+
+    // Если задан кастомный CSS, используем его
+    if (customCSS && customCSS.trim()) {
+      return customCSS;
+    }
+
+    // Иначе используем стандартную генерацию
     if (type === 'linear') {
       return `linear-gradient(${direction || 'to right'}, ${colors.join(', ')})`;
     } else {
