@@ -194,6 +194,30 @@ const importSettings = (dispatch: any) => {
           return Date.now().toString(36) + Math.random().toString(36).substring(2);
         };
 
+        // Создаем маппинг старых ID фонов на новые
+        const backgroundIdMapping: Record<string, string> = {};
+
+        // Импортируем фоновые изображения (добавляем к существующим)
+        const importedImages = data.localStorage['background-images'];
+        if (importedImages) {
+          const newImages = JSON.parse(importedImages);
+          if (Array.isArray(newImages)) {
+            // Генерируем новые ID для импортируемых изображений и создаем маппинг
+            const imagesWithNewIds = newImages.map((image: any) => {
+              const newId = generateNewId();
+              backgroundIdMapping[image.id] = newId; // Сохраняем маппинг старый ID -> новый ID
+              return {
+                ...image,
+                id: newId
+              };
+            });
+
+            // Объединяем изображения с новыми ID
+            const mergedImages = [...currentImages, ...imagesWithNewIds];
+            localStorage.setItem('background-images', JSON.stringify(mergedImages));
+          }
+        }
+
         // Применяем настройки темы (перезаписываем)
         const importedTheme = data.localStorage['theme-colors'];
         if (importedTheme) {
@@ -202,11 +226,25 @@ const importSettings = (dispatch: any) => {
           // Сохраняем текущие пресеты для объединения
           const importedPresets = themeData.presets || [];
 
-          // Генерируем новые ID для импортируемых пресетов
-          const presetsWithNewIds = importedPresets.map((preset: any) => ({
-            ...preset,
-            id: generateNewId()
-          }));
+          // Генерируем новые ID для импортируемых пресетов и обновляем ID фонов
+          const presetsWithNewIds = importedPresets.map((preset: any) => {
+            const updatedPreset = {
+              ...preset,
+              id: generateNewId()
+            };
+
+            // Обновляем ID фона в пресете, если он ссылается на импортированное изображение
+            if (preset.data?.background?.type === 'image' && preset.data.background.value) {
+              const oldBackgroundId = preset.data.background.value;
+              const newBackgroundId = backgroundIdMapping[oldBackgroundId];
+              if (newBackgroundId) {
+                updatedPreset.data.background.value = newBackgroundId;
+                console.log(`Updated preset "${preset.name}" background ID: ${oldBackgroundId} -> ${newBackgroundId}`);
+              }
+            }
+
+            return updatedPreset;
+          });
 
           // Применяем тему без пресетов
           const themeWithoutPresets = { ...themeData };
@@ -219,26 +257,8 @@ const importSettings = (dispatch: any) => {
           localStorage.setItem('theme-colors', JSON.stringify(themeWithoutPresets));
         }
 
-        // Импортируем фоновые изображения (добавляем к существующим)
-        const importedImages = data.localStorage['background-images'];
-        if (importedImages) {
-          const newImages = JSON.parse(importedImages);
-          if (Array.isArray(newImages)) {
-            // Генерируем новые ID для импортируемых изображений
-            const imagesWithNewIds = newImages.map((image: any) => ({
-              ...image,
-              id: generateNewId()
-            }));
-
-            // Объединяем изображения с новыми ID
-            const mergedImages = [...currentImages, ...imagesWithNewIds];
-            localStorage.setItem('background-images', JSON.stringify(mergedImages));
-          }
-        }
-
         // Применяем остальные настройки фона (перезаписываем)
         const backgroundKeys = [
-          'current-background',
           'background-filters',
           'background-type',
           'solid-background',
@@ -253,6 +273,21 @@ const importSettings = (dispatch: any) => {
             localStorage.setItem(key, data.localStorage[key]);
           }
         });
+
+        // Обрабатываем current-background отдельно, чтобы обновить ID если нужно
+        const importedCurrentBackground = data.localStorage['current-background'];
+        if (importedCurrentBackground) {
+          // Проверяем, есть ли маппинг для этого ID фона
+          const newBackgroundId = backgroundIdMapping[importedCurrentBackground];
+          if (newBackgroundId) {
+            // Используем новый ID
+            localStorage.setItem('current-background', newBackgroundId);
+            console.log(`Updated current background ID: ${importedCurrentBackground} -> ${newBackgroundId}`);
+          } else {
+            // Используем оригинальный ID (возможно, это не импортированное изображение)
+            localStorage.setItem('current-background', importedCurrentBackground);
+          }
+        }
 
         // Импортируем списки (добавляем к существующим)
         const importedLists = data.localStorage['lists'];
