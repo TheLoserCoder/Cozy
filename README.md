@@ -5,19 +5,14 @@ A cozy and beautiful browser extension that replaces your new tab page with a st
 ## Screenshots
 
 ![Main Interface](Screenshots/Screen%200.png)
-*Main interface with customizable clock and quick links*
 
 ![Settings Panel](Screenshots/Screen%201.png)
-*Comprehensive settings panel with theme customization*
 
 ![Background Options](Screenshots/Screen%202.png)
-*Beautiful background options and filters*
 
 ![Lists and Organization](Screenshots/Screen%203.png)
-*Todo lists and link organization features*
 
 ![Color Customization](Screenshots/Screen%204.png)
-*Advanced color customization and presets*
 
 ## Features
 
