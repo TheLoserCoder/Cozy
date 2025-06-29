@@ -6,11 +6,15 @@ import { LinkListItem } from "./entities/list/list.types";
 import { generateLinkId } from "./store/linkId";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { useFontLoader } from "./hooks/useFontLoader";
+import { useErrorHandler } from "./hooks/useErrorHandler";
 import { addList, editListTitle, addLinkToList, reorderLinksInList, moveLinkToList, deleteList, setListColor, editLink, deleteLink, setLinkColor } from "./store/listsSlice";
+import { applyAllStandardSettings } from "./store/themeSlice";
+import { syncLanguageFromRedux, useTranslation } from "./locales";
 import { createList } from "./entities/list/list.utils";
 import { getFaviconUrl } from "./utils/favicon";
 import { Clock } from "./components/Clock";
 import { SearchBox } from "./components/SearchBox";
+import { FastLinksGrid } from "./components/FastLinksGrid";
 
 import { Background } from "./components/Background";
 import {
@@ -30,19 +34,48 @@ import { GearIcon } from "@radix-ui/react-icons";
 import { ActionIconButton } from "./components/ActionButtons";
 import { AddListDialog } from "./components/AddListDialog";
 import Settings from "./components/settings";
+import { ErrorTestComponent } from "./components/ErrorTestComponent";
 
 
 
 export const App: React.FC = () => {
   const dispatch = useAppDispatch();
   const lists = useAppSelector((state) => state.lists);
-  const { lists: listsSettings } = useAppSelector((state) => state.theme);
+  const { lists: listsSettings, cleanMode, language } = useAppSelector((state) => state.theme);
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const [addListOpen, setAddListOpen] = React.useState(false);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const { t } = useTranslation();
+
+  // Инициализируем обработчик ошибок
+  const { handleError, handleAsyncError } = useErrorHandler('App');
 
   // Загружаем и применяем выбранный шрифт
   useFontLoader();
+
+  // Синхронизируем язык из Redux с системой переводов
+  React.useEffect(() => {
+    syncLanguageFromRedux(language);
+  }, [language]);
+
+  // Инициализация стандартных настроек только при самом первом запуске
+  React.useEffect(() => {
+    // Проверяем, есть ли какие-либо сохраненные данные приложения
+    const hasThemeSettings = localStorage.getItem('theme-settings');
+    const hasBackgroundSettings = localStorage.getItem('background-images');
+    const hasFirstRunFlag = localStorage.getItem('app-initialized');
+
+    // Если нет флага инициализации И нет основных настроек - это первый запуск
+    const isFirstRun = !hasFirstRunFlag && !hasThemeSettings && !hasBackgroundSettings;
+
+    if (isFirstRun) {
+      console.log('First run detected, applying standard settings...');
+      // Устанавливаем флаг, что приложение было инициализировано
+      localStorage.setItem('app-initialized', 'true');
+      // Применяем все стандартные настройки
+      dispatch(applyAllStandardSettings());
+    }
+  }, [dispatch]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -57,12 +90,20 @@ export const App: React.FC = () => {
 
   // Управление CSS классом для скрытия границ карточек
   React.useEffect(() => {
-    if (listsSettings.hideBackground) {
-      document.body.classList.add('hide-card-borders');
-    } else {
-      document.body.classList.remove('hide-card-borders');
+    try {
+      if (listsSettings.hideBackground) {
+        document.body.classList.add('hide-card-borders');
+      } else {
+        document.body.classList.remove('hide-card-borders');
+      }
+    } catch (error) {
+      handleError(error as Error, {
+        shouldReload: false,
+        logToConsole: true,
+        logToStorage: true
+      });
     }
-  }, [listsSettings.hideBackground]);
+  }, [listsSettings.hideBackground, handleError]);
 
   function findContainer(id: string): string | undefined {
     // Проверяем, является ли id идентификатором списка
@@ -176,16 +217,24 @@ export const App: React.FC = () => {
   }
 
   const handleAddLink = (listId: string) => (data: { title: string; url: string }) => {
-    const newLink: LinkListItem = {
-      id: generateLinkId(),
-      ...data,
-      iconUrl: getFaviconUrl(data.url)
-    };
+    try {
+      const newLink: LinkListItem = {
+        id: generateLinkId(),
+        ...data,
+        iconUrl: getFaviconUrl(data.url)
+      };
 
-    dispatch(addLinkToList({
-      listId,
-      link: newLink
-    }));
+      dispatch(addLinkToList({
+        listId,
+        link: newLink
+      }));
+    } catch (error) {
+      handleError(error as Error, {
+        shouldReload: false,
+        logToConsole: true,
+        logToStorage: true
+      });
+    }
   };
 
   const handleEditList = (listId: string) => (newTitle: string) => {
@@ -204,9 +253,17 @@ export const App: React.FC = () => {
   };
 
   const handleAddList = (title: string) => {
-    const newList = createList(title);
-    dispatch(addList(newList));
-    setAddListOpen(false);
+    try {
+      const newList = createList(title);
+      dispatch(addList(newList));
+      setAddListOpen(false);
+    } catch (error) {
+      handleError(error as Error, {
+        shouldReload: false,
+        logToConsole: true,
+        logToStorage: true
+      });
+    }
   };
 
   return (
@@ -223,7 +280,32 @@ export const App: React.FC = () => {
       }}>
         {/* Верхняя панель с кнопками */}
       <Flex align="center" justify="start" gap="2" p="4">
-        <ActionIconButton variant="soft" size="3" onClick={() => setSettingsOpen(true)} aria-label="Настройки">
+        <ActionIconButton
+          variant="soft"
+          color="gray"
+          size="3"
+          onClick={() => setSettingsOpen(true)}
+          aria-label={t('settings.title')}
+          style={{
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)', // Для Safari
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            color: '#FFFFFF',
+            opacity: cleanMode ? 0.6 : 1,
+            cursor: 'pointer',
+            transition: 'opacity 0.3s ease',
+          }}
+          onMouseEnter={(e) => {
+            if (cleanMode) {
+              e.currentTarget.style.opacity = '1';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (cleanMode) {
+              e.currentTarget.style.opacity = '0.6';
+            }
+          }}
+        >
           <GearIcon />
         </ActionIconButton>
       </Flex>
@@ -235,7 +317,10 @@ export const App: React.FC = () => {
         {/* Поисковик между часами и списками */}
         <SearchBox />
 
-
+        {/* Быстрые ссылки между поисковиком и списками */}
+        <Box style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <FastLinksGrid />
+        </Box>
 
         {/* Списки под быстрыми ссылками */}
         <Box>
@@ -246,30 +331,38 @@ export const App: React.FC = () => {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <Flex
-            direction="row"
-            gap="5"
-            justify="center"
-            align="stretch"
-            wrap="wrap"
-            px="4"
-          >
-            {lists.filter(list => list.enabled !== false).map((list) => (
-              <LinkList
-                key={list.id}
-                title={list.title}
-                links={list.links}
-                listId={list.id}
-                customColor={list.customColor}
-                activeId={activeId}
-                onAddLink={handleAddLink(list.id)}
-                onEditList={handleEditList(list.id)}
-                onDeleteList={handleDeleteList(list.id)}
-                onDeleteLink={handleDeleteLink(list.id)}
-              />
-            ))}
-          </Flex>
-          <DragOverlay>
+          <>
+            {listsSettings.enabled && (
+              <Box
+                px="4"
+                mb="20px"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${lists.length > listsSettings.gridColumns ? listsSettings.gridColumns : lists.length  }, auto)`,
+                  gap: 'var(--space-4)',
+                  justifyItems: 'start',
+                  justifyContent: 'center',
+                  alignItems: 'start'
+                }}
+              >
+                {lists.filter(list => list.enabled !== false).map((list) => (
+                <LinkList
+                  key={list.id}
+                  title={list.title}
+                  links={list.links}
+                  listId={list.id}
+                  customColor={list.customColor}
+                  activeId={activeId}
+                  onAddLink={handleAddLink(list.id)}
+                  onEditList={handleEditList(list.id)}
+                  onDeleteList={handleDeleteList(list.id)}
+                  onDeleteLink={handleDeleteLink(list.id)}
+                  cleanMode={cleanMode}
+                />
+                ))}
+              </Box>
+            )}
+            <DragOverlay>
             {activeId && (() => {
               const allLinks = lists.flatMap(list => list.links);
               const item = allLinks.find((l) => l.id === activeId);
@@ -281,6 +374,7 @@ export const App: React.FC = () => {
               ) : null;
             })()}
           </DragOverlay>
+          </>
         </DndContext>
         </Box>
       </Flex>
@@ -291,6 +385,9 @@ export const App: React.FC = () => {
           onAddList={() => setAddListOpen(true)}
         />
         <AddListDialog open={addListOpen} onOpenChange={setAddListOpen} onSubmit={handleAddList} />
+
+        {/* Компонент для тестирования ошибок (только в development) */}
+        {process.env.NODE_ENV === 'development' && <ErrorTestComponent />}
       </Box>
     </>
   );

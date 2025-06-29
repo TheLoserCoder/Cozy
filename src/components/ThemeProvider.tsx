@@ -4,7 +4,7 @@ import { useAppSelector } from "../store/hooks";
 import "@radix-ui/themes/styles.css";
 
 export const AppThemeProvider: React.FC<React.PropsWithChildren<Partial<ThemeProps>>> = ({ children, ...props }) => {
-  const { colors, radixTheme } = useAppSelector((state) => state.theme);
+  const { colors, radixTheme, radixRadius } = useAppSelector((state) => state.theme);
 
   // Применяем кастомные CSS переменные для цветов
   React.useEffect(() => {
@@ -69,7 +69,7 @@ export const AppThemeProvider: React.FC<React.PropsWithChildren<Partial<ThemePro
     // CSS с максимальным приоритетом
     styleElement.textContent = `
       /* Принудительное переопределение всех цветов Radix */
-      .radix-themes {
+      #root .radix-themes {
         --my-brand-color: ${radixTheme} !important;
 
         /* Переопределяем indigo */
@@ -144,7 +144,8 @@ export const AppThemeProvider: React.FC<React.PropsWithChildren<Partial<ThemePro
     `;
 
     console.log('Applying custom Radix theme color:', radixTheme);
-  }, [colors, radixTheme]);
+    console.log('Applying custom Radix radius:', radixRadius);
+  }, [colors, radixTheme, radixRadius]);
 
   return (
     <Theme
@@ -152,11 +153,99 @@ export const AppThemeProvider: React.FC<React.PropsWithChildren<Partial<ThemePro
       grayColor="sage"
       panelBackground="solid"
       scaling="100%"
-      radius="full"
+      radius={radixRadius as any}
       appearance="light"
       {...props}
     >
       {children}
     </Theme>
+  );
+};
+
+// Провайдер темы для настроек и диалогов с фиксированным серым акцентом
+export const SettingsThemeProvider: React.FC<React.PropsWithChildren<Partial<ThemeProps>>> = ({ children, ...props }) => {
+  const { radixRadius } = useAppSelector((state) => state.theme);
+
+  React.useEffect(() => {
+    // Добавляем стили для скролла в настройках
+    const style = document.createElement('style');
+    style.id = 'settings-scroll-styles';
+    style.textContent = `
+      /* Стили скролла для всех элементов внутри провайдера темы */
+      .settings-theme-provider * {
+        scrollbar-width: thin !important;
+        scrollbar-color: var(--gray-6) transparent !important;
+      }
+
+      .settings-theme-provider *::-webkit-scrollbar {
+        width: 8px !important;
+      }
+
+      .settings-theme-provider *::-webkit-scrollbar-track {
+        background: transparent !important;
+      }
+
+      .settings-theme-provider *::-webkit-scrollbar-thumb {
+        background-color: var(--gray-6) !important;
+        border-radius: 4px !important;
+      }
+
+      .settings-theme-provider *::-webkit-scrollbar-thumb:hover {
+        background-color: var(--gray-7) !important;
+      }
+
+      /* Специальные стили для основного контейнера настроек */
+      .settings-theme-provider .settings-scroll {
+        scrollbar-width: thin !important;
+        scrollbar-color: var(--gray-6) transparent !important;
+      }
+
+      .settings-theme-provider .settings-scroll::-webkit-scrollbar {
+        width: 8px !important;
+      }
+
+      .settings-theme-provider .settings-scroll::-webkit-scrollbar-track {
+        background: transparent !important;
+      }
+
+      .settings-theme-provider .settings-scroll::-webkit-scrollbar-thumb {
+        background-color: var(--gray-6) !important;
+        border-radius: 4px !important;
+      }
+
+      .settings-theme-provider .settings-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: var(--gray-7) !important;
+      }
+    `;
+
+    if (!document.head.querySelector('#settings-scroll-styles')) {
+      document.head.appendChild(style);
+    }
+
+    return () => {
+      const existingStyle = document.head.querySelector('#settings-scroll-styles');
+      if (existingStyle) {
+        document.head.removeChild(existingStyle);
+      }
+    };
+  }, []);
+
+  return (
+    <div className="settings-theme-provider">
+      <Theme
+        accentColor="gray"
+        grayColor="gray"
+        panelBackground="solid"
+        scaling="100%"
+        radius={radixRadius as any}
+        appearance="light"
+        style={{
+          overflow: "scroll"
+        }}
+        {...props}
+      >
+        {children}
+      </Theme>
+    </div>
   );
 };

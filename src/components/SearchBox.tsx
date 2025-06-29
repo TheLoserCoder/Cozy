@@ -3,11 +3,27 @@ import { Box } from "@radix-ui/themes";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { useAppSelector } from "../store/hooks";
 import { getSearchEngine } from "../data/searchEngines";
+import { useTranslation } from "../locales";
 
 export const SearchBox: React.FC = () => {
-  const { search, radixTheme } = useAppSelector((state) => state.theme);
+  const { search, radixTheme, language } = useAppSelector((state) => state.theme);
+  const { t } = useTranslation();
   const [query, setQuery] = React.useState("");
   const [isFocused, setIsFocused] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  // Автофокус на поле поиска при загрузке страницы
+  React.useEffect(() => {
+    if (search.visible && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [search.visible]);
+
+  // Принудительное обновление при смене языка
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+  React.useEffect(() => {
+    forceUpdate();
+  }, [language]);
 
   // Не отображаем поисковик, если он скрыт
   if (!search.visible) {
@@ -31,10 +47,10 @@ export const SearchBox: React.FC = () => {
     }
   };
 
-  // Определяем цвета с учетом настроек
+  // Определяем цвета с учетом настроек и fallback к стандартным значениям
   const backgroundColor = search.backgroundColor || 'rgba(255, 255, 255, 0.1)';
-  const borderColor = search.borderColor || radixTheme || 'var(--accent-9)';
-  const textColor = search.textColor || '#FFFFFF';
+  const borderColor = search.borderColor || radixTheme;
+  const textColor = search.textColor || radixTheme;
 
   // Размер поисковика
   const scale = search.size || 1.0;
@@ -69,13 +85,14 @@ export const SearchBox: React.FC = () => {
           }}
         >
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder={searchEngine.placeholder}
+            placeholder={t(searchEngine.placeholderKey)}
             style={{
               width: '100%',
               backgroundColor: backgroundColor,

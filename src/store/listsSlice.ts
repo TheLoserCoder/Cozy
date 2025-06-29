@@ -1,59 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { LinkList, LinkListItem } from "../entities/list/list.types";
 import { getListsFromStorage, saveListsToStorage } from "../entities/list/list.storage";
-import { getFaviconUrl } from "../utils/favicon";
+
 
 // Дефолтные списки, если localStorage пуст
-const defaultLists: LinkList[] = [
-  {
-    id: "favorites",
-    title: "Избранное",
-    links: [
-      {
-        id: "google",
-        url: "https://www.google.com/",
-        title: "Google",
-        iconUrl: getFaviconUrl("https://www.google.com/"),
-      },
-      {
-        id: "youtube",
-        url: "https://www.youtube.com/",
-        title: "YouTube",
-        iconUrl: getFaviconUrl("https://www.youtube.com/"),
-      },
-      {
-        id: "github",
-        url: "https://github.com/",
-        title: "GitHub",
-        iconUrl: getFaviconUrl("https://github.com/"),
-      },
-    ],
-  },
-  {
-    id: "ai",
-    title: "ИИ",
-    links: [
-      {
-        id: "gemini",
-        url: "https://gemini.google.com/",
-        title: "Gemini",
-        iconUrl: getFaviconUrl("https://gemini.google.com/"),
-      },
-      {
-        id: "chatgpt",
-        url: "https://chat.openai.com/",
-        title: "ChatGPT",
-        iconUrl: getFaviconUrl("https://chat.openai.com/"),
-      },
-      {
-        id: "copilot",
-        url: "https://copilot.microsoft.com/",
-        title: "Copilot",
-        iconUrl: getFaviconUrl("https://copilot.microsoft.com/"),
-      },
-    ],
-  },
-];
+const defaultLists: LinkList[] = [];
+
+// Стандартные списки для кнопки сброса (пустые)
+export const standardLists: LinkList[] = [];
 
 const storedLists = getListsFromStorage();
 const initialState: LinkList[] = storedLists.length > 0 ? storedLists : defaultLists;
@@ -222,6 +176,12 @@ const listsSlice = createSlice({
       });
       saveListsToStorage(state);
     },
+    // Сброс к стандартным спискам (пустые)
+    resetToStandardLists(state) {
+      const newState = [...standardLists];
+      saveListsToStorage(newState);
+      return newState;
+    },
   },
 });
 
@@ -244,6 +204,7 @@ export const {
   resetAllCustomColors,
   resetAllCustomStyles,
   toggleListEnabled,
-  applyListStates
+  applyListStates,
+  resetToStandardLists
 } = listsSlice.actions;
 export default listsSlice.reducer;

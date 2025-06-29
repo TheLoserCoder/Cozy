@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { AppThemeProvider } from "./ThemeProvider";
+import { SettingsThemeProvider } from "./ThemeProvider";
 
 interface ThemedDialogProps extends React.PropsWithChildren<{
   open: boolean;
@@ -106,7 +106,7 @@ export const ThemedDialog: React.FC<ThemedDialogProps & { title?: React.ReactNod
                 pointerEvents: "none",
               }}
             >
-              <AppThemeProvider>
+              <SettingsThemeProvider>
                 <div
                   className={contentClassName}
                   style={{
@@ -114,9 +114,9 @@ export const ThemedDialog: React.FC<ThemedDialogProps & { title?: React.ReactNod
                     animation: `${open ? "themed-dialog-fade-in" : "themed-dialog-fade-out"} 0.25s cubic-bezier(.4,0,.2,1) forwards`,
                   }}
                 >
-                  {/* Прозрачность для .radix-themes.light внутри диалога */}
+                  {/* Прозрачность для .radix-themes внутри диалога */}
                   <style>{`
-                    .radix-themes.light {
+                    .radix-themes {
                       background: transparent !important;
                       box-shadow: none !important;
                     }
@@ -128,7 +128,7 @@ export const ThemedDialog: React.FC<ThemedDialogProps & { title?: React.ReactNod
                   )}
                   {children}
                 </div>
-              </AppThemeProvider>
+              </SettingsThemeProvider>
             </Dialog.Content>
           </>
         )}

@@ -36,7 +36,7 @@ export interface GradientBackground {
 
 interface BackgroundState {
   images: BackgroundImage[];
-  currentBackground: string | null;
+  currentBackground: string | null; // ID изображения, а не URL
   isLoading: boolean;
   filters: BackgroundFilters;
   backgroundType: BackgroundType;
@@ -68,7 +68,7 @@ const AUTO_SWITCH_KEY = 'auto-switch';
 
 const defaultFilters: BackgroundFilters = {
   blur: 0,
-  brightness: 100,
+  brightness: 100, // Яркость по умолчанию 100% для естественного отображения
   contrast: 100,
   saturate: 100,
   hueRotate: 0,
@@ -86,6 +86,42 @@ const defaultGradientBackground: GradientBackground = {
   type: 'linear',
   colors: ['#667eea', '#764ba2'],
   direction: 'to right'
+};
+
+// Стандартные настройки фона для кнопки сброса
+export const standardBackgroundSettings = {
+  backgroundType: 'image' as BackgroundType, // Фон по умолчанию - изображение
+  solidBackground: {
+    color: '#FFFFFF' // Белый цвет (на случай если нет изображений)
+  } as SolidBackground,
+  gradientBackground: {
+    type: 'linear' as const,
+    colors: ['#000000', '#FFFFFF'], // Черный и белый
+    direction: 'to bottom' // Направление вниз
+  } as GradientBackground,
+  filters: {
+    blur: 0,
+    brightness: 100, // Яркость 100% для естественного отображения
+    contrast: 100,
+    saturate: 100,
+    hueRotate: 0,
+    sepia: 0,
+    grayscale: 0,
+    invert: 0,
+    opacity: 100
+  } as BackgroundFilters, // Стандартные фильтры
+  images: [] as BackgroundImage[], // Галерея пустая
+  currentBackground: null as string | null,
+  parallaxEnabled: false,
+  shadowOverlay: {
+    enabled: false,
+    intensity: 0,
+    height: 0
+  },
+  autoSwitch: {
+    enabled: false,
+    mode: 'random' as AutoSwitchMode
+  }
 };
 
 function getImagesFromStorage(): BackgroundImage[] {
@@ -271,15 +307,15 @@ const backgroundSlice = createSlice({
   reducers: {
     addImage: (state, action: PayloadAction<BackgroundImage>) => {
       console.log("Redux: Adding image", action.payload);
-      // Проверяем, что изображение еще не добавлено
-      const exists = state.images.some(img => img.url === action.payload.url);
+      // Проверяем, что изображение с таким ID еще не добавлено
+      const exists = state.images.some(img => img.id === action.payload.id);
       if (!exists) {
         state.images.unshift(action.payload); // Добавляем в начало массива
         saveImagesToStorage(state.images);
 
         // Автоматически устанавливаем новое изображение как текущий фон
-        state.currentBackground = action.payload.url;
-        saveCurrentBackgroundToStorage(action.payload.url);
+        state.currentBackground = action.payload.id;
+        saveCurrentBackgroundToStorage(action.payload.id);
 
         // Сбрасываем дату последнего переключения для автопроигрывания
         // чтобы очередь начиналась с нового изображения
@@ -290,7 +326,7 @@ const backgroundSlice = createSlice({
 
         console.log("Redux: Image added and set as current background, total images:", state.images.length);
       } else {
-        console.log("Redux: Image already exists");
+        console.log("Redux: Image with this ID already exists");
       }
     },
     removeImage: (state, action: PayloadAction<string>) => {
@@ -303,7 +339,7 @@ const backgroundSlice = createSlice({
       saveImagesToStorage(state.images);
 
       // Если удаляемое изображение было текущим фоном
-      if (removedImage && state.currentBackground === removedImage.url) {
+      if (removedImage && state.currentBackground === removedImage.id) {
         if (state.images.length > 0) {
           // Выбираем следующее изображение
           // Если удалили последнее, берем предыдущее, иначе берем то что на том же индексе
@@ -311,8 +347,8 @@ const backgroundSlice = createSlice({
             ? state.images.length - 1
             : removedImageIndex;
 
-          state.currentBackground = state.images[nextIndex].url;
-          saveCurrentBackgroundToStorage(state.images[nextIndex].url);
+          state.currentBackground = state.images[nextIndex].id;
+          saveCurrentBackgroundToStorage(state.images[nextIndex].id);
         } else {
           // Если изображений не осталось, сбрасываем фон
           state.currentBackground = null;
@@ -388,12 +424,12 @@ const backgroundSlice = createSlice({
     switchToRandomImage: (state) => {
       if (state.images.length > 1) {
         // Находим случайное изображение, отличное от текущего
-        const availableImages = state.images.filter(img => img.url !== state.currentBackground);
+        const availableImages = state.images.filter(img => img.id !== state.currentBackground);
         if (availableImages.length > 0) {
           const randomIndex = Math.floor(Math.random() * availableImages.length);
           const randomImage = availableImages[randomIndex];
-          state.currentBackground = randomImage.url;
-          saveCurrentBackgroundToStorage(randomImage.url);
+          state.currentBackground = randomImage.id;
+          saveCurrentBackgroundToStorage(randomImage.id);
         }
       }
     },
@@ -414,16 +450,18 @@ const backgroundSlice = createSlice({
       shadowOverlay?: any;
       autoSwitch?: any;
     }>) => {
-      const { type, value, filters, images, parallaxEnabled, shadowOverlay, autoSwitch } = action.payload;
+      const { type, value, filters, shadowOverlay, autoSwitch } = action.payload;
 
       state.backgroundType = type;
 
       switch (type) {
         case 'image':
           state.currentBackground = value;
+          saveCurrentBackgroundToStorage(value);
           break;
         case 'solid':
           state.solidBackground.color = value;
+          saveSolidBackgroundToStorage(state.solidBackground);
           break;
         case 'gradient':
           // Для градиентов value содержит CSS градиент
@@ -433,6 +471,7 @@ const backgroundSlice = createSlice({
             colors: [value], // Упрощенно
             direction: 'to right'
           };
+          saveGradientBackgroundToStorage(state.gradientBackground);
           break;
       }
 
@@ -442,17 +481,16 @@ const backgroundSlice = createSlice({
         saveFiltersToStorage(state.filters);
       }
 
-      // Применяем изображения
-      if (images) {
-        state.images = [...images];
-        saveImagesToStorage(state.images);
-      }
+      // Не применяем галерею изображений и параллакс из пресетов
+      // if (images) {
+      //   state.images = [...images];
+      //   saveImagesToStorage(state.images);
+      // }
 
-      // Применяем настройки параллакса
-      if (parallaxEnabled !== undefined) {
-        state.parallaxEnabled = parallaxEnabled;
-        saveParallaxToStorage(state.parallaxEnabled);
-      }
+      // if (parallaxEnabled !== undefined) {
+      //   state.parallaxEnabled = parallaxEnabled;
+      //   saveParallaxToStorage(state.parallaxEnabled);
+      // }
 
       // Применяем настройки затенения
       if (shadowOverlay) {
@@ -467,6 +505,29 @@ const backgroundSlice = createSlice({
       }
 
       saveBackgroundTypeToStorage(state.backgroundType);
+    },
+    // Сброс к стандартным настройкам фона
+    resetToStandardBackground: (state) => {
+      state.backgroundType = standardBackgroundSettings.backgroundType;
+      state.solidBackground = { ...standardBackgroundSettings.solidBackground };
+      state.gradientBackground = { ...standardBackgroundSettings.gradientBackground };
+      state.filters = { ...standardBackgroundSettings.filters };
+      state.images = [];
+      state.currentBackground = null;
+      state.parallaxEnabled = standardBackgroundSettings.parallaxEnabled;
+      state.shadowOverlay = { ...standardBackgroundSettings.shadowOverlay };
+      state.autoSwitch = { ...standardBackgroundSettings.autoSwitch };
+
+      // Сохраняем все настройки
+      saveImagesToStorage([]);
+      saveCurrentBackgroundToStorage(null);
+      saveFiltersToStorage(state.filters);
+      saveBackgroundTypeToStorage(state.backgroundType);
+      saveSolidBackgroundToStorage(state.solidBackground);
+      saveGradientBackgroundToStorage(state.gradientBackground);
+      saveParallaxToStorage(state.parallaxEnabled);
+      saveShadowOverlayToStorage(state.shadowOverlay);
+      saveAutoSwitchToStorage(state.autoSwitch);
     }
   },
 });
@@ -492,7 +553,8 @@ export const {
   setAutoSwitchLastDate,
   switchToRandomImage,
   resetAutoSwitchQueue,
-  applyPresetBackground
+  applyPresetBackground,
+  resetToStandardBackground
 } = backgroundSlice.actions;
 
 export default backgroundSlice.reducer;

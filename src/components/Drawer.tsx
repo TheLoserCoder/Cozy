@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AppThemeProvider } from "./ThemeProvider";
+import { useTranslation } from "../locales";
 
 export interface DrawerProps {
   open: boolean;
@@ -20,6 +21,7 @@ export const Drawer: React.FC<DrawerProps> = ({
   const [shouldRender, setShouldRender] = React.useState(open);
   const [isClosing, setIsClosing] = React.useState(false);
   const closeTimeout = React.useRef<number | null>(null);
+  const { t } = useTranslation();
 
   // Управление открытием/закрытием с анимацией
   React.useEffect(() => {
@@ -67,7 +69,7 @@ export const Drawer: React.FC<DrawerProps> = ({
         <Dialog.Content
           asChild
           aria-describedby="drawer-desc"
-          aria-label="Боковая панель"
+          aria-label={t('common.sidebar')}
         >
           <AppThemeProvider>
             {shouldRender && (
@@ -117,7 +119,7 @@ export const Drawer: React.FC<DrawerProps> = ({
                     overflow: "hidden",
                   }}
                 >
-                  Боковая панель с настройками и дополнительным контентом
+                  {t('common.sidebarDescription')}
                 </Dialog.Description>
                 {/* Прокидываем обработчик для кастомной кнопки закрытия */}
                 {React.Children.map(children, (child) =>

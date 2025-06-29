@@ -2,7 +2,7 @@ export interface SearchEngine {
   id: string;
   name: string;
   url: string;
-  placeholder: string;
+  placeholderKey: string; // Ключ для перевода placeholder
 }
 
 export const SEARCH_ENGINES: SearchEngine[] = [
@@ -10,61 +10,61 @@ export const SEARCH_ENGINES: SearchEngine[] = [
     id: 'google',
     name: 'Google',
     url: 'https://www.google.com/search?q=',
-    placeholder: 'Поиск в Google...'
+    placeholderKey: 'search.searchInGoogle'
   },
   {
     id: 'yandex',
-    name: 'Яндекс',
+    name: 'Yandex',
     url: 'https://yandex.ru/search/?text=',
-    placeholder: 'Поиск в Яндексе...'
+    placeholderKey: 'search.searchInYandex'
   },
   {
     id: 'bing',
     name: 'Bing',
     url: 'https://www.bing.com/search?q=',
-    placeholder: 'Поиск в Bing...'
+    placeholderKey: 'search.searchInBing'
   },
   {
     id: 'duckduckgo',
     name: 'DuckDuckGo',
     url: 'https://duckduckgo.com/?q=',
-    placeholder: 'Поиск в DuckDuckGo...'
+    placeholderKey: 'search.searchInDuckDuckGo'
   },
   {
     id: 'yahoo',
     name: 'Yahoo',
     url: 'https://search.yahoo.com/search?p=',
-    placeholder: 'Поиск в Yahoo...'
+    placeholderKey: 'search.searchInYahoo'
   },
   {
     id: 'baidu',
     name: 'Baidu',
     url: 'https://www.baidu.com/s?wd=',
-    placeholder: 'Поиск в Baidu...'
+    placeholderKey: 'search.searchInBaidu'
   },
   {
     id: 'startpage',
     name: 'Startpage',
     url: 'https://www.startpage.com/sp/search?query=',
-    placeholder: 'Поиск в Startpage...'
+    placeholderKey: 'search.searchInStartpage'
   },
   {
     id: 'searx',
     name: 'SearX',
     url: 'https://searx.org/?q=',
-    placeholder: 'Поиск в SearX...'
+    placeholderKey: 'search.searchInSearX'
   },
   {
     id: 'ecosia',
     name: 'Ecosia',
     url: 'https://www.ecosia.org/search?q=',
-    placeholder: 'Поиск в Ecosia...'
+    placeholderKey: 'search.searchInEcosia'
   },
   {
     id: 'brave',
     name: 'Brave Search',
     url: 'https://search.brave.com/search?q=',
-    placeholder: 'Поиск в Brave...'
+    placeholderKey: 'search.searchInBrave'
   }
 ];
 

@@ -11,7 +11,7 @@ export const FONT_OPTIONS: FontOption[] = [
   // Системные шрифты
   {
     id: 'system-ui',
-    name: 'Системный шрифт',
+    name: 'System font',
     family: 'system-ui',
     category: 'sans-serif',
     fallback: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -213,20 +213,68 @@ export const FONT_OPTIONS: FontOption[] = [
     fallback: '"Press Start 2P", monospace'
   },
   {
-    id: 'pixel-operator',
-    name: 'Pixel Operator',
-    family: 'Pixel Operator',
-    category: 'pixel',
-    googleFont: true,
-    fallback: '"Pixel Operator", monospace'
-  },
-  {
     id: 'orbitron',
     name: 'Orbitron',
     family: 'Orbitron',
     category: 'pixel',
     googleFont: true,
     fallback: 'Orbitron, monospace'
+  },
+  {
+    id: 'vt323',
+    name: 'VT323',
+    family: 'VT323',
+    category: 'pixel',
+    googleFont: true,
+    fallback: 'VT323, monospace'
+  },
+  {
+    id: 'share-tech-mono',
+    name: 'Share Tech Mono',
+    family: 'Share Tech Mono',
+    category: 'pixel',
+    googleFont: true,
+    fallback: '"Share Tech Mono", monospace'
+  },
+  {
+    id: 'major-mono-display',
+    name: 'Major Mono Display',
+    family: 'Major Mono Display',
+    category: 'pixel',
+    googleFont: true,
+    fallback: '"Major Mono Display", monospace'
+  },
+  {
+    id: 'silkscreen',
+    name: 'Silkscreen',
+    family: 'Silkscreen',
+    category: 'pixel',
+    googleFont: true,
+    fallback: 'Silkscreen, monospace'
+  },
+  {
+    id: 'pixelify-sans',
+    name: 'Pixelify Sans',
+    family: 'Pixelify Sans',
+    category: 'pixel',
+    googleFont: true,
+    fallback: '"Pixelify Sans", monospace'
+  },
+  {
+    id: 'bungee',
+    name: 'Bungee',
+    family: 'Bungee',
+    category: 'pixel',
+    googleFont: true,
+    fallback: 'Bungee, monospace'
+  },
+  {
+    id: 'audiowide',
+    name: 'Audiowide',
+    family: 'Audiowide',
+    category: 'pixel',
+    googleFont: true,
+    fallback: 'Audiowide, monospace'
   },
 
   // Терминальные шрифты
@@ -269,6 +317,98 @@ export const FONT_OPTIONS: FontOption[] = [
     category: 'terminal',
     googleFont: true,
     fallback: '"Space Mono", monospace'
+  },
+  {
+    id: 'anonymous-pro',
+    name: 'Anonymous Pro',
+    family: 'Anonymous Pro',
+    category: 'terminal',
+    googleFont: true,
+    fallback: '"Anonymous Pro", monospace'
+  },
+  {
+    id: 'pt-mono',
+    name: 'PT Mono',
+    family: 'PT Mono',
+    category: 'terminal',
+    googleFont: true,
+    fallback: '"PT Mono", monospace'
+  },
+  {
+    id: 'cousine',
+    name: 'Cousine',
+    family: 'Cousine',
+    category: 'terminal',
+    googleFont: true,
+    fallback: 'Cousine, monospace'
+  },
+
+  // Дополнительные современные шрифты
+  {
+    id: 'work-sans',
+    name: 'Work Sans',
+    family: 'Work Sans',
+    category: 'sans-serif',
+    googleFont: true,
+    fallback: '"Work Sans", sans-serif'
+  },
+  {
+    id: 'dm-sans',
+    name: 'DM Sans',
+    family: 'DM Sans',
+    category: 'sans-serif',
+    googleFont: true,
+    fallback: '"DM Sans", sans-serif'
+  },
+  {
+    id: 'manrope',
+    name: 'Manrope',
+    family: 'Manrope',
+    category: 'sans-serif',
+    googleFont: true,
+    fallback: 'Manrope, sans-serif'
+  },
+  {
+    id: 'outfit',
+    name: 'Outfit',
+    family: 'Outfit',
+    category: 'sans-serif',
+    googleFont: true,
+    fallback: 'Outfit, sans-serif'
+  },
+  {
+    id: 'plus-jakarta-sans',
+    name: 'Plus Jakarta Sans',
+    family: 'Plus Jakarta Sans',
+    category: 'sans-serif',
+    googleFont: true,
+    fallback: '"Plus Jakarta Sans", sans-serif'
+  },
+
+  // Дополнительные декоративные шрифты
+  {
+    id: 'righteous',
+    name: 'Righteous',
+    family: 'Righteous',
+    category: 'display',
+    googleFont: true,
+    fallback: 'Righteous, cursive'
+  },
+  {
+    id: 'fredoka-one',
+    name: 'Fredoka One',
+    family: 'Fredoka One',
+    category: 'display',
+    googleFont: true,
+    fallback: '"Fredoka One", cursive'
+  },
+  {
+    id: 'comfortaa',
+    name: 'Comfortaa',
+    family: 'Comfortaa',
+    category: 'display',
+    googleFont: true,
+    fallback: 'Comfortaa, cursive'
   }
 ];
 

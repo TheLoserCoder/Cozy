@@ -3,10 +3,19 @@ import { Flex, Text } from "@radix-ui/themes";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { setLoading } from "../store/backgroundSlice";
 import { useAutoSwitch } from "../hooks/useAutoSwitch";
+import { useTranslation } from "../locales";
 
 export const Background: React.FC = () => {
-  const { currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, shadowOverlay } = useAppSelector((state) => state.background);
+  const { currentBackground, images, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, shadowOverlay } = useAppSelector((state) => state.background);
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
+
+  // Получаем URL текущего изображения по ID
+  const currentImageUrl = React.useMemo(() => {
+    if (!currentBackground || backgroundType !== 'image') return null;
+    const currentImage = images.find(img => img.id === currentBackground);
+    return currentImage?.url || null;
+  }, [currentBackground, images, backgroundType]);
 
   // Используем хук автоматического переключения
   useAutoSwitch();
@@ -17,6 +26,9 @@ export const Background: React.FC = () => {
   const [primaryLoaded, setPrimaryLoaded] = React.useState(false);
   const [secondaryLoaded, setSecondaryLoaded] = React.useState(false);
   const [isTransitioning, setIsTransitioning] = React.useState(false);
+
+  // Флаг для отслеживания первой загрузки компонента
+  const [isFirstImageLoaded, setIsFirstImageLoaded] = React.useState(false);
 
   // Состояние для параллакса
   const [mouseX, setMouseX] = React.useState(0);
@@ -81,27 +93,42 @@ export const Background: React.FC = () => {
 
   // Отслеживаем изменения фона для анимации
   React.useEffect(() => {
-    if (backgroundType === 'image' && currentBackground) {
+    if (backgroundType === 'image' && currentImageUrl) {
       // Если это первое изображение
       if (!primaryImage) {
-        setPrimaryImage(currentBackground);
+        setPrimaryImage(currentImageUrl);
         setPrimaryLoaded(false);
         dispatch(setLoading(true));
       }
       // Если изображение изменилось
-      else if (currentBackground !== primaryImage) {
-        setIsTransitioning(true);
-        setSecondaryImage(currentBackground);
-        setSecondaryLoaded(false);
-        dispatch(setLoading(true));
+      else if (currentImageUrl !== primaryImage) {
+        // Если первое изображение еще не загружено, показываем новое сразу без анимации
+        if (!isFirstImageLoaded) {
+          setPrimaryImage(currentImageUrl);
+          setPrimaryLoaded(false);
+          setSecondaryImage(null);
+          setSecondaryLoaded(false);
+          setIsTransitioning(false);
+          dispatch(setLoading(true));
+        } else {
+          // Обычная анимация перехода (только после загрузки первого изображения)
+          setIsTransitioning(true);
+          setSecondaryImage(currentImageUrl);
+          setSecondaryLoaded(false);
+          dispatch(setLoading(true));
+        }
       }
     }
-  }, [currentBackground, backgroundType, primaryImage, dispatch]);
+  }, [currentImageUrl, backgroundType, primaryImage, isFirstImageLoaded, dispatch]);
 
   // Обработчики для основного изображения
   const handlePrimaryLoad = () => {
     setPrimaryLoaded(true);
     dispatch(setLoading(false));
+    // Отмечаем, что первое изображение загружено и можно включать анимации
+    if (!isFirstImageLoaded) {
+      setIsFirstImageLoaded(true);
+    }
   };
 
   const handlePrimaryError = () => {
@@ -166,7 +193,7 @@ export const Background: React.FC = () => {
   }, [parallaxEnabled]);
 
   // Показываем фон только если есть изображение или выбран другой тип фона
-  if (backgroundType === 'image' && !currentBackground) {
+  if (backgroundType === 'image' && !currentImageUrl) {
     return null;
   }
 
@@ -280,10 +307,10 @@ export const Background: React.FC = () => {
         >
           <Flex direction="column" align="center" gap="3">
             <Text size="4" weight="bold" color="red">
-              Ошибка загрузки
+              {t('errors.loadingError')}
             </Text>
             <Text size="3" color="gray" style={{ textAlign: "center" }}>
-              Не удалось загрузить фоновое изображение
+              {t('errors.backgroundLoadError')}
             </Text>
           </Flex>
         </Flex>

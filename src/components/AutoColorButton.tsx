@@ -2,8 +2,10 @@ import * as React from "react";
 import { IconButton, Tooltip } from "@radix-ui/themes";
 import { MagicWandIcon } from "@radix-ui/react-icons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setClockColor, setRadixTheme } from "../store/themeSlice";
-import { setListBackgroundColor, setListTitleColor, setListLinkColor, setListSeparatorColor, setListBorderColor } from "../store/themeSlice";
+import { setClockColor, setRadixTheme, resetAllColorsToAccent, updateLinkedColors } from "../store/themeSlice";
+import { setListBackgroundColor, setListTitleColor, setListSeparatorColor, setListBorderColor } from "../store/themeSlice";
+import { resetAllFastLinkIndividualColors } from "../store/fastLinksSlice";
+import { resetAllCustomColors } from "../store/listsSlice";
 import { getColorPalettes, createAllColorPalettes, ColorAnalysisMode } from "../utils/colorAnalysis";
 
 interface AutoColorButtonProps {
@@ -36,8 +38,15 @@ const MODE_NAMES = {
 
 export const AutoColorButton: React.FC<AutoColorButtonProps> = ({ size = "2" }) => {
   const dispatch = useAppDispatch();
-  const { currentBackground, backgroundType, solidBackground, gradientBackground } = useAppSelector((state) => state.background);
+  const { currentBackground, images, backgroundType, solidBackground, gradientBackground } = useAppSelector((state) => state.background);
   const { lists } = useAppSelector((state) => state.theme);
+
+  // Получаем URL текущего изображения по ID
+  const currentImageUrl = React.useMemo(() => {
+    if (!currentBackground || backgroundType !== 'image') return null;
+    const currentImage = images.find(img => img.id === currentBackground);
+    return currentImage?.url || null;
+  }, [currentBackground, images, backgroundType]);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [currentModeIndex, setCurrentModeIndex] = React.useState(0);
   const [cachedPalettes, setCachedPalettes] = React.useState<any[]>([]);
@@ -47,8 +56,8 @@ export const AutoColorButton: React.FC<AutoColorButtonProps> = ({ size = "2" }) 
   const getColorsFromBackground = async () => {
     switch (backgroundType) {
       case 'image':
-        if (!currentBackground) return null;
-        return await getColorPalettes(currentBackground, lists.backdropBlur);
+        if (!currentImageUrl) return null;
+        return await getColorPalettes(currentImageUrl, lists.backdropBlur);
 
       case 'solid':
         // Создаем палитры на основе одного цвета
@@ -81,7 +90,7 @@ export const AutoColorButton: React.FC<AutoColorButtonProps> = ({ size = "2" }) 
 
     try {
       // Создаем уникальный ключ для текущего фона
-      const currentSource = `${backgroundType}-${backgroundType === 'image' ? currentBackground :
+      const currentSource = `${backgroundType}-${backgroundType === 'image' ? currentImageUrl :
         backgroundType === 'solid' ? solidBackground.color :
         gradientBackground.colors.join(',')}-${lists.backdropBlur}`;
 
@@ -117,15 +126,25 @@ export const AutoColorButton: React.FC<AutoColorButtonProps> = ({ size = "2" }) 
       if (currentPalette) {
         console.log('Applying palette with mode:', currentMode, currentPalette);
 
-        // Применяем цвета
+        // Сначала сбрасываем все цвета к акцентному
+        dispatch(resetAllColorsToAccent());
+        // Сбрасываем индивидуальные цвета списков
+        dispatch(resetAllCustomColors());
+        // Сбрасываем индивидуальные цвета быстрых ссылок
+        dispatch(resetAllFastLinkIndividualColors());
+
+        // Затем применяем новые цвета
         dispatch(setRadixTheme(currentPalette.accent));
         dispatch(setClockColor(currentPalette.clock));
 
         // Применяем цвета только для списков
         dispatch(setListBackgroundColor(currentPalette.listBackground));
-        // Очищаем все цветовые настройки чтобы использовался акцентный цвет
+
+        // Обновляем связанные цвета на основе нового акцентного цвета
+        dispatch(updateLinkedColors(currentPalette.accent));
+
+        // Очищаем остальные цветовые настройки чтобы использовался акцентный цвет
         dispatch(setListTitleColor(''));
-        dispatch(setListLinkColor(''));
         dispatch(setListSeparatorColor(''));
         dispatch(setListBorderColor(''));
 
@@ -145,12 +164,16 @@ export const AutoColorButton: React.FC<AutoColorButtonProps> = ({ size = "2" }) 
       console.error('Error analyzing image:', error);
 
       // Fallback - применяем стандартную палитру
-      dispatch(setRadixTheme('#3E63DD'));
+      const fallbackAccent = '#3E63DD';
+      dispatch(setRadixTheme(fallbackAccent));
       dispatch(setClockColor('#FFFFFF'));
       dispatch(setListBackgroundColor(lists.backdropBlur ? 'rgba(255, 255, 255, 0.1)' : '#F8F9FA'));
-      // Очищаем все цветовые настройки чтобы использовался акцентный цвет
+
+      // Обновляем связанные цвета на основе fallback акцентного цвета
+      dispatch(updateLinkedColors(fallbackAccent));
+
+      // Очищаем остальные цветовые настройки чтобы использовался акцентный цвет
       dispatch(setListTitleColor(''));
-      dispatch(setListLinkColor(''));
       dispatch(setListSeparatorColor(''));
       dispatch(setListBorderColor(''));
     } finally {
@@ -165,7 +188,7 @@ export const AutoColorButton: React.FC<AutoColorButtonProps> = ({ size = "2" }) 
     <Tooltip content={
       isAnalyzing
         ? `Анализ изображения (${MODE_NAMES[currentMode]})...`
-        : `Подобрать цвета: ${MODE_NAMES[nextMode]}`
+        : `Генерация цвета на основе изображения: ${MODE_NAMES[nextMode]}`
     }>
       <IconButton
         variant="soft"

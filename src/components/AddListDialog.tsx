@@ -2,6 +2,7 @@ import * as React from "react";
 import { Button, TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
 import { useAppSelector } from "../store/hooks";
+import { useTranslation } from "../locales";
 
 interface AddListDialogProps {
   open: boolean;
@@ -12,6 +13,7 @@ interface AddListDialogProps {
 export const AddListDialog: React.FC<AddListDialogProps> = ({ open, onOpenChange, onSubmit }) => {
   const [title, setTitle] = React.useState("");
   const { lists } = useAppSelector((state) => state.theme);
+  const { t } = useTranslation();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,9 +33,9 @@ export const AddListDialog: React.FC<AddListDialogProps> = ({ open, onOpenChange
     <ThemedDialog
       open={open}
       onOpenChange={onOpenChange}
-      ariaLabel="Создать список"
+      ariaLabel={t('lists.addNewList')}
       ariaDescribedBy="add-list-desc"
-      title={<Text as="div" size="5" weight="bold" mb="2">Создать список</Text>}
+      title={<Text as="div" size="5" weight="bold" mb="2">{t('lists.addNewList')}</Text>}
       contentClassName="add-list-dialog-content"
     >
       <Box
@@ -56,26 +58,27 @@ export const AddListDialog: React.FC<AddListDialogProps> = ({ open, onOpenChange
         <form onSubmit={handleSubmit} aria-describedby="add-list-desc">
           <Flex direction="column" gap="4">
             <label>
-              <Text as="div" size="2" mb="1" weight="medium">Название списка</Text>
+              <Text as="div" size="2" mb="1" weight="medium">{t('dialogs.newListName')}</Text>
               <TextField.Root
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="Название списка"
+                placeholder={t('dialogs.newListName')}
+                color="gray"
                 required
                 autoFocus
               />
             </label>
             <Flex gap="3" justify="end" mt="2">
               <Button variant="soft" color="gray" type="button" onClick={handleClose}>
-                Отмена
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
+                color="gray"
                 variant="solid"
-                color="indigo"
                 disabled={!title.trim()}
               >
-                Создать
+                {t('common.add')}
               </Button>
             </Flex>
           </Flex>

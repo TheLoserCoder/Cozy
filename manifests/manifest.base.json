@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "New tab",
+  "version": "1.0.0",
+  "description": "A cozy and stylish replacement for your new tab page with customizable widgets and beautiful backgrounds.",
+  "author": "TheLoserCoder",
+  "homepage_url": "https://github.com/TheLoserCoder/Cozy",
+
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+
+  "permissions": [
+    "storage"
+  ],
+
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https: http: blob:; connect-src 'self' https: http: data:;"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "newtab@yourdomain.com",
+      "strict_min_version": "91.0"
+    }
+  },
+
+  "content_security_policy": "script-src 'self'; object-src 'self'; img-src 'self' data: https: http: blob:; connect-src 'self' https: http: data:;"
+}

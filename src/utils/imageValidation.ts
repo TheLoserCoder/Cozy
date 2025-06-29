@@ -1,3 +1,5 @@
+import { t } from "../locales";
+
 /**
  * Проверяет, является ли URL ссылкой на изображение по расширению
  */
@@ -106,25 +108,25 @@ export async function validateBackgroundImage(url: string): Promise<{
     // Проверяем базовую валидность URL
     const isValid = await validateImageUrl(url);
     if (!isValid) {
-      return { isValid: false, reason: 'Недопустимый URL изображения' };
+      return { isValid: false, reason: t('errors.invalidImageUrl') };
     }
-    
+
     // Получаем размеры изображения
     const dimensions = await getImageDimensions(url);
     if (!dimensions) {
-      return { isValid: false, reason: 'Не удалось загрузить изображение' };
+      return { isValid: false, reason: t('errors.imageLoadFailed') };
     }
-    
+
     // Проверяем минимальные размеры (например, 800x600)
     if (dimensions.width < 800 || dimensions.height < 600) {
-      return { 
-        isValid: false, 
-        reason: `Изображение слишком маленькое (${dimensions.width}x${dimensions.height}). Минимум: 800x600` 
+      return {
+        isValid: false,
+        reason: `${t('errors.imageTooSmall')} (${dimensions.width}x${dimensions.height}). Минимум: 800x600`
       };
     }
-    
+
     return { isValid: true };
   } catch (error) {
-    return { isValid: false, reason: 'Ошибка при проверке изображения' };
+    return { isValid: false, reason: t('errors.imageValidationError') };
   }
 }

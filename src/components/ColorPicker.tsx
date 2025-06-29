@@ -4,6 +4,7 @@ import { UpdateIcon } from "@radix-ui/react-icons";
 import { ActionIconButton } from "./ActionButtons";
 import { SketchPicker, ColorResult } from "react-color";
 import { createPortal } from "react-dom";
+import { useTranslation } from "../locales";
 
 interface ColorPickerProps {
   value: string;
@@ -27,6 +28,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   const [showPicker, setShowPicker] = React.useState(false);
   const [pickerPosition, setPickerPosition] = React.useState({ top: 0, left: 0 });
   const triggerRef = React.useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   const handleColorChange = (color: ColorResult) => {
     if (disableAlpha) {
@@ -161,7 +163,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             variant="soft"
             size="1"
             onClick={onReset}
-            aria-label="Сбросить цвет"
+            aria-label={t('common.reset')}
           >
             <UpdateIcon />
           </ActionIconButton>

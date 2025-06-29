@@ -18,6 +18,7 @@ interface LinkItemProps {
   dragHandleProps?: any;
   listId?: string; // Для редактирования
   onDelete?: () => void; // Для удаления
+  cleanMode?: boolean; // Чистый режим - скрывает кнопки редактирования
 }
 
 
@@ -35,7 +36,8 @@ export const LinkItem: React.FC<LinkItemProps> = ({
   style = {},
   dragHandleProps = {},
   listId,
-  onDelete
+  onDelete,
+  cleanMode = false
 }) => {
   const { lists, radixTheme } = useAppSelector((state) => state.theme);
   const [editOpen, setEditOpen] = React.useState(false);
@@ -66,14 +68,15 @@ export const LinkItem: React.FC<LinkItemProps> = ({
         <Flex
           className="list-item"
           align="center"
-          gap="3"
-          px="3"
-          py="2"
+          gap="2"
+          px="2"
+          py="1"
           style={{
             borderRadius: 9999,
-            transition: "background-color 0.2s ease",
+            transition: "all 0.2s ease",
             position: "relative",
-            background: "transparent"
+            background: "transparent",
+            transform: showButtons ? "translateX(4px)" : "translateX(0px)"
           }}
         >
           {iconUrl && !lists.hideIcons && (
@@ -115,8 +118,8 @@ export const LinkItem: React.FC<LinkItemProps> = ({
             {title}
           </Link>
 
-          {/* Кнопки редактирования и удаления */}
-          {listId && (
+          {/* Кнопки редактирования и удаления - скрыты в чистом режиме */}
+          {listId && !cleanMode && (
             <Flex
               gap="1"
               style={{

@@ -16,3 +16,13 @@
 .hide-card-borders .rt-Card:where(.rt-variant-surface) {
   --card-border-width: 0px;
 }
+
+/* Обеспечиваем правильный z-index для подсказок в диалогах */
+[data-radix-tooltip-content] {
+  z-index: 9999 !important;
+}
+
+/* Подсказки в диалогах должны быть поверх всего */
+[data-radix-dialog-content] [data-radix-tooltip-content] {
+  z-index: 10000 !important;
+}

@@ -14,6 +14,7 @@ import { AddLinkDialog } from "./AddLinkDialog";
 import { EditListDialog } from "./EditListDialog";
 import { LinkListItem } from "../entities/list/list.types";
 import { useAppSelector } from "../store/hooks";
+import { useTranslation } from "../locales";
 
 interface LinkListProps {
   title: string;
@@ -26,6 +27,7 @@ interface LinkListProps {
   onEditList?: (newTitle: string) => void;
   onDeleteList?: () => void;
   onDeleteLink?: (linkId: string) => void;
+  cleanMode?: boolean;
 }
 
 function SortableLinkItem({
@@ -34,12 +36,14 @@ function SortableLinkItem({
   listId,
   listLinkColor,
   onDelete,
+  cleanMode = false,
 }: {
   link: LinkListItem;
   activeId?: string | null;
   listId: string;
   listLinkColor?: string;
   onDelete?: (linkId: string) => void;
+  cleanMode?: boolean;
 }) {
   const {
     attributes,
@@ -70,6 +74,7 @@ function SortableLinkItem({
           ...listeners,
         }}
         onDelete={onDelete ? () => onDelete(link.id) : undefined}
+        cleanMode={cleanMode}
       />
     </Box>
   );
@@ -85,7 +90,8 @@ export function LinkList({
   onAddLink,
   onEditList,
   onDeleteList,
-  onDeleteLink
+  onDeleteLink,
+  cleanMode = false
 }: LinkListProps) {
   const { setNodeRef } = useDroppable({ id: listId });
   const { lists, radixTheme } = useAppSelector((state) => state.theme);
@@ -94,6 +100,7 @@ export function LinkList({
   const items = React.useMemo(() => links.map((l) => l.id), [links]);
   const [addOpen, setAddOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
+  const { t } = useTranslation();
 
   // Определяем цвет заголовка: кастомный цвет списка, цвет заголовков из настроек списков или акцентный цвет
   const titleColor = customColor || lists.titleColor || radixTheme;
@@ -131,6 +138,7 @@ export function LinkList({
   const cardStyle = {
     minWidth: 320,
     maxWidth: 400,
+    padding: "8px",
     backgroundColor: lists.hideBackground ? 'transparent' : lists.backgroundColor,
     backdropFilter: lists.hideBackground ? 'none' : (lists.backdropBlur ? 'blur(10px)' : 'none'),
     WebkitBackdropFilter: lists.hideBackground ? 'none' : (lists.backdropBlur ? 'blur(10px)' : 'none'), // Для Safari
@@ -153,8 +161,9 @@ export function LinkList({
         ref={setNodeRef}
         style={cardStyle}
         variant="surface"
+        
       >
-        <Flex direction="column" gap="3" style={{ background: 'transparent' }}>
+        <Flex direction="column" gap="2" style={{ background: 'transparent' }}>
           <Flex align="center" justify="between" style={{ background: 'transparent' }}>
             <Flex
               align="center"
@@ -185,35 +194,40 @@ export function LinkList({
               })()}
               <Heading className="list-title" size="4" as="h2" style={{ color: titleColor, background: 'transparent', fontFamily: "var(--app-font-family, inherit)" }}>{title}</Heading>
             </Flex>
-            <Flex gap="2" style={{ background: 'transparent' }}>
-              <IconButton
-                variant="soft"
-                size="2"
-                onClick={openAllLinksInNewTabs}
-                aria-label="Открыть все ссылки в новых вкладках"
-              >
-                <ExternalLinkIcon />
-              </IconButton>
-              <IconButton variant="soft" size="2" onClick={() => setEditOpen(true)} aria-label="Редактировать список">
-                <Pencil2Icon />
-              </IconButton>
-              <IconButton variant="soft" size="2" onClick={() => setAddOpen(true)} aria-label="Добавить ссылку">
-                <PlusIcon />
-              </IconButton>
+            <Flex gap="1" style={{ background: 'transparent' }}>
+              {!cleanMode && (
+                <IconButton
+                  variant="soft"
+                  size="2"
+                  onClick={openAllLinksInNewTabs}
+                  aria-label={t('tooltips.openAllLinks')}
+                >
+                  <ExternalLinkIcon />
+                </IconButton>
+              )}
+              {!cleanMode && (
+                <>
+                  <IconButton variant="soft" size="2" onClick={() => setEditOpen(true)} aria-label={t('tooltips.editItem')}>
+                    <Pencil2Icon />
+                  </IconButton>
+                  <IconButton variant="soft" size="2" onClick={() => setAddOpen(true)} aria-label={t('tooltips.addLink')}>
+                    <PlusIcon />
+                  </IconButton>
+                </>
+              )}
             </Flex>
           </Flex>
-          {!lists.separatorHidden && (
-            <div
-              style={{
-                width: '100%',
-                height: `${lists.separatorThickness}px`,
-                backgroundColor: currentList?.customSeparatorColor || lists.separatorColor || 'var(--accent-9)',
-                borderRadius: '1px',
-                margin: '8px 0'
-              }}
-            />
-          )}
-          <Flex direction="column" gap="2" style={{ background: 'transparent' }}>
+          <div
+            style={{
+              width: '100%',
+              height: `${lists.separatorThickness}px`,
+              backgroundColor: currentList?.customSeparatorColor || lists.separatorColor || 'var(--accent-9)',
+              borderRadius: '1px',
+              margin: '2px 0',
+              visibility: lists.separatorHidden ? 'hidden' : 'visible'
+            }}
+          />
+          <Flex direction="column" gap="0.4" style={{ background: 'transparent' }}>
             {links.map((link) => (
               <SortableLinkItem
                 key={link.id}
@@ -222,6 +236,7 @@ export function LinkList({
                 listId={listId}
                 listLinkColor={currentList?.customLinkColor}
                 onDelete={onDeleteLink}
+                cleanMode={cleanMode}
               />
             ))}
           </Flex>

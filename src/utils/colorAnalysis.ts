@@ -253,7 +253,7 @@ async function loadImageWithoutCORS(imageUrl: string): Promise<RGB[]> {
 export async function extractDominantColors(imageUrl: string): Promise<RGB[]> {
   console.log('Starting image analysis for:', imageUrl);
 
-  // Метод 1: Прямая загрузка с crossOrigin
+  // Method 1: Direct loading with crossOrigin
   try {
     console.log('Method 1: Direct loading with crossOrigin...');
     return await loadImageDirect(imageUrl);
@@ -261,7 +261,7 @@ export async function extractDominantColors(imageUrl: string): Promise<RGB[]> {
     console.log('Method 1 failed:', directError);
   }
 
-  // Метод 2: CORS прокси
+  // Method 2: CORS proxy
   try {
     console.log('Method 2: CORS proxy...');
     return await loadImageViaFetch(imageUrl);
@@ -595,11 +595,11 @@ export function createAllColorPalettes(dominantColors: RGB[], hasBackdropBlur: b
 
 // Главная функция для получения всех палитр с кэшированием
 export async function getColorPalettes(imageUrl: string, hasBackdropBlur: boolean = false): Promise<ColorPalette[]> {
-  // Проверяем кэш
+  // Check cache
   const cached = loadCachedAnalysis(imageUrl);
   if (cached) {
     console.log('Using cached color analysis for:', imageUrl);
-    // Пересоздаем палитры с учетом текущих настроек размытия
+    // Recreate palettes with current blur settings
     return createAllColorPalettes(cached.dominantColors, hasBackdropBlur);
   }
 

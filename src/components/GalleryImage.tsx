@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Box, Skeleton } from "@radix-ui/themes";
+import { useTranslation } from "../locales";
 
 interface GalleryImageProps {
   src: string;
@@ -21,6 +22,7 @@ export const GalleryImage: React.FC<GalleryImageProps> = ({
   const [isInView, setIsInView] = React.useState(false);
   const imgRef = React.useRef<HTMLImageElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   // Intersection Observer для lazy loading
   React.useEffect(() => {
@@ -127,7 +129,7 @@ export const GalleryImage: React.FC<GalleryImageProps> = ({
             fontSize: "12px"
           }}
         >
-          Ошибка загрузки
+          {t('errors.loadingError')}
         </Box>
       )}
     </Box>

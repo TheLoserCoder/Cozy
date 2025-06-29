@@ -2,6 +2,7 @@ import * as React from "react";
 import { TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
 import { CancelButton, PrimaryButton } from "./ActionButtons";
+import { useTranslation } from "../locales";
 
 interface AddLinkDialogProps {
   open: boolean;
@@ -14,6 +15,7 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
   const [url, setUrl] = React.useState("");
 
   const prevUrlRef = React.useRef("");
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     // Если поле url было пустым и стало валидным URL, подставить домен в title
@@ -54,9 +56,9 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
     <ThemedDialog
       open={open}
       onOpenChange={onOpenChange}
-      ariaLabel="Добавить ссылку"
+      ariaLabel={t('lists.addLink')}
       ariaDescribedBy="add-link-desc"
-      title={<Text as="div" size="5" weight="bold" mb="2">Добавить ссылку</Text>}
+      title={<Text as="div" size="5" weight="bold" mb="2">{t('lists.addLink')}</Text>}
       contentClassName="add-link-dialog-content"
     >
       <Box
@@ -78,11 +80,12 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
         <form onSubmit={handleSubmit} aria-describedby="add-link-desc">
           <Flex direction="column" gap="4">
             <label>
-              <Text as="div" size="2" mb="1" weight="medium">Название</Text>
+              <Text as="div" size="2" mb="1" weight="medium">{t('lists.title')}</Text>
               <TextField.Root
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="Название ссылки"
+                placeholder={t('lists.linkName')}
+                color="gray"
                 required
                 autoFocus
               />
@@ -93,19 +96,20 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 placeholder="https://example.com"
+                color="gray"
                 required
                 type="url"
               />
             </label>
             <Flex gap="3" justify="end" mt="2">
               <CancelButton onClick={handleClose}>
-                Отмена
+                {t('common.cancel')}
               </CancelButton>
               <PrimaryButton
                 type="submit"
                 disabled={!title.trim() || !url.trim()}
               >
-                Добавить
+                {t('common.add')}
               </PrimaryButton>
             </Flex>
           </Flex>

@@ -1,12 +1,32 @@
 {
-  "name": "newtab",
-  "version": "0.0.1",
+  "name": "cozy-new-tab",
+  "version": "1.0.0",
   "private": true,
-  "description": "A stylish replacement for your new tab.",
+  "description": "A cozy and stylish replacement for your new tab page.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheLoserCoder/Cozy"
+  },
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node dev-with-extensions.js",
+    "dev:server": "vite",
+    "build": "npm run build:chrome && npm run build:firefox && npm run build:edge",
+    "build:vite": "vite build",
+    "build:vite:dev": "vite build --config vite.config.dev.ts",
+    "build:vite:dev:once": "vite build --config vite.config.dev.ts",
+    "build:vite:dev:watch": "vite build --config vite.config.dev.ts --watch",
+    "build:chrome": "node build.js chrome",
+    "build:firefox": "node build.js firefox",
+    "build:edge": "node build.js edge",
+    "build:dev": "npm run build:dev:chrome && npm run build:dev:firefox && npm run build:dev:edge",
+    "build:dev:chrome": "node build-dev.js chrome",
+    "build:dev:firefox": "node build-dev.js firefox",
+    "build:dev:edge": "node build-dev.js edge",
+    "watch:dev:chrome": "node watch-dev.js chrome",
+    "watch:dev:firefox": "node watch-dev.js firefox",
+    "watch:dev:edge": "node watch-dev.js edge",
+    "package": "npm run build && node package-extensions.js",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -18,16 +38,21 @@
     "@reduxjs/toolkit": "^2.8.2",
     "@types/react-color": "^3.0.13",
     "@types/redux": "^3.6.0",
+    "deepmerge": "^4.3.1",
     "nanoid": "^5.1.5",
     "react": "^19.1.0",
     "react-color": "^2.19.3",
     "react-dom": "^19.1.0",
-    "react-redux": "^9.2.0"
+    "react-redux": "^9.2.0",
+    "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@types/webextension-polyfill": "^0.12.3",
     "@vitejs/plugin-react": "^4.6.0",
+    "chokidar": "^4.0.3",
+    "rollup-plugin-copy": "^3.5.0",
     "vite": "^7.0.0"
   }
 }

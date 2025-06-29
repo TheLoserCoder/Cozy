@@ -5,12 +5,14 @@ interface SimpleTooltipProps {
   content: string;
   children: React.ReactNode;
   delayDuration?: number;
+  side?: 'top' | 'bottom';
 }
 
 export const SimpleTooltip: React.FC<SimpleTooltipProps> = ({
   content,
   children,
-  delayDuration = 300
+  delayDuration = 300,
+  side = 'top'
 }) => {
   const [isVisible, setIsVisible] = React.useState(false);
   const [position, setPosition] = React.useState({ top: 0, left: 0 });
@@ -26,7 +28,7 @@ export const SimpleTooltip: React.FC<SimpleTooltipProps> = ({
       if (triggerRef.current) {
         const rect = triggerRef.current.getBoundingClientRect();
         setPosition({
-          top: rect.top - 35,
+          top: side === 'bottom' ? rect.bottom + 5 : rect.top - 35,
           left: rect.left + rect.width / 2
         });
         setIsVisible(true);

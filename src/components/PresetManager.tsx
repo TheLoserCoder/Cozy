@@ -3,10 +3,12 @@ import { Box, Text, Button, TextField, Flex, IconButton, Dialog } from "@radix-u
 import { PlusIcon, Pencil2Icon, TrashIcon, CheckIcon, Cross2Icon, UpdateIcon } from "@radix-ui/react-icons";
 import { createPortal } from "react-dom";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
-import { createPreset, applyPreset, deletePreset, renamePreset, updatePreset } from "../store/themeSlice";
+import { createPreset, applyPreset, deletePreset, renamePreset, updatePreset, resetToStandardSettings } from "../store/themeSlice";
 import { applyPresetBackground } from "../store/backgroundSlice";
 import { setListColor, setListIcon, setListIconColor, setLinkColor, resetAllCustomStyles, applyListStates } from "../store/listsSlice";
+import { resetAllFastLinkIndividualColors, applyFastLinkStyles } from "../store/fastLinksSlice";
 import { PresetPreview } from "./PresetPreview";
+import { useTranslation } from "../locales";
 
 interface PresetManagerProps {
   onDialogOpenChange?: (open: boolean) => void;
@@ -14,25 +16,28 @@ interface PresetManagerProps {
 
 export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange }) => {
   const dispatch = useAppDispatch();
-  const { presets } = useAppSelector((state) => state.theme);
+  const { presets, activePresetId } = useAppSelector((state) => state.theme);
   const [newPresetName, setNewPresetName] = React.useState("");
   const [editingPresetId, setEditingPresetId] = React.useState<string | null>(null);
   const [editingName, setEditingName] = React.useState("");
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
+  const { t } = useTranslation();
 
   // Получаем данные о текущем фоне из других частей store
   const {
     currentBackground, backgroundType, solidBackground, gradientBackground, filters,
-    images, parallaxEnabled, shadowOverlay, autoSwitch
+    shadowOverlay, autoSwitch
   } = useAppSelector((state) => state.background);
 
   // Получаем данные о списках и ссылках для индивидуальных стилей
   const allLists = useAppSelector((state) => state.lists);
+  const fastLinks = useAppSelector((state) => state.fastLinks);
 
   const getCurrentBackgroundData = () => {
     const baseData = {
-      images: [...images],
-      parallaxEnabled,
+      // Не сохраняем галерею изображений и эффект параллакса в пресетах
+      // images: [...images],
+      // parallaxEnabled,
       shadowOverlay: shadowOverlay ? { ...shadowOverlay } : undefined,
       autoSwitch: autoSwitch ? { ...autoSwitch } : undefined,
       filters: { ...filters }
@@ -75,6 +80,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
   const getIndividualStyles = () => {
     const listStyles: { [key: string]: any } = {};
     const linkStyles: { [key: string]: any } = {};
+    const fastLinkStyles: { [key: string]: any } = {};
 
     // Собираем стили всех списков (включая отсутствие стилей)
     allLists.forEach(list => {
@@ -96,9 +102,21 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
       });
     });
 
+    // Собираем индивидуальные стили быстрых ссылок
+    fastLinks.forEach(fastLink => {
+      if (fastLink.customTextColor || fastLink.customBackdropColor || fastLink.customIconBackgroundColor) {
+        fastLinkStyles[fastLink.id] = {
+          customTextColor: fastLink.customTextColor || undefined,
+          customBackdropColor: fastLink.customBackdropColor || undefined,
+          customIconBackgroundColor: fastLink.customIconBackgroundColor || undefined
+        };
+      }
+    });
+
     return {
       lists: Object.keys(listStyles).length > 0 ? listStyles : undefined,
-      links: Object.keys(linkStyles).length > 0 ? linkStyles : undefined
+      links: Object.keys(linkStyles).length > 0 ? linkStyles : undefined,
+      fastLinks: Object.keys(fastLinkStyles).length > 0 ? fastLinkStyles : undefined
     };
   };
 
@@ -158,16 +176,17 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
     if (preset) {
       // Сначала сбрасываем все индивидуальные стили (включая иконки)
       dispatch(resetAllCustomStyles());
+      dispatch(resetAllFastLinkIndividualColors());
 
-      // Применяем настройки темы
+      // Применяем настройки темы (это переписывает ВСЕ настройки темы)
       dispatch(applyPreset(presetId));
 
-      // Применяем фон из пресета
+      // Применяем фон из пресета (это переписывает ВСЕ настройки фона)
       dispatch(applyPresetBackground(preset.data.background));
 
       // Применяем индивидуальные стили из пресета
       if (preset.data.individualStyles) {
-        const { lists: listStyles, links: linkStyles } = preset.data.individualStyles;
+        const { lists: listStyles, links: linkStyles, fastLinks: fastLinkStyles } = preset.data.individualStyles;
 
         // Применяем стили списков
         if (listStyles) {
@@ -203,6 +222,11 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
             }
           });
         }
+
+        // Применяем стили быстрых ссылок
+        if (fastLinkStyles) {
+          dispatch(applyFastLinkStyles(fastLinkStyles));
+        }
       }
 
       // Применяем состояние активации списков из пресета
@@ -213,7 +237,28 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
   };
 
   const handleDeletePreset = (presetId: string) => {
-    dispatch(deletePreset(presetId));
+    // Если удаляем активный пресет, нужно обработать переключение
+    if (activePresetId === presetId) {
+      const remainingPresets = presets.filter(p => p.id !== presetId);
+
+      if (remainingPresets.length > 0) {
+        // Есть другие пресеты - сначала переключаемся на первый
+        const nextPreset = remainingPresets[0];
+        handleApplyPreset(nextPreset.id);
+
+        // Затем удаляем старый пресет
+        dispatch(deletePreset(presetId));
+      } else {
+        // Пресетов не осталось - сначала применяем дефолтные настройки
+        dispatch(resetToStandardSettings());
+
+        // Затем удаляем пресет
+        dispatch(deletePreset(presetId));
+      }
+    } else {
+      // Удаляем неактивный пресет - просто удаляем
+      dispatch(deletePreset(presetId));
+    }
   };
 
   const handleStartEdit = (presetId: string, currentName: string) => {
@@ -241,7 +286,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
     <Box>
       <Flex align="center" justify="between" mb="3">
         <Text size="4" weight="bold">
-          Пресеты
+          {t('settings.presets')}
         </Text>
         <Dialog.Root
           open={createDialogOpen}
@@ -251,27 +296,28 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
           }}
         >
           <Dialog.Trigger>
-            <Button size="2" variant="soft" type="button">
+            <Button color = "gray" size="2" variant="soft" type="button">
               <PlusIcon width="16" height="16" />
-              Создать пресет
+              {t('settings.createPreset')}
             </Button>
           </Dialog.Trigger>
           {createPortal(
             <Dialog.Content style={{ maxWidth: 400, zIndex: 15001 }}>
-              <Dialog.Title>Создать новый пресет</Dialog.Title>
+              <Dialog.Title>{t('settings.createNewPreset')}</Dialog.Title>
               <Dialog.Description size="2" mb="4">
-                Пресет сохранит текущие настройки цветов, шрифтов и фона.
+                {t('settings.presetDescription')}
               </Dialog.Description>
 
               <Flex direction="column" gap="3">
                 <Box>
                   <Text size="2" mb="1" weight="medium" as="div">
-                    Название пресета
+                    {t('settings.presetName')}
                   </Text>
                   <TextField.Root
                     value={newPresetName}
                     onChange={(e) => setNewPresetName(e.target.value)}
-                    placeholder="Введите название..."
+                    placeholder={t('common.enterName')}
+                    color="gray"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         handleCreatePreset();
@@ -283,15 +329,16 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
                 <Flex gap="3" mt="4" justify="end">
                   <Dialog.Close>
                     <Button variant="soft" color="gray" type="button">
-                      Отмена
+                      {t('common.cancel')}
                     </Button>
                   </Dialog.Close>
                   <Button
                     onClick={handleCreatePreset}
                     disabled={!newPresetName.trim()}
                     type="button"
+                    color="gray"
                   >
-                    Создать
+                    {t('common.create')}
                   </Button>
                 </Flex>
               </Flex>
@@ -312,30 +359,45 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
           }}
         >
           <Text size="2">
-            Пресеты не созданы. Создайте первый пресет для быстрого переключения между настройками.
+            {t('settings.noPresets')}
           </Text>
         </Box>
       ) : (
         <Flex direction="column" gap="2">
-          {presets.map((preset) => (
-            <Flex
-              key={preset.id}
-              align="center"
-              gap="3"
-              p="3"
-              style={{
-                border: '1px solid var(--gray-6)',
-                borderRadius: 'var(--radius-3)',
-                backgroundColor: 'var(--color-surface)',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--gray-8)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--gray-6)';
-              }}
-            >
+          {presets.slice().reverse().map((preset) => {
+            const isActive = activePresetId === preset.id;
+            return (
+              <Flex
+                key={preset.id}
+                align="center"
+                gap="3"
+                p="3"
+                style={{
+                  border: isActive ? '2px solid var(--accent-9)' : '1px solid var(--gray-6)',
+                  borderRadius: 'var(--radius-3)',
+                  backgroundColor: isActive ? 'var(--accent-2)' : 'var(--color-surface)',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.borderColor = 'var(--gray-8)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.borderColor = 'var(--gray-6)';
+                  }
+                }}
+                onClick={(e) => {
+                  // Проверяем, что клик не был по кнопкам действий
+                  const target = e.target as HTMLElement;
+                  const isButton = target.closest('button') || target.closest('[role="button"]');
+                  if (!isButton && editingPresetId !== preset.id) {
+                    handleApplyPreset(preset.id, e);
+                  }
+                }}
+              >
               {/* Превью пресета */}
               <PresetPreview preset={preset} size="small" />
               
@@ -385,7 +447,17 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
                   </Flex>
                 ) : (
                   <Flex direction="column">
-                    <Text size="3" weight="medium">
+                    <Text
+                      size="3"
+                      weight="medium"
+                      style={{
+                        maxWidth: '150px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                      title={preset.name}
+                    >
                       {preset.name}
                     </Text>
                     <Text size="1" color="gray">
@@ -398,14 +470,6 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
               {/* Кнопки действий */}
               {editingPresetId !== preset.id && (
                 <Flex gap="1">
-                  <Button
-                    size="2"
-                    variant="soft"
-                    onClick={(e) => handleApplyPreset(preset.id, e)}
-                    type="button"
-                  >
-                    Применить
-                  </Button>
                   <IconButton
                     size="2"
                     variant="soft"
@@ -416,7 +480,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
                       handleStartEdit(preset.id, preset.name);
                     }}
                     type="button"
-                    title="Переименовать пресет"
+                    title={t('settings.renamePreset')}
                   >
                     <Pencil2Icon width="14" height="14" />
                   </IconButton>
@@ -426,7 +490,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
                     color="blue"
                     onClick={(e) => handleUpdatePreset(preset.id, e)}
                     type="button"
-                    title="Обновить пресет текущими настройками"
+                    title={t('settings.updatePreset')}
                   >
                     <UpdateIcon width="14" height="14" />
                   </IconButton>
@@ -440,14 +504,15 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
                       handleDeletePreset(preset.id);
                     }}
                     type="button"
-                    title="Удалить пресет"
+                    title={t('settings.deletePreset')}
                   >
                     <TrashIcon width="14" height="14" />
                   </IconButton>
                 </Flex>
               )}
             </Flex>
-          ))}
+            );
+          })}
         </Flex>
       )}
 

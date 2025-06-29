@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Button, IconButton } from "@radix-ui/themes";
 import { TrashIcon } from "@radix-ui/react-icons";
+import { useTranslation } from "../locales";
 
 // Кнопка удаления (красная)
 interface DeleteButtonProps {
@@ -54,8 +55,9 @@ export const DeleteIconButton: React.FC<DeleteIconButtonProps> = ({
   size,
   disabled = false,
   type = "button",
-  "aria-label": ariaLabel = "Удалить"
+  "aria-label": ariaLabel
 }) => {
+  const { t } = useTranslation();
   return (
     <IconButton
       variant={variant}
@@ -63,7 +65,7 @@ export const DeleteIconButton: React.FC<DeleteIconButtonProps> = ({
       disabled={disabled}
       type={type}
       size={size}
-      aria-label={ariaLabel}
+      aria-label={ariaLabel || t('tooltips.deleteItem')}
       style={{
         backgroundColor: variant === "solid" ? "#E5484D" : "rgba(229, 72, 77, 0.1)",
         color: variant === "solid" ? "white" : "#E5484D",
@@ -94,7 +96,7 @@ export const CancelButton: React.FC<CancelButtonProps> = ({
   return (
     <Button
       variant="soft"
-      color="indigo"
+      color="gray"
       onClick={onClick}
       disabled={disabled}
       type={type}
@@ -124,7 +126,7 @@ export const EditButton: React.FC<EditButtonProps> = ({
   return (
     <Button
       variant="soft"
-      color="indigo"
+      color="gray"
       onClick={onClick}
       disabled={disabled}
       type={type}
@@ -154,7 +156,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   return (
     <Button
       variant="solid"
-      color="indigo"
+      color="gray"
       onClick={onClick}
       disabled={disabled}
       type={type}
@@ -184,7 +186,7 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
   return (
     <Button
       variant="soft"
-      color="indigo"
+      color="gray"
       onClick={onClick}
       disabled={disabled}
       type={type}
@@ -205,17 +207,23 @@ interface ActionIconButtonProps {
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
   "aria-label"?: string;
+  style?: React.CSSProperties;
+  onMouseEnter?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onMouseLeave?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 export const ActionIconButton: React.FC<ActionIconButtonProps> = ({
   onClick,
   children,
   variant = "soft",
-  color,
+  color = "gray",
   size,
   disabled = false,
   type = "button",
-  "aria-label": ariaLabel
+  "aria-label": ariaLabel,
+  style,
+  onMouseEnter,
+  onMouseLeave
 }) => {
   return (
     <IconButton
@@ -226,6 +234,9 @@ export const ActionIconButton: React.FC<ActionIconButtonProps> = ({
       size={size}
       type={type}
       aria-label={ariaLabel}
+      style={style}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       {children}
     </IconButton>

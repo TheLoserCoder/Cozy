@@ -6,6 +6,7 @@ import { DeleteIconButton, CancelButton, PrimaryButton } from "./ActionButtons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { editLink, deleteLink, setLinkColor } from "../store/listsSlice";
 import { getFaviconUrl } from "../utils/favicon";
+import { useTranslation } from "../locales";
 
 interface EditLinkDialogProps {
   open: boolean;
@@ -31,6 +32,7 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
   const [title, setTitle] = React.useState(initialTitle);
   const [url, setUrl] = React.useState(initialUrl);
   const [customColor, setCustomColor] = React.useState(initialColor || "");
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     setTitle(initialTitle);
@@ -70,7 +72,7 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
   };
 
   const handleDelete = () => {
-    if (confirm('Вы уверены, что хотите удалить эту ссылку?')) {
+    if (confirm(t('errors.deleteLinkConfirm'))) {
       dispatch(deleteLink({ listId, linkId }));
       onOpenChange(false);
     }
@@ -107,9 +109,9 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
     <ThemedDialog
       open={open}
       onOpenChange={onOpenChange}
-      ariaLabel="Редактировать ссылку"
+      ariaLabel={t('lists.editLink')}
       ariaDescribedBy="edit-link-desc"
-      title={<Text as="div" size="5" weight="bold" mb="2">Редактировать ссылку</Text>}
+      title={<Text as="div" size="5" weight="bold" mb="2">{t('lists.editLink')}</Text>}
       contentClassName="edit-link-dialog-content"
     >
       <Box
@@ -137,40 +139,42 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
                 value={url}
                 onChange={handleUrlChange}
                 placeholder="https://example.com"
+                color="gray"
                 required
                 type="url"
                 autoFocus
               />
             </label>
-            
+
             <label>
-              <Text as="div" size="2" mb="1" weight="medium">Название</Text>
+              <Text as="div" size="2" mb="1" weight="medium">{t('lists.linkName')}</Text>
               <TextField.Root
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="Название ссылки"
+                placeholder={t('lists.linkName')}
+                color="gray"
                 required
               />
             </label>
             
             <ColorPicker
-              label="Цвет ссылки"
+              label={t('lists.linkColor')}
               value={customColor || lists.linkColor || `color-mix(in srgb, ${radixTheme} 70%, var(--gray-12) 30%)`}
               onChange={handleColorChange}
               onReset={handleColorReset}
-              showReset={true}
+              showReset={!!customColor}
               disableAlpha={false}
             />
             
             <Flex gap="3" justify="between" mt="2">
-              <DeleteIconButton onClick={handleDelete} aria-label="Удалить ссылку" />
+              <DeleteIconButton onClick={handleDelete} aria-label={t('tooltips.deleteItem')} />
 
               <Flex gap="3" ml="auto">
                 <CancelButton onClick={handleClose}>
-                  Отмена
+                  {t('common.cancel')}
                 </CancelButton>
                 <PrimaryButton type="submit">
-                  Сохранить
+                  {t('common.save')}
                 </PrimaryButton>
               </Flex>
             </Flex>

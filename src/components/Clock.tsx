@@ -1,10 +1,14 @@
 import * as React from "react";
 import { Text, Heading, Box } from "@radix-ui/themes";
 import { useAppSelector } from "../store/hooks";
+import { createLinkColorFromAccent, isValidHexColor } from "../utils/colorUtils";
 
 export const Clock: React.FC = () => {
   const [time, setTime] = React.useState<Date>(new Date());
-  const { clock } = useAppSelector((state) => state.theme);
+  const { clock, language, radixTheme } = useAppSelector((state) => state.theme);
+
+  // Определяем цвет часов: настроенный цвет или fallback к производному от акцентного
+  const clockColor = clock.color || (isValidHexColor(radixTheme) ? createLinkColorFromAccent(radixTheme) : radixTheme);
 
   React.useEffect(() => {
     if (!clock.enabled) return;
@@ -18,7 +22,28 @@ export const Clock: React.FC = () => {
     };
   }, [clock.enabled]);
 
-  const formattedTime = time.toLocaleTimeString("ru-RU", {
+  // Получаем правильную локаль для форматирования времени
+  const getLocale = (languageCode: string): string => {
+    const localeMap: Record<string, string> = {
+      'ru': 'ru-RU',
+      'en': 'en-US',
+      'de': 'de-DE',
+      'fr': 'fr-FR',
+      'es': 'es-ES',
+      'it': 'it-IT',
+      'pt': 'pt-BR',
+      'nl': 'nl-NL',
+      'pl': 'pl-PL',
+      'cs': 'cs-CZ',
+      'ja': 'ja-JP',
+      'ko': 'ko-KR',
+    };
+    return localeMap[languageCode] || 'en-US';
+  };
+
+  const currentLocale = getLocale(language);
+
+  const formattedTime = time.toLocaleTimeString(currentLocale, {
     hour: "2-digit",
     minute: "2-digit",
     second: clock.showSeconds ? "2-digit" : undefined,
@@ -61,7 +86,7 @@ export const Clock: React.FC = () => {
           fontSize: "4rem",
           fontWeight: "700",
           letterSpacing: "-0.02em",
-          color: clock.color,
+          color: clockColor,
           transition: "all 0.3s ease",
           fontFamily: "var(--app-font-family, inherit)"
         }}
@@ -74,13 +99,13 @@ export const Clock: React.FC = () => {
           style={{
             fontSize: "1.2rem",
             fontWeight: "400",
-            color: clock.color,
+            color: clockColor,
             opacity: 0.8,
             transition: "all 0.3s ease",
             fontFamily: "var(--app-font-family, inherit)"
           }}
         >
-          {time.toLocaleDateString("ru-RU", {
+          {time.toLocaleDateString(currentLocale, {
             weekday: "long",
             day: "numeric",
             month: "long",

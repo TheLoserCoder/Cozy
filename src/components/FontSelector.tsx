@@ -2,6 +2,7 @@ import * as React from "react";
 import { Box, Text, TextField, Select } from "@radix-ui/themes";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { FONT_OPTIONS, FontOption, getFontOption } from "../data/fonts";
+import { useTranslation } from "../locales";
 
 interface FontSelectorProps {
   value: string;
@@ -15,6 +16,7 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isOpen, setIsOpen] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   // Фильтруем шрифты по поисковому запросу
   const filteredFonts = React.useMemo(() => {
@@ -52,13 +54,13 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
   }, [filteredFonts]);
 
   const categoryNames = {
-    'sans-serif': 'Без засечек',
-    'serif': 'С засечками',
-    'monospace': 'Моноширинные',
-    'display': 'Декоративные',
-    'handwriting': 'Рукописные',
-    'pixel': 'Пиксельные',
-    'terminal': 'Терминальные'
+    'sans-serif': t('settings.fontCategories.sansSerif'),
+    'serif': t('settings.fontCategories.serif'),
+    'monospace': t('settings.fontCategories.monospace'),
+    'display': t('settings.fontCategories.display'),
+    'handwriting': t('settings.fontCategories.handwriting'),
+    'pixel': t('settings.fontCategories.pixel'),
+    'terminal': t('settings.fontCategories.terminal')
   };
 
   // Закрытие при клике вне компонента
@@ -78,9 +80,7 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
 
   return (
     <Box ref={containerRef} style={{ position: 'relative' }}>
-      <Text size="2" mb="2" weight="medium" as="div">
-        Шрифт
-      </Text>
+    
       
       {/* Показываем текущий выбранный шрифт */}
       <Box
@@ -133,7 +133,7 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
             <TextField.Root
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Поиск шрифтов..."
+              placeholder={t('search.searchFonts')}
               size="2"
             >
               <TextField.Slot>
@@ -217,7 +217,7 @@ export const FontSelector: React.FC<FontSelectorProps> = ({
             {filteredFonts.length === 0 && (
               <Box style={{ padding: '16px', textAlign: 'center' }}>
                 <Text size="2" color="gray">
-                  Шрифты не найдены
+                  {t('search.fontsNotFound')}
                 </Text>
               </Box>
             )}

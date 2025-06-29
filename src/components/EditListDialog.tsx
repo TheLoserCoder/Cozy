@@ -6,6 +6,7 @@ import { IconPicker } from "./IconPicker";
 import { DeleteIconButton, CancelButton, PrimaryButton } from "./ActionButtons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setListColor, setListSeparatorColor, setListLinkColor, setListIcon, setListIconColor } from "../store/listsSlice";
+import { useTranslation } from "../locales";
 
 interface EditListDialogProps {
   open: boolean;
@@ -36,6 +37,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const { lists, radixTheme } = useAppSelector((state) => state.theme);
+  const { t } = useTranslation();
   const [title, setTitle] = React.useState(initialTitle);
   const [customColor, setCustomColor] = React.useState(initialColor || "");
   const [customSeparatorColor, setCustomSeparatorColor] = React.useState(initialSeparatorColor || "");
@@ -78,7 +80,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
   };
 
   const handleDelete = () => {
-    if (onDelete && confirm('Вы уверены, что хотите удалить этот список? Это действие нельзя отменить.')) {
+    if (onDelete && confirm(t('errors.deleteListConfirm'))) {
       onDelete();
       onOpenChange(false);
     }
@@ -128,9 +130,9 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
     <ThemedDialog
       open={open}
       onOpenChange={onOpenChange}
-      ariaLabel="Переименовать список"
+      ariaLabel={t('lists.editList')}
       ariaDescribedBy="edit-list-desc"
-      title={<Text as="div" size="5" weight="bold" mb="2">Переименовать список</Text>}
+      title={<Text as="div" size="5" weight="bold" mb="2">{t('lists.editList')}</Text>}
       contentClassName="edit-list-dialog-content"
     >
       <Box
@@ -153,45 +155,46 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
         <form onSubmit={handleSubmit} aria-describedby="edit-list-desc">
           <Flex direction="column" gap="4">
             <label>
-              <Text as="div" size="2" mb="1" weight="medium">Новое название</Text>
+              <Text as="div" size="2" mb="1" weight="medium">{t('dialogs.newName')}</Text>
               <TextField.Root
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="Новое название списка"
+                placeholder={t('dialogs.newListName')}
+                color="gray"
                 required
                 autoFocus
               />
             </label>
 
             <ColorPicker
-              label="Цвет заголовка"
+              label={t('dialogs.titleColor')}
               value={customColor || lists.titleColor || radixTheme}
               onChange={handleColorChange}
               onReset={handleColorReset}
-              showReset={true}
+              showReset={!!customColor}
               disableAlpha={false}
             />
 
             <ColorPicker
-              label="Цвет разделителя"
+              label={t('dialogs.separatorColor')}
               value={customSeparatorColor || lists.separatorColor || radixTheme}
               onChange={handleSeparatorColorChange}
               onReset={handleSeparatorColorReset}
-              showReset={true}
+              showReset={!!customSeparatorColor}
               disableAlpha={false}
             />
 
             <ColorPicker
-              label="Цвет ссылок"
+              label={t('dialogs.linkColor')}
               value={customLinkColor || lists.linkColor || `color-mix(in srgb, ${radixTheme} 70%, var(--gray-12) 30%)`}
               onChange={handleLinkColorChange}
               onReset={handleLinkColorReset}
-              showReset={true}
+              showReset={!!customLinkColor}
               disableAlpha={false}
             />
 
             <IconPicker
-              label="Иконка списка"
+              label={t('lists.listIcon')}
               value={icon || undefined}
               onChange={handleIconChange}
               onReset={handleIconReset}
@@ -200,25 +203,25 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
 
             {icon && (
               <ColorPicker
-                label="Цвет иконки"
+                label={t('lists.iconColor')}
                 value={iconColor || customColor || lists.titleColor || radixTheme}
                 onChange={handleIconColorChange}
                 onReset={handleIconColorReset}
-                showReset={true}
+                showReset={!!iconColor}
                 disableAlpha={false}
               />
             )}
 
             <Flex gap="3" justify="between" mt="2">
               {onDelete && (
-                <DeleteIconButton onClick={handleDelete} aria-label="Удалить список" />
+                <DeleteIconButton onClick={handleDelete} aria-label={t('lists.deleteList')} />
               )}
               <Flex gap="3" ml="auto">
                 <CancelButton onClick={handleClose}>
-                  Отмена
+                  {t('common.cancel')}
                 </CancelButton>
                 <PrimaryButton type="submit">
-                  Сохранить
+                  {t('common.save')}
                 </PrimaryButton>
               </Flex>
             </Flex>
