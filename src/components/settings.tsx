@@ -26,7 +26,8 @@ import {
   setAutoSwitchEnabled,
   setAutoSwitchMode,
   switchToRandomImage,
-  resetToStandardBackground
+  resetToStandardBackground,
+  setBorderlessBackground
 } from "../store/backgroundSlice";
 import {
   setClockColor,
@@ -347,9 +348,14 @@ const importSettings = (dispatch: any) => {
 };
 
 const Settings: React.FC<SettingsProps> = ({ open, onOpenChange, onAddList }) => {
+  const [isFirefox, setIsFirefox] = React.useState(false);
+  React.useEffect(() => {
+    setIsFirefox(navigator.userAgent.toLowerCase().indexOf('firefox') > -1);
+  }, []);
+
   const [presetDialogOpen, setPresetDialogOpen] = React.useState(false);
   const dispatch = useAppDispatch();
-  const { images, currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, shadowOverlay, autoSwitch } = useAppSelector((state) => state.background);
+  const { images, currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, shadowOverlay, autoSwitch, borderlessBackground } = useAppSelector((state) => state.background);
   const { colors, clock, lists, search, font, fastLinks, radixTheme, radixRadius, cleanMode, language } = useAppSelector((state) => state.theme);
 
   const allLists = useAppSelector((state) => state.lists);
@@ -1282,6 +1288,24 @@ const accardionStyle = {
                         </SimpleTooltip>
                       </Flex>
                          </form>
+                      {/* Переключатель безграничного фона для Firefox */}
+                      {isFirefox && (
+                        <Box>
+                          <Flex align="center" gap="2">
+                            <Switch
+                              checked={borderlessBackground}
+                              onCheckedChange={(checked) => dispatch(setBorderlessBackground(checked))}
+                            />
+                            <Text size="2" weight="medium">
+                              {t('settings.borderlessBackground')}
+                            </Text>
+                          </Flex>
+                          <Text size="1" color="gray" mt="1">
+                            {t('settings.borderlessBackgroundDescription')}
+                          </Text>
+                        </Box>
+                      )}
+
                       {/* Переключатель параллакса */}
                       <Box>
                         <Flex align="center" gap="2">
@@ -1297,7 +1321,7 @@ const accardionStyle = {
                           {t('settings.parallaxDescription')}
                         </Text>
                       </Box>
-
+                      
                       {/* Настройки затенения */}
                       <Box>
                         <Flex align="center" gap="2" mb="2">
@@ -2042,5 +2066,3 @@ if (!document.head.querySelector('style[data-accordion-styles]')) {
   accordionStyle.setAttribute('data-accordion-styles', 'true');
   document.head.appendChild(accordionStyle);
 }
-
-

@@ -53,6 +53,7 @@ interface BackgroundState {
     mode: AutoSwitchMode;
     lastSwitchDate?: string; // для режима daily
   };
+  borderlessBackground: boolean;
 }
 
 // Функции для работы с localStorage
@@ -65,6 +66,7 @@ const GRADIENT_BG_KEY = 'gradient-background';
 const PARALLAX_KEY = 'parallax-enabled';
 const SHADOW_OVERLAY_KEY = 'shadow-overlay';
 const AUTO_SWITCH_KEY = 'auto-switch';
+const BORDERLESS_BACKGROUND_KEY = 'borderless-background';
 
 const defaultFilters: BackgroundFilters = {
   blur: 0,
@@ -260,6 +262,23 @@ function saveAutoSwitchToStorage(autoSwitch: { enabled: boolean; mode: AutoSwitc
   }
 }
 
+function getBorderlessBackgroundFromStorage(): boolean {
+  try {
+    const stored = localStorage.getItem(BORDERLESS_BACKGROUND_KEY);
+    return stored ? JSON.parse(stored) : false;
+  } catch {
+    return false;
+  }
+}
+
+function saveBorderlessBackgroundToStorage(enabled: boolean): void {
+  try {
+    localStorage.setItem(BORDERLESS_BACKGROUND_KEY, JSON.stringify(enabled));
+  } catch {
+    // Игнорируем ошибки сохранения
+  }
+}
+
 function saveImagesToStorage(images: BackgroundImage[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(images));
@@ -298,7 +317,8 @@ const initialState: BackgroundState = {
   gradientBackground: getGradientBackgroundFromStorage(),
   parallaxEnabled: getParallaxFromStorage(),
   shadowOverlay: getShadowOverlayFromStorage(),
-  autoSwitch: getAutoSwitchFromStorage()
+  autoSwitch: getAutoSwitchFromStorage(),
+  borderlessBackground: getBorderlessBackgroundFromStorage()
 };
 
 const backgroundSlice = createSlice({
@@ -508,6 +528,7 @@ const backgroundSlice = createSlice({
     },
     // Сброс к стандартным настройкам фона
     resetToStandardBackground: (state) => {
+      state.borderlessBackground = false;
       state.backgroundType = standardBackgroundSettings.backgroundType;
       state.solidBackground = { ...standardBackgroundSettings.solidBackground };
       state.gradientBackground = { ...standardBackgroundSettings.gradientBackground };
@@ -528,7 +549,12 @@ const backgroundSlice = createSlice({
       saveParallaxToStorage(state.parallaxEnabled);
       saveShadowOverlayToStorage(state.shadowOverlay);
       saveAutoSwitchToStorage(state.autoSwitch);
-    }
+      saveBorderlessBackgroundToStorage(state.borderlessBackground);
+    },
+    setBorderlessBackground: (state, action: PayloadAction<boolean>) => {
+      state.borderlessBackground = action.payload;
+      saveBorderlessBackgroundToStorage(action.payload);
+    },
   },
 });
 
@@ -554,7 +580,8 @@ export const {
   switchToRandomImage,
   resetAutoSwitchQueue,
   applyPresetBackground,
-  resetToStandardBackground
+  resetToStandardBackground,
+  setBorderlessBackground
 } = backgroundSlice.actions;
 
 export default backgroundSlice.reducer;

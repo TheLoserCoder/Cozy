@@ -37,6 +37,12 @@ export const Clock: React.FC = () => {
       'cs': 'cs-CZ',
       'ja': 'ja-JP',
       'ko': 'ko-KR',
+      'hi': 'hi-IN',     // хинди
+      'ar': 'ar-SA',     // арабский (Саудовская Аравия, часто базовый)
+      'zh': 'zh-CN',     // китайский (упрощённый, материковый Китай)
+      'vi': 'vi-VN',     // вьетнамский
+      'uk': 'uk-UA',     // украинский
+      'tr': 'tr-TR'
     };
     return localeMap[languageCode] || 'en-US';
   };

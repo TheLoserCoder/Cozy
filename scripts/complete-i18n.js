@@ -1,169 +1,134 @@
 #!/usr/bin/env node
 
-/**
- * Автоматизированный скрипт для завершения интернационализации
- * Обновляет все языковые словари недостающими ключами из русского словаря
- */
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const fs = require('fs');
-const path = require('path');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Пути к файлам
 const LOCALES_DIR = path.join(__dirname, '../src/locales');
-const RU_FILE = path.join(LOCALES_DIR, 'ru.ts');
+const EN_FILE = path.join(LOCALES_DIR, 'en.ts');
 
-// Список языков для обновления
-const LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'de', name: 'German' },
-  { code: 'fr', name: 'French' },
-  { code: 'es', name: 'Spanish' },
-  { code: 'it', name: 'Italian' },
-  { code: 'pt', name: 'Portuguese' },
-  { code: 'nl', name: 'Dutch' },
-  { code: 'pl', name: 'Polish' },
-  { code: 'cs', name: 'Czech' },
-  { code: 'ja', name: 'Japanese' },
-  { code: 'ko', name: 'Korean' }
-];
+const languages = fs.readdirSync(LOCALES_DIR)
+  .filter(file => file.endsWith('.ts') && file !== 'en.ts' && file !== 'index.ts')
+  .map(file => file.replace('.ts', ''));
 
-// Переводы для новых ключей
-const TRANSLATIONS = {
-  // Настройки часов
-  clockSettings: {
-    en: 'Clock Settings',
-    de: 'Uhren-Einstellungen',
-    fr: 'Paramètres de l\'horloge',
-    es: 'Configuración del reloj',
-    it: 'Impostazioni orologio',
-    pt: 'Configurações do relógio',
-    nl: 'Klok instellingen',
-    pl: 'Ustawienia zegara',
-    cs: 'Nastavení hodin',
-    ja: '時計設定',
-    ko: '시계 설정'
-  },
-  searchSettings: {
-    en: 'Search',
-    de: 'Suche',
-    fr: 'Recherche',
-    es: 'Búsqueda',
-    it: 'Ricerca',
-    pt: 'Pesquisa',
-    nl: 'Zoeken',
-    pl: 'Wyszukiwanie',
-    cs: 'Vyhledávání',
-    ja: '検索',
-    ko: '검색'
-  },
-  // Добавить остальные переводы...
-};
-
-/**
- * Читает русский словарь и извлекает все ключи
- */
-function extractKeysFromRussian() {
-  console.log('📖 Читаем русский словарь...');
-  
-  const ruContent = fs.readFileSync(RU_FILE, 'utf8');
-  
-  // Простое извлечение ключей из TypeScript файла
-  const keys = [];
-  const lines = ruContent.split('\n');
-  
-  for (const line of lines) {
-    const match = line.match(/^\s*(\w+):\s*['"`](.+?)['"`],?\s*$/);
-    if (match) {
-      const [, key, value] = match;
-      keys.push({ key, value });
-    }
+function getKeys(filePath) {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const keys = new Set();
+  const regex = /(['"`])(.*?)\1\s*:/g;
+  let match;
+  while ((match = regex.exec(content)) !== null) {
+    keys.add(match[2]);
   }
-  
-  console.log(`✅ Найдено ${keys.length} ключей в русском словаре`);
   return keys;
 }
 
-/**
- * Обновляет языковой файл недостающими ключами
- */
-function updateLanguageFile(langCode, keys) {
-  const langFile = path.join(LOCALES_DIR, `${langCode}.ts`);
-  
-  if (!fs.existsSync(langFile)) {
-    console.log(`❌ Файл ${langFile} не найден`);
-    return;
-  }
-  
-  console.log(`🔄 Обновляем ${langCode}.ts...`);
-  
-  let content = fs.readFileSync(langFile, 'utf8');
-  
-  // Найти место для вставки новых ключей (перед закрывающей скобкой settings)
-  const settingsEndMatch = content.match(/(\s+)}\s*,\s*\/\/\s*Lists/);
-  if (!settingsEndMatch) {
-    console.log(`❌ Не удалось найти место для вставки в ${langCode}.ts`);
-    return;
-  }
-  
-  const indent = settingsEndMatch[1];
-  let newKeys = [];
-  
-  // Добавляем недостающие ключи
-  for (const { key } of keys) {
-    if (!content.includes(`${key}:`)) {
-      const translation = TRANSLATIONS[key] && TRANSLATIONS[key][langCode] 
-        ? TRANSLATIONS[key][langCode] 
-        : `[${key}]`; // Заглушка если перевода нет
-      
-      newKeys.push(`${indent}${key}: '${translation}',`);
+function getFullStructure(filePath) {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    // This is a simplified parser. It might not work for all edge cases.
+    // It assumes a relatively standard object literal structure.
+    try {
+        const objStr = content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1);
+        // Using Function to parse is safer than eval
+        return new Function(`return ${objStr}`)();
+    } catch (e) {
+        console.error(`Error parsing ${filePath}:`, e);
+        return null;
     }
-  }
-  
-  if (newKeys.length > 0) {
-    // Вставляем новые ключи перед закрывающей скобкой
-    const insertPosition = content.indexOf(settingsEndMatch[0]);
-    const newContent = content.slice(0, insertPosition) + 
-                      newKeys.join('\n') + '\n' + 
-                      content.slice(insertPosition);
-    
-    fs.writeFileSync(langFile, newContent, 'utf8');
-    console.log(`✅ Добавлено ${newKeys.length} ключей в ${langCode}.ts`);
-  } else {
-    console.log(`✅ ${langCode}.ts уже актуален`);
-  }
 }
 
-/**
- * Основная функция
- */
+function deepFind(obj, path) {
+    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+}
+
+function deepSet(obj, path, value) {
+    const keys = path.split('.');
+    let current = obj;
+    for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) {
+            current[keys[i]] = {};
+        }
+        current = current[keys[i]];
+    }
+    current[keys[keys.length - 1]] = value;
+}
+
+function formatObject(obj, indent = '  ') {
+    let result = '{\n';
+    for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const value = obj[key];
+            result += `${indent}  ${key}: `;
+            if (typeof value === 'string') {
+                result += `'${value.replace(/'/g, "\\'")}',\n`;
+            } else if (typeof value === 'object' && value !== null) {
+                result += formatObject(value, indent + '  ') + ',\n';
+            }
+        }
+    }
+    result = result.replace(/,\n$/, '\n');
+    result += `${indent}}`;
+    return result;
+}
+
 function main() {
-  console.log('🚀 Запуск автоматизированного обновления словарей...\n');
-  
-  try {
-    // Извлекаем ключи из русского словаря
-    const keys = extractKeysFromRussian();
-    
-    // Обновляем каждый языковой файл
-    for (const { code, name } of LANGUAGES) {
-      console.log(`\n📝 Обрабатываем ${name} (${code})...`);
-      updateLanguageFile(code, keys);
-    }
-    
-    console.log('\n🎉 Обновление словарей завершено!');
-    console.log('\n📋 Следующие шаги:');
-    console.log('1. Проверьте обновленные файлы');
-    console.log('2. Замените русские тексты в компонентах на t() функции');
-    console.log('3. Протестируйте переключение языков');
-    
-  } catch (error) {
-    console.error('❌ Ошибка:', error.message);
-    process.exit(1);
+  console.log('🚀 Starting automated dictionary update...');
+
+  const enStructure = getFullStructure(EN_FILE);
+  if (!enStructure) {
+      console.error('Could not parse English dictionary. Aborting.');
+      return;
   }
+
+  const allEnKeys = getAllKeys(enStructure);
+
+  for (const lang of languages) {
+    console.log(`\n📝 Processing ${lang}...`);
+    const langFile = path.join(LOCALES_DIR, `${lang}.ts`);
+    const langStructure = getFullStructure(langFile);
+    if (!langStructure) {
+        console.warn(`Could not parse ${lang}.ts, skipping.`);
+        continue;
+    }
+
+    let updated = false;
+    for (const keyPath of allEnKeys) {
+        if (!deepFind(langStructure, keyPath)) {
+            const enValue = deepFind(enStructure, keyPath);
+            console.log(`  - Adding missing key: ${keyPath}`);
+            deepSet(langStructure, keyPath, enValue);
+            updated = true;
+        }
+    }
+
+    if (updated) {
+        const langName = lang.replace(/-/g, '_');
+        const newContent = `// ${lang} translation dictionary\nexport const ${langName} = ${formatObject(langStructure)};\n`;
+        fs.writeFileSync(langFile, newContent, 'utf-8');
+        console.log(`✅ Updated ${lang}.ts`);
+    } else {
+        console.log(`✅ ${lang}.ts is already up to date.`);
+    }
+  }
+
+  console.log('\n🎉 Dictionary update complete!');
 }
 
-// Запуск скрипта
-if (require.main === module) {
-  main();
+function getAllKeys(obj, prefix = '') {
+    let keys = [];
+    for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const newPrefix = prefix ? `${prefix}.${key}` : key;
+            if (typeof obj[key] === 'object' && obj[key] !== null) {
+                keys = keys.concat(getAllKeys(obj[key], newPrefix));
+            } else {
+                keys.push(newPrefix);
+            }
+        }
+    }
+    return keys;
 }
 
-module.exports = { main, extractKeysFromRussian, updateLanguageFile };
+main();

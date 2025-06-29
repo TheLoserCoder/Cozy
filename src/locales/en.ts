@@ -145,6 +145,8 @@ export const en = {
     onLoad: 'On Load',
     daily: 'Daily',
     deleteImage: 'Delete Image',
+    borderlessBackground: 'Borderless Background',
+    borderlessBackgroundDescription: 'Applies the background to the Firefox theme',
     
     // Gradients
     gradientType: 'Gradient Type',
