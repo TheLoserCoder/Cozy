@@ -1,6 +1,6 @@
 # Cozy - cozy new tab
 
-A cozy and beautiful browser extension that replaces your new tab page with a stylish interface featuring customizable widgets, beautiful backgrounds, and productivity tools.
+A cozy and beautiful browser extension that replaces your new tab page.
 
 ## Screenshots
 
