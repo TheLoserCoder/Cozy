@@ -2,7 +2,7 @@ import * as React from "react";
 import { IconButton, Tooltip } from "@radix-ui/themes";
 import { MagicWandIcon } from "@radix-ui/react-icons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setClockColor, setRadixTheme, resetAllColorsToAccent, updateLinkedColors } from "../store/themeSlice";
+import { setRadixTheme, resetAllColorsToAccent, updateLinkedColors } from "../store/themeSlice";
 import { setListBackgroundColor, setListTitleColor, setListSeparatorColor, setListBorderColor } from "../store/themeSlice";
 import { resetAllFastLinkIndividualColors } from "../store/fastLinksSlice";
 import { resetAllCustomColors } from "../store/listsSlice";
@@ -135,13 +135,13 @@ export const AutoColorButton: React.FC<AutoColorButtonProps> = ({ size = "2" }) 
 
         // Затем применяем новые цвета
         dispatch(setRadixTheme(currentPalette.accent));
-        dispatch(setClockColor(currentPalette.clock));
+        // НЕ устанавливаем цвет часов - пусть они используют производный от акцентного
 
         // Применяем цвета только для списков
         dispatch(setListBackgroundColor(currentPalette.listBackground));
 
         // Обновляем связанные цвета на основе нового акцентного цвета
-        dispatch(updateLinkedColors(currentPalette.accent));
+        dispatch(updateLinkedColors());
 
         // Очищаем остальные цветовые настройки чтобы использовался акцентный цвет
         dispatch(setListTitleColor(''));
@@ -166,11 +166,11 @@ export const AutoColorButton: React.FC<AutoColorButtonProps> = ({ size = "2" }) 
       // Fallback - применяем стандартную палитру
       const fallbackAccent = '#3E63DD';
       dispatch(setRadixTheme(fallbackAccent));
-      dispatch(setClockColor('#FFFFFF'));
+      // НЕ устанавливаем цвет часов - пусть они используют производный от акцентного
       dispatch(setListBackgroundColor(lists.backdropBlur ? 'rgba(255, 255, 255, 0.1)' : '#F8F9FA'));
 
       // Обновляем связанные цвета на основе fallback акцентного цвета
-      dispatch(updateLinkedColors(fallbackAccent));
+      dispatch(updateLinkedColors());
 
       // Очищаем остальные цветовые настройки чтобы использовался акцентный цвет
       dispatch(setListTitleColor(''));

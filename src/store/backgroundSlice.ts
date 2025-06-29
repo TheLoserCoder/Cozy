@@ -119,8 +119,8 @@ export const standardBackgroundSettings = {
     height: 0
   },
   autoSwitch: {
-    enabled: false,
-    mode: 'random' as AutoSwitchMode
+    enabled: true, // Включено по умолчанию
+    mode: 'daily' as AutoSwitchMode // Переключение раз в день
   }
 };
 
@@ -246,9 +246,9 @@ function saveShadowOverlayToStorage(shadowOverlay: { enabled: boolean; intensity
 function getAutoSwitchFromStorage() {
   try {
     const stored = localStorage.getItem(AUTO_SWITCH_KEY);
-    return stored ? JSON.parse(stored) : { enabled: false, mode: 'onLoad' as AutoSwitchMode };
+    return stored ? JSON.parse(stored) : { enabled: true, mode: 'daily' as AutoSwitchMode };
   } catch {
-    return { enabled: false, mode: 'onLoad' as AutoSwitchMode };
+    return { enabled: true, mode: 'daily' as AutoSwitchMode };
   }
 }
 
