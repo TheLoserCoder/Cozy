@@ -18,7 +18,7 @@ A cozy and beautiful browser extension that replaces your new tab page.
 
 - 🎨 **Customizable Interface** - Personalize colors, layouts, and themes
 - 🔗 **Quick Links** - Fast access to your favorite websites
-- 📋 **Todo Lists** - Organize your tasks efficiently
+- 📋 **Link list** - More links to use
 - 🌅 **Beautiful Backgrounds** - Stunning wallpapers and gradients
 - ⚡ **Fast Performance** - Built with React and optimized for speed
 - 🌐 **Multi-Browser Support** - Works on Chrome, Firefox, and Edge
