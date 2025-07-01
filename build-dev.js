@@ -31,7 +31,7 @@ fs.mkdirSync(buildDir, { recursive: true });
 // Build with Vite (dev config)
 console.log('📦 Building with Vite (dev mode)...');
 try {
-  execSync('npm run build:vite:dev:once', { stdio: 'inherit' });
+  execSync('npm run build:vite:dev', { stdio: 'inherit' });
 } catch (error) {
   console.error('❌ Vite dev build failed');
   process.exit(1);

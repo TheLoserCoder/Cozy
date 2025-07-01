@@ -21,7 +21,7 @@
     "build:edge": "node build.js edge",
     "build:dev": "npm run build:dev:chrome && npm run build:dev:firefox && npm run build:dev:edge",
     "build:dev:chrome": "node build-dev.js chrome",
-    "build:dev:firefox": "node build-dev.js firefox && node src/worker/build.js",
+    "build:dev:firefox": "node build-dev.js firefox",
     "build:dev:edge": "node build-dev.js edge",
     "watch:dev:chrome": "node watch-dev.js chrome",
     "watch:dev:firefox": "node watch-dev.js firefox",

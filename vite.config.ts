@@ -19,7 +19,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         // Main entry point for new tab page
-        main: path.resolve(__dirname, 'index.html')
+        main: path.resolve(__dirname, 'index.html'),
+        // Firefox worker
+        worker: path.resolve(__dirname, 'src/worker.ts')
       },
       output: {
         // Ensure consistent naming for WebExtension
