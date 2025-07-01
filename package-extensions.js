@@ -35,7 +35,7 @@ browsers.forEach(browser => {
   
   console.log(`📦 Packaging ${browser} extension...`);
   
-  const zipName = `newtab-${browser}-extension.zip`;
+  const zipName = `cozy-${browser}-extension.zip`;
   const zipPath = path.join(packagesDir, zipName);
   
   try {
