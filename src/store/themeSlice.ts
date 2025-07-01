@@ -74,6 +74,7 @@ export interface PresetData {
     parallaxEnabled?: boolean;
     shadowOverlay?: any;
     autoSwitch?: any;
+    borderlessBackground?: boolean; // Безрамочный фон Firefox
   };
   // Индивидуальные настройки списков и ссылок
   individualStyles?: {

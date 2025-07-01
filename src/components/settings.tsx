@@ -442,6 +442,20 @@ const accardionStyle = {
         };
         console.log("Adding image:", newImage);
         dispatch(addImage(newImage));
+        
+        // Проверяем включен ли borderless режим для Firefox
+        if (borderlessBackground && isFirefox) {
+          const { sendBackgroundToFirefox } = await import('../utils/firefoxBackground');
+          const success = await sendBackgroundToFirefox(newImage.url, {
+            blur: filters.blur,
+            brightness: filters.brightness
+          });
+          
+          if (!success) {
+            console.warn('Failed to apply background to Firefox theme');
+          }
+        }
+        
         setImageUrl("");
         console.log("Image added successfully");
       } else {
@@ -462,12 +476,28 @@ const accardionStyle = {
 
 
 
-  const handleSetBackground = (imageId: string) => {
+  const handleSetBackground = async (imageId: string) => {
     dispatch(setCurrentBackground(imageId));
+    
+    // Проверяем включен ли borderless режим для Firefox
+    if (borderlessBackground && isFirefox) {
+      const selectedImage = images.find(img => img.id === imageId);
+      if (selectedImage) {
+        const { sendBackgroundToFirefox } = await import('../utils/firefoxBackground');
+        const success = await sendBackgroundToFirefox(selectedImage.url, {
+          blur: filters.blur,
+          brightness: filters.brightness
+        });
+        
+        if (!success) {
+          console.warn('Failed to apply background to Firefox theme');
+        }
+      }
+    }
   };
 
   // Функция для быстрого добавления тестового изображения
-  const handleAddTestImage = () => {
+  const handleAddTestImage = async () => {
     // Генерируем фиксированный seed для постоянного изображения
     const seed = Math.floor(Math.random() * 1000);
     const testImage = {
@@ -477,6 +507,19 @@ const accardionStyle = {
     };
     console.log("Adding random image:", testImage);
     dispatch(addImage(testImage));
+    
+    // Проверяем включен ли borderless режим для Firefox
+    if (borderlessBackground && isFirefox) {
+      const { sendBackgroundToFirefox } = await import('../utils/firefoxBackground');
+      const success = await sendBackgroundToFirefox(testImage.url, {
+        blur: filters.blur,
+        brightness: filters.brightness
+      });
+      
+      if (!success) {
+        console.warn('Failed to apply background to Firefox theme');
+      }
+    }
   };
 
   return (
@@ -1294,7 +1337,27 @@ const accardionStyle = {
                           <Flex align="center" gap="2">
                             <Switch
                               checked={borderlessBackground}
-                              onCheckedChange={(checked) => dispatch(setBorderlessBackground(checked))}
+                              onCheckedChange={async (checked) => {
+                                dispatch(setBorderlessBackground(checked));
+                                
+                                if (checked) {
+                                  // Включаем режим - применяем текущий фон
+                                  if (currentBackground) {
+                                    const selectedImage = images.find(img => img.id === currentBackground);
+                                    if (selectedImage) {
+                                      const { sendBackgroundToFirefox } = await import('../utils/firefoxBackground');
+                                      await sendBackgroundToFirefox(selectedImage.url, {
+                                        blur: filters.blur,
+                                        brightness: filters.brightness
+                                      });
+                                    }
+                                  }
+                                } else {
+                                  // Отключаем режим - сбрасываем тему
+                                  const { resetFirefoxTheme } = await import('../utils/firefoxBackground');
+                                  await resetFirefoxTheme();
+                                }
+                              }}
                             />
                             <Text size="2" weight="medium">
                               {t('settings.borderlessBackground')}

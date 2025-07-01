@@ -52,6 +52,8 @@ export const App: React.FC = () => {
 
   // Загружаем и применяем выбранный шрифт
   useFontLoader();
+  
+
 
   // Синхронизируем язык из Redux с системой переводов
   React.useEffect(() => {

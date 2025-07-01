@@ -33,3 +33,6 @@ packages/
 *.sw?
 Mozilla Start Page/
 
+.gemini/
+.github/
+

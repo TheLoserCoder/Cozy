@@ -40,7 +40,8 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
       // parallaxEnabled,
       shadowOverlay: shadowOverlay ? { ...shadowOverlay } : undefined,
       autoSwitch: autoSwitch ? { ...autoSwitch } : undefined,
-      filters: { ...filters }
+      filters: { ...filters },
+      borderlessBackground: localStorage.getItem('borderless-background') === 'true'
     };
 
     switch (backgroundType) {
@@ -183,6 +184,11 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
 
       // Применяем фон из пресета (это переписывает ВСЕ настройки фона)
       dispatch(applyPresetBackground(preset.data.background));
+      
+      // Применяем borderless background из пресета
+      if (preset.data.background.borderlessBackground !== undefined) {
+        dispatch(setBorderlessBackground(preset.data.background.borderlessBackground));
+      }
 
       // Применяем индивидуальные стили из пресета
       if (preset.data.individualStyles) {

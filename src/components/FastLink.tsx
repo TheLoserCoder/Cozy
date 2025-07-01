@@ -240,6 +240,7 @@ export const FastLink = React.forwardRef<HTMLDivElement, FastLinkProps>(({
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              fontFamily: "var(--app-font-family, inherit)"
             }}
           >
             {fastLink.title}

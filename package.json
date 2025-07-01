@@ -21,7 +21,7 @@
     "build:edge": "node build.js edge",
     "build:dev": "npm run build:dev:chrome && npm run build:dev:firefox && npm run build:dev:edge",
     "build:dev:chrome": "node build-dev.js chrome",
-    "build:dev:firefox": "node build-dev.js firefox",
+    "build:dev:firefox": "node build-dev.js firefox && node src/worker/build.js",
     "build:dev:edge": "node build-dev.js edge",
     "watch:dev:chrome": "node watch-dev.js chrome",
     "watch:dev:firefox": "node watch-dev.js firefox",
@@ -38,12 +38,14 @@
     "@reduxjs/toolkit": "^2.8.2",
     "@types/react-color": "^3.0.13",
     "@types/redux": "^3.6.0",
+    "canvas-filters": "^1.0.1",
     "deepmerge": "^4.3.1",
     "nanoid": "^5.1.5",
     "react": "^19.1.0",
     "react-color": "^2.19.3",
     "react-dom": "^19.1.0",
     "react-redux": "^9.2.0",
+    "tinycolor2": "^1.6.0",
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {

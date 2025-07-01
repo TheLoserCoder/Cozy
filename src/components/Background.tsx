@@ -6,7 +6,7 @@ import { useAutoSwitch } from "../hooks/useAutoSwitch";
 import { useTranslation } from "../locales";
 
 export const Background: React.FC = () => {
-  const { currentBackground, images, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, shadowOverlay } = useAppSelector((state) => state.background);
+  const { currentBackground, images, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, shadowOverlay, borderlessBackground } = useAppSelector((state) => state.background);
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
 
@@ -120,6 +120,19 @@ export const Background: React.FC = () => {
       }
     }
   }, [currentImageUrl, backgroundType, primaryImage, isFirstImageLoaded, dispatch]);
+
+  // Отслеживаем изменения фильтров и изображений для Firefox
+  React.useEffect(() => {
+    const updateFirefoxBackground = async () => {
+      const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+      if (borderlessBackground && isFirefox && currentImageUrl) {
+        const { sendBackgroundToFirefox } = await import('../utils/firefoxBackground');
+        await sendBackgroundToFirefox(currentImageUrl, filters);
+      }
+    };
+    
+    updateFirefoxBackground();
+  }, [filters, borderlessBackground, currentImageUrl]);
 
   // Обработчики для основного изображения
   const handlePrimaryLoad = () => {
