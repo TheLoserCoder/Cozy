@@ -1,19 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import copy from 'rollup-plugin-copy'
+// import copy from 'rollup-plugin-copy'
 import path from 'path'
 
 // Development configuration for browser extensions
 export default defineConfig({
   plugins: [
     react(),
-    copy({
-      targets: [
-        // Copy manifest files from manifests directory
-        { src: 'manifests/manifest.*.json', dest: 'dist-dev' }
-      ],
-      hook: 'writeBundle'
-    })
+    // Копирование отключено для dev режима
   ],
   build: {
     outDir: 'dist-dev',
@@ -28,8 +22,23 @@ export default defineConfig({
       output: {
         // Ensure consistent naming for WebExtension
         entryFileNames: '[name].js',
-        chunkFileNames: '[name].js',
-        assetFileNames: '[name].[ext]'
+        chunkFileNames: (chunkInfo) => {
+          // Prevent files starting with underscore
+          const name = chunkInfo.name || 'chunk';
+          return name.startsWith('_') ? name.substring(1) + '.js' : name + '.js';
+        },
+        assetFileNames: (assetInfo) => {
+          // Prevent assets starting with underscore
+          const name = assetInfo.name || 'asset';
+          const ext = name.split('.').pop() || 'unknown';
+          const baseName = name.replace(/\.[^/.]+$/, '');
+          return baseName.startsWith('_') ? baseName.substring(1) + '.' + ext : name;
+        },
+        manualChunks: {
+          // Explicitly name common chunks to avoid underscore prefixes
+          vendor: ['react', 'react-dom'],
+          utils: ['nanoid', 'tinycolor2']
+        }
       }
     },
     // Development optimizations

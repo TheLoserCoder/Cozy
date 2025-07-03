@@ -208,6 +208,7 @@ interface ActionIconButtonProps {
   type?: "button" | "submit" | "reset";
   "aria-label"?: string;
   style?: React.CSSProperties;
+  className?: string;
   onMouseEnter?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onMouseLeave?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
@@ -222,6 +223,7 @@ export const ActionIconButton: React.FC<ActionIconButtonProps> = ({
   type = "button",
   "aria-label": ariaLabel,
   style,
+  className,
   onMouseEnter,
   onMouseLeave
 }) => {
@@ -235,6 +237,7 @@ export const ActionIconButton: React.FC<ActionIconButtonProps> = ({
       type={type}
       aria-label={ariaLabel}
       style={style}
+      className={className}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >

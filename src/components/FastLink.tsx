@@ -6,6 +6,7 @@ import { ActionIconButton } from "./ActionButtons";
 import { FastLink as FastLinkType } from "../entities/list/list.types";
 import { createFastLinkColorFromAccent, isValidHexColor } from "../utils/colorUtils";
 import { useTranslation } from "../locales";
+import { Icon } from "./Icon";
 
 interface FastLinkProps {
   fastLink: FastLinkType;
@@ -51,18 +52,25 @@ export const FastLink = React.forwardRef<HTMLDivElement, FastLinkProps>(({
       ? fastLinks.globalBackdropColor
       : radixTheme;
 
-  // Определяем цвет фона иконки (внутренний круг): индивидуальный цвет > глобальный цвет > белый по умолчанию
+  // Определяем цвет фона иконки (внутренний круг): индивидуальный цвет > глобальный цвет > производный от акцента
   const iconBackgroundColor = (fastLink.customIconBackgroundColor && fastLink.customIconBackgroundColor !== "")
     ? fastLink.customIconBackgroundColor
     : (fastLinks.globalIconBackgroundColor && fastLinks.globalIconBackgroundColor !== "")
       ? fastLinks.globalIconBackgroundColor
-      : '#FFFFFF';
+      : (isValidHexColor(radixTheme) ? `color-mix(in srgb, ${radixTheme} 15%, white 85%)` : '#FFFFFF');
   // Определяем цвет текста: индивидуальный цвет > глобальный цвет > производный от акцентного
   const textColor = (fastLink.customTextColor && fastLink.customTextColor !== "")
     ? fastLink.customTextColor
     : (fastLinks.globalTextColor && fastLinks.globalTextColor !== "")
       ? fastLinks.globalTextColor
       : (isValidHexColor(radixTheme) ? createFastLinkColorFromAccent(radixTheme) : '#6B7280');
+
+  // Определяем цвет иконки: индивидуальный цвет > глобальный цвет > акцентный
+  const iconColor = (fastLink.iconColor && fastLink.iconColor !== "")
+    ? fastLink.iconColor
+    : (fastLinks.globalIconColor && fastLinks.globalIconColor !== "")
+      ? fastLinks.globalIconColor
+      : (isValidHexColor(radixTheme) ? radixTheme : '#000000');
   const handleClick = (e: React.MouseEvent) => {
     // Предотвращаем активацию ссылки во время перетаскивания
     if (isDragActive || e.detail === 0) {
@@ -197,10 +205,17 @@ export const FastLink = React.forwardRef<HTMLDivElement, FastLinkProps>(({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                overflow: 'hidden',
               }}
             >
-              {fastLink.iconUrl ? (
+              {fastLink.iconId ? (
+                <Icon
+                  iconId={fastLink.iconId}
+                  iconType={fastLink.iconType || 'favicon'}
+                  fallbackText={fastLink.title}
+                  size={20}
+                  color={iconColor}
+                />
+              ) : fastLink.iconUrl ? (
                 <img
                   src={fastLink.iconUrl}
                   alt={fastLink.title}

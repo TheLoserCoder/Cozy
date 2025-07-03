@@ -51,10 +51,12 @@ const listsSlice = createSlice({
         saveListsToStorage(state);
       }
     },
-    setListIcon(state, action: PayloadAction<{ id: string; icon?: string }>) {
+    setListIcon(state, action: PayloadAction<{ id: string; icon?: string; iconId?: string; iconType?: 'standard' | 'custom' }>) {
       const list = state.find(l => l.id === action.payload.id);
       if (list) {
         list.icon = action.payload.icon;
+        list.iconId = action.payload.iconId;
+        list.iconType = action.payload.iconType;
         saveListsToStorage(state);
       }
     },
@@ -141,6 +143,7 @@ const listsSlice = createSlice({
         // Сбрасываем цвета всех ссылок в списке
         list.links.forEach(link => {
           link.customColor = undefined;
+          link.iconColor = undefined;
         });
       });
       saveListsToStorage(state);
@@ -153,9 +156,14 @@ const listsSlice = createSlice({
         list.customLinkColor = undefined;
         list.iconColor = undefined;
         list.icon = undefined; // Сбрасываем и саму иконку
-        // Сбрасываем цвета всех ссылок в списке
+        list.iconId = undefined;
+        list.iconType = undefined;
+        // Сбрасываем все стили всех ссылок в списке
         list.links.forEach(link => {
           link.customColor = undefined;
+          link.iconColor = undefined;
+          link.iconId = undefined;
+          link.iconType = undefined;
         });
       });
       saveListsToStorage(state);

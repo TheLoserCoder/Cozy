@@ -17,24 +17,24 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
   const prevUrlRef = React.useRef("");
   const { t } = useTranslation();
 
-  React.useEffect(() => {
-    // Если поле url было пустым и стало валидным URL, подставить домен в title
-    if (!prevUrlRef.current && url) {
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = e.target.value;
+    setUrl(newUrl);
+    
+    // Автоподстановка заголовка только если поле пустое
+    if (!title.trim() && newUrl.trim()) {
       try {
-        const parsed = new URL(url);
-        // Получаем домен без www и до первой точки после домена
-        let host = parsed.hostname.replace(/^www\./, "");
-        const parts = host.split(".");
-        if (parts.length > 1) {
-          host = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-        } else {
-          host = host.charAt(0).toUpperCase() + host.slice(1);
+        const extractedTitle = newUrl
+          .replace(/^.*?:\/\/([^\/?#]+).*$/, '$1') // hostname
+          .replace(/\.[^\.]+$/, '')                // убираем последнюю .xxx
+          .replace(/\./g, ' ');                     // заменяем точки на пробелы
+        
+        if (extractedTitle && extractedTitle !== newUrl) {
+          setTitle(extractedTitle);
         }
-        setTitle(host);
       } catch {}
     }
-    prevUrlRef.current = url;
-  }, [url]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +80,18 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
         <form onSubmit={handleSubmit} aria-describedby="add-link-desc">
           <Flex direction="column" gap="4">
             <label>
+              <Text as="div" size="2" mb="1" weight="medium">URL</Text>
+              <TextField.Root
+                value={url}
+                onChange={handleUrlChange}
+                placeholder="https://example.com"
+                color="gray"
+                required
+                type="url"
+                autoFocus
+              />
+            </label>
+            <label>
               <Text as="div" size="2" mb="1" weight="medium">{t('lists.title')}</Text>
               <TextField.Root
                 value={title}
@@ -87,18 +99,6 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
                 placeholder={t('lists.linkName')}
                 color="gray"
                 required
-                autoFocus
-              />
-            </label>
-            <label>
-              <Text as="div" size="2" mb="1" weight="medium">URL</Text>
-              <TextField.Root
-                value={url}
-                onChange={e => setUrl(e.target.value)}
-                placeholder="https://example.com"
-                color="gray"
-                required
-                type="url"
               />
             </label>
             <Flex gap="3" justify="end" mt="2">

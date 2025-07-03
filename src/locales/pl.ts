@@ -27,7 +27,9 @@ export const pl = {
       create: 'Utwórz',
       enterName: 'Wpisz nazwę...',
       sidebar: 'Pasek boczny',
-      sidebarDescription: 'Pasek boczny z ustawieniami i dodatkową zawartością'
+      sidebarDescription: 'Pasek boczny z ustawieniami i dodatkową zawartością',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'Ustawienia',
@@ -49,6 +51,9 @@ export const pl = {
       cleanModeDescription: 'Ukrywa przyciski otwierania list',
       colorScheme: 'Schemat kolorów',
       borderRounding: 'Zaokrąglenie elementów',
+      icon: 'Ikona',
+      selection: 'Wybór',
+      iconColor: 'Kolor ikony',
       showClock: 'Pokaż zegar',
       showSeconds: 'Pokaż sekundy',
       showDate: 'Pokaż datę',
@@ -393,5 +398,18 @@ export const pl = {
       terminal: 'Terminalowa',
       modern: 'Nowoczesna',
       decorative: 'Dekoracyjna'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'Standardowe',
+    custom: 'Niestandardowe',
+    searchPlaceholderBootstrap: 'Szukaj wśród ponad 2000 ikon...',
+    searchPlaceholderCustom: 'Szukaj niestandardowych ikon...',
+    found: 'Znaleziono',
+    total: 'Razem',
+    notFound: 'Nie znaleziono ikon',
+    iconUrl: 'URL ikony',
+    uploadFile: 'Prześlij plik',
+    noCustomIcons: 'Brak niestandardowych ikon',
+    deleteConfirm: 'Usunąć tę ikonę?',
+  },
+};

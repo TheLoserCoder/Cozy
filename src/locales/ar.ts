@@ -27,7 +27,9 @@ export const ar = {
       create: 'إنشاء',
       enterName: 'أدخل الاسم...',
       sidebar: 'الشريط الجانبي',
-      sidebarDescription: 'شريط جانبي به إعدادات ومحتوى إضافي'
+      sidebarDescription: 'شريط جانبي به إعدادات ومحتوى إضافي',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'الإعدادات',
@@ -49,6 +51,9 @@ export const ar = {
       cleanModeDescription: 'يخفي أزرار فتح القائمة',
       colorScheme: 'نظام الألوان',
       borderRounding: 'استدارة العناصر',
+      icon: 'أيقونة',
+      selection: 'تحديد',
+      iconColor: 'لون الأيقونة',
       showClock: 'إظهار الساعة',
       showSeconds: 'إظهار الثواني',
       showDate: 'إظهار التاريخ',
@@ -393,5 +398,18 @@ export const ar = {
       terminal: 'طرفي',
       modern: 'حديث',
       decorative: 'زخرفي'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'القياسي',
+    custom: 'مخصص',
+    searchPlaceholderBootstrap: 'ابحث بين 2000+ أيقونة...',
+    searchPlaceholderCustom: 'ابحث في الأيقونات المخصصة...',
+    found: 'تم العثور على',
+    total: 'المجموع',
+    notFound: 'لم يتم العثور على أيقونات',
+    iconUrl: 'رابط الأيقونة',
+    uploadFile: 'تحميل ملف',
+    noCustomIcons: 'لا توجد أيقونات مخصصة',
+    deleteConfirm: 'هل تريد حذف هذه الأيقونة؟',
+  },
+};

@@ -8,16 +8,36 @@ import deepmerge from 'deepmerge';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('🚀 Starting development mode with extension auto-rebuild...');
+// Configuration
+const browsers = ['chrome', 'firefox', 'edge'];
+const targetBrowser = process.argv[2]; // Если указан конкретный браузер
+const buildBrowsers = targetBrowser ? [targetBrowser] : browsers;
+
+console.log(`🚀 Starting development mode with extension auto-rebuild for ${targetBrowser || 'all browsers'}...`);
+
+// Ensure Bootstrap Icons data exists
+const bootstrapIconsPath = path.join(__dirname, 'public', 'bootstrap-icons-data.json');
+if (!fs.existsSync(bootstrapIconsPath)) {
+  console.log('📦 Generating Bootstrap Icons data...');
+  try {
+    const { execSync } = await import('child_process');
+    execSync('node scripts/generate-all-bootstrap-icons.js', { stdio: 'inherit' });
+  } catch (error) {
+    console.error('❌ Failed to generate Bootstrap Icons data');
+    process.exit(1);
+  }
+}
 
 // Paths
 const distDir = path.join(__dirname, 'dist-dev');
 const manifestsDir = path.join(__dirname, 'manifests');
-const browsers = ['chrome', 'firefox', 'edge'];
 
 let viteDevProcess = null;
 let viteBuildProcess = null;
 let isBuilding = false;
+let bootstrapIconsCopied = false;
+let buildTimeout = null;
+let lastBuildTime = 0;
 
 // Function to start Vite dev server
 function startViteDevServer() {
@@ -57,24 +77,35 @@ function startViteBuildWatch() {
   });
 }
 
-// Function to build extensions for all browsers
+// Function to build extensions for all browsers with debouncing
 function buildAllExtensions() {
-  if (isBuilding) return;
-  isBuilding = true;
-
-  try {
-    console.log('📦 Building extensions for all browsers...');
-
-    browsers.forEach(browser => {
-      buildExtensionForBrowser(browser);
-    });
-
-    console.log('✅ All extensions updated!');
-  } catch (error) {
-    console.error('❌ Error building extensions:', error);
-  } finally {
-    isBuilding = false;
+  if (buildTimeout) {
+    clearTimeout(buildTimeout);
   }
+  
+  buildTimeout = setTimeout(() => {
+    const now = Date.now();
+    if (now - lastBuildTime < 1000) return; // Не собираем чаще раза в секунду
+    
+    if (isBuilding) return;
+    isBuilding = true;
+    lastBuildTime = now;
+
+    try {
+      console.log('📦 Building extensions...');
+
+      buildBrowsers.forEach(browser => {
+        buildExtensionForBrowser(browser);
+      });
+
+      console.log(`✅ ${targetBrowser ? targetBrowser : 'All'} extension(s) updated!`);
+      bootstrapIconsCopied = true;
+    } catch (error) {
+      console.error('❌ Error building extensions:', error);
+    } finally {
+      isBuilding = false;
+    }
+  }, 500); // Задержка 500мс
 }
 
 // Function to build extension for specific browser
@@ -153,6 +184,20 @@ function buildExtensionForBrowser(browser) {
   // Copy all files from dist-dev to build directory, except manifest files
   copyRecursive(distDir, buildDir);
 
+  // Copy Bootstrap Icons JSON files
+  const bootstrapFiles = [
+    'bootstrap-icons-data.json',
+    'bootstrap-icons-list.json'
+  ];
+
+  bootstrapFiles.forEach(file => {
+    const srcPath = path.join(__dirname, 'public', file);
+    const destPath = path.join(buildDir, file);
+    if (fs.existsSync(srcPath)) {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  });
+
   // Copy icon from icons directory
   const iconPath = path.join(__dirname, 'icons', 'icon.png');
   const iconDestPath = path.join(buildDir, 'icon.png');
@@ -172,24 +217,28 @@ function buildExtensionForBrowser(browser) {
 
 // Watch for changes in dist-dev directory
 const distWatcher = chokidar.watch(distDir, {
-  ignored: /node_modules/,
+  ignored: [/node_modules/, /\.tmp$/, /\.temp$/, /~$/],
   persistent: true,
-  ignoreInitial: true
+  ignoreInitial: true,
+  awaitWriteFinish: {
+    stabilityThreshold: 100,
+    pollInterval: 50
+  }
 });
 
 distWatcher.on('change', (filePath) => {
   console.log(`📁 File changed: ${path.relative(__dirname, filePath)}`);
-  setTimeout(buildAllExtensions, 100); // Small delay to ensure file is fully written
+  buildAllExtensions();
 });
 
 distWatcher.on('add', (filePath) => {
   console.log(`📁 File added: ${path.relative(__dirname, filePath)}`);
-  setTimeout(buildAllExtensions, 100);
+  buildAllExtensions();
 });
 
 distWatcher.on('unlink', (filePath) => {
   console.log(`📁 File removed: ${path.relative(__dirname, filePath)}`);
-  setTimeout(buildAllExtensions, 100);
+  buildAllExtensions();
 });
 
 // Watch for changes in manifest files
@@ -206,7 +255,7 @@ manifestWatcher.on('change', (filePath) => {
 // Initial build after a delay
 setTimeout(() => {
   buildAllExtensions();
-}, 3000); // Wait for Vite to create initial files
+}, 5000); // Wait for Vite to create initial files
 
 // Start both Vite processes
 startViteDevServer();

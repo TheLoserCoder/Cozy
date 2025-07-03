@@ -51,26 +51,35 @@ const fastLinksSlice = createSlice({
       saveFastLinksToStorage(newState);
       return newState;
     },
-    editFastLink(state, action: PayloadAction<{ id: string; title?: string; url?: string; customTextColor?: string; customBackdropColor?: string; customIconBackgroundColor?: string }>) {
-      const { id, title, url, customTextColor, customBackdropColor, customIconBackgroundColor } = action.payload;
+    editFastLink(state, action: PayloadAction<{ id: string; title?: string; url?: string; customTextColor?: string; customBackdropColor?: string; customIconBackgroundColor?: string; iconId?: string; iconType?: 'standard' | 'custom' | 'favicon'; iconColor?: string }>) {
+      const { id, title, url, customTextColor, customBackdropColor, customIconBackgroundColor, iconId, iconType, iconColor } = action.payload;
       const fastLink = state.find(link => link.id === id);
       if (fastLink) {
         if (title !== undefined) fastLink.title = title;
         if (url !== undefined) {
           fastLink.url = url;
-          fastLink.iconUrl = getFaviconUrl(url);
+          // Обновляем favicon только если нет пользовательской иконки
+          if (!fastLink.iconId || fastLink.iconType === 'favicon') {
+            fastLink.iconUrl = getFaviconUrl(url);
+          }
         }
         if (customTextColor !== undefined) {
-          // Если передана пустая строка, сбрасываем цвет
           fastLink.customTextColor = customTextColor === "" ? undefined : customTextColor;
         }
         if (customBackdropColor !== undefined) {
-          // Если передана пустая строка, сбрасываем цвет
           fastLink.customBackdropColor = customBackdropColor === "" ? undefined : customBackdropColor;
         }
         if (customIconBackgroundColor !== undefined) {
-          // Если передана пустая строка, сбрасываем цвет
           fastLink.customIconBackgroundColor = customIconBackgroundColor === "" ? undefined : customIconBackgroundColor;
+        }
+        if (iconId !== undefined) {
+          fastLink.iconId = iconId === "" ? undefined : iconId;
+        }
+        if (iconType !== undefined) {
+          fastLink.iconType = iconType;
+        }
+        if (iconColor !== undefined) {
+          fastLink.iconColor = iconColor === "" ? undefined : iconColor;
         }
         saveFastLinksToStorage(state);
       }
@@ -99,11 +108,29 @@ const fastLinksSlice = createSlice({
         saveFastLinksToStorage(state);
       }
     },
+    resetFastLinkIcon(state, action: PayloadAction<string>) {
+      const fastLink = state.find(link => link.id === action.payload);
+      if (fastLink) {
+        fastLink.iconId = undefined;
+        fastLink.iconType = 'favicon';
+        // Восстанавливаем favicon
+        fastLink.iconUrl = getFaviconUrl(fastLink.url);
+        saveFastLinksToStorage(state);
+      }
+    },
     resetAllFastLinkColors(state) {
       state.forEach(link => {
         link.customTextColor = undefined;
         link.customBackdropColor = undefined;
         link.customIconBackgroundColor = undefined;
+      });
+      saveFastLinksToStorage(state);
+    },
+    resetAllFastLinkIcons(state) {
+      state.forEach(link => {
+        link.iconId = undefined;
+        link.iconType = 'favicon';
+        link.iconUrl = getFaviconUrl(link.url);
       });
       saveFastLinksToStorage(state);
     },
@@ -124,6 +151,7 @@ const fastLinksSlice = createSlice({
         link.customTextColor = undefined;
         link.customBackdropColor = undefined;
         link.customIconBackgroundColor = undefined;
+        link.iconColor = undefined; // Сбрасываем индивидуальный цвет иконки
       });
       saveFastLinksToStorage(state);
     },
@@ -134,19 +162,25 @@ const fastLinksSlice = createSlice({
       state.forEach(fastLink => {
         const presetStyle = fastLinkStyles[fastLink.id];
         if (presetStyle) {
-          // Применяем только те стили, которые были сохранены в пресете
-          if (presetStyle.customTextColor !== undefined) {
-            fastLink.customTextColor = presetStyle.customTextColor;
-          }
-          if (presetStyle.customBackdropColor !== undefined) {
-            fastLink.customBackdropColor = presetStyle.customBackdropColor;
-          }
-          if (presetStyle.customIconBackgroundColor !== undefined) {
-            fastLink.customIconBackgroundColor = presetStyle.customIconBackgroundColor;
-          }
+          // Применяем все стили из пресета, включая undefined для сброса
+          fastLink.customTextColor = presetStyle.customTextColor;
+          fastLink.customBackdropColor = presetStyle.customBackdropColor;
+          fastLink.customIconBackgroundColor = presetStyle.customIconBackgroundColor;
+          fastLink.iconId = presetStyle.iconId;
+          fastLink.iconType = presetStyle.iconType;
+          fastLink.iconColor = presetStyle.iconColor;
         }
       });
       saveFastLinksToStorage(state);
+    },
+    updateFastLinkIcon(state, action: PayloadAction<{ id: string; iconId: string }>) {
+      // Обновляем иконку быстрой ссылки после скачивания favicon
+      const { id, iconId } = action.payload;
+      const fastLink = state.find(link => link.id === id);
+      if (fastLink && fastLink.iconType === 'custom') {
+        fastLink.iconId = iconId;
+        saveFastLinksToStorage(state);
+      }
     },
   },
 });
@@ -158,11 +192,14 @@ export const {
   deleteFastLink,
   reorderFastLinks,
   resetFastLinkColors,
+  resetFastLinkIcon,
   resetAllFastLinkColors,
+  resetAllFastLinkIcons,
   updateGlobalBackgroundColor,
   resetAllFastLinkIndividualColors,
   applyFastLinkStyles,
-  resetToStandardFastLinks
+  resetToStandardFastLinks,
+  updateFastLinkIcon
 } = fastLinksSlice.actions;
 
 export default fastLinksSlice.reducer;

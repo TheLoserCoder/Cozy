@@ -27,7 +27,9 @@ export const tr = {
       create: 'Oluştur',
       enterName: 'İsim girin...',
       sidebar: 'Kenar Çubuğu',
-      sidebarDescription: 'Ayarlar ve ek içerik içeren kenar çubuğu'
+      sidebarDescription: 'Ayarlar ve ek içerik içeren kenar çubuğu',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'Ayarlar',
@@ -49,6 +51,9 @@ export const tr = {
       cleanModeDescription: 'Liste açma düğmelerini gizler',
       colorScheme: 'Renk Şeması',
       borderRounding: 'Eleman Köşeleri',
+      icon: 'Simge',
+      selection: 'Seçim',
+      iconColor: 'Simge Rengi',
       showClock: 'Saati Göster',
       showSeconds: 'Saniyeleri Göster',
       showDate: 'Tarihi Göster',
@@ -393,5 +398,18 @@ export const tr = {
       terminal: 'Terminal',
       modern: 'Modern',
       decorative: 'Dekoratif'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'Standart',
+    custom: 'Özel',
+    searchPlaceholderBootstrap: '2000\'den fazla simge arasında arama yapın...', 
+    searchPlaceholderCustom: 'Özel simgeleri ara...', 
+    found: 'Bulundu',
+    total: 'Toplam',
+    notFound: 'Simgeler bulunamadı',
+    iconUrl: "Simge URL'si",
+    uploadFile: 'Dosya Yükle',
+    noCustomIcons: 'Özel simge yok',
+    deleteConfirm: 'Bu simgeyi sil?',
+  },
+};

@@ -29,6 +29,7 @@ export interface ListSettings {
   borderHidden: boolean; // Скрытие границы
   borderThickness: number; // Толщина границы (1-5)
   hideIcons: boolean; // Скрытие иконок ссылок
+  iconColor: string; // Глобальный цвет иконок
   gridColumns: number; // Количество колонок в сетке (2-10, по умолчанию 4)
 }
 
@@ -52,6 +53,7 @@ export interface FastLinkSettings {
   globalTextColor?: string; // Глобальный цвет текста заголовков
   globalBackdropColor?: string; // Глобальный цвет задника (внешний круг)
   globalIconBackgroundColor?: string; // Глобальный цвет фона иконки (внутренний круг)
+  globalIconColor?: string; // Глобальный цвет иконок
   hideIcons: boolean; // Скрывать иконки
   hideText: boolean; // Скрывать текст
   backdropBlur: number; // Размытие фона (0-20)
@@ -195,6 +197,7 @@ export const standardSettings = {
     titleColor: '#000000', // Цвет заголовка черный
     linkColor: '#000000', // Цвет ссылок черный
     hideIcons: false, // Скрыть иконки ссылок - нет
+    iconColor: '', // Глобальный цвет иконок - акцентный
     gridColumns: 3, // Количество колонок - 3
   } as ListSettings,
 
@@ -407,6 +410,10 @@ const themeSlice = createSlice({
     },
     setListHideIcons: (state, action: PayloadAction<boolean>) => {
       state.lists.hideIcons = action.payload;
+      saveState(state);
+    },
+    setListIconColor: (state, action: PayloadAction<string>) => {
+      state.lists.iconColor = action.payload;
       saveState(state);
     },
     setListGridColumns: (state, action: PayloadAction<number>) => {
@@ -687,6 +694,11 @@ const themeSlice = createSlice({
       state.fastLinks.globalIconBackgroundColor = action.payload;
       saveState(state);
     },
+    setFastLinksGlobalIconColor: (state, action: PayloadAction<string>) => {
+      state.fastLinks.globalIconColor = action.payload;
+      saveState(state);
+    },
+
     setFastLinksHideIcons: (state, action: PayloadAction<boolean>) => {
       state.fastLinks.hideIcons = action.payload;
       // Если скрываем иконки, автоматически показываем текст
@@ -731,6 +743,7 @@ const themeSlice = createSlice({
       state.lists.titleColor = '';
       state.lists.separatorColor = '';
       state.lists.borderColor = '';
+      state.lists.iconColor = '';
 
       // Очищаем цвета поиска
       state.search.backgroundColor = '';
@@ -741,6 +754,7 @@ const themeSlice = createSlice({
       state.fastLinks.globalTextColor = '';
       state.fastLinks.globalBackdropColor = '';
       state.fastLinks.globalIconBackgroundColor = '';
+      state.fastLinks.globalIconColor = '';
 
       saveState(state);
     },
@@ -836,6 +850,7 @@ const themeSlice = createSlice({
       state.lists.linkColor = '';
       state.lists.separatorColor = '';
       state.lists.borderColor = '';
+      state.lists.iconColor = '';
       state.search.backgroundColor = '';
       state.search.borderColor = '';
       state.search.textColor = '';
@@ -877,6 +892,7 @@ export const {
   setListBorderHidden,
   setListBorderThickness,
   setListHideIcons,
+  setListIconColor,
   setListGridColumns,
   setListSettings,
   resetListSettings,
@@ -897,6 +913,8 @@ export const {
   setFastLinksGlobalTextColor,
   setFastLinksGlobalBackdropColor,
   setFastLinksGlobalIconBackgroundColor,
+  setFastLinksGlobalIconColor,
+
   setFastLinksHideIcons,
   setFastLinksHideText,
   setFastLinksBackdropBlur,

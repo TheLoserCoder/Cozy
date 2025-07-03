@@ -27,7 +27,9 @@ export const ru = {
       create: 'Создать',
       enterName: 'Введите название...',
       sidebar: 'Боковая панель',
-      sidebarDescription: 'Боковая панель с настройками и дополнительным контентом'
+      sidebarDescription: 'Боковая панель с настройками и дополнительным контентом',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'Настройки',
@@ -49,6 +51,9 @@ export const ru = {
       cleanModeDescription: 'Скрывает кнопки открытия списков',
       colorScheme: 'Цветовая схема',
       borderRounding: 'Скругление элементов',
+      icon: 'Иконка',
+      selection: 'Выделение',
+      iconColor: 'Цвет иконки',
       showClock: 'Показывать часы',
       showSeconds: 'Показывать секунды',
       showDate: 'Показывать дату',
@@ -393,5 +398,18 @@ export const ru = {
       terminal: 'Terminal',
       modern: 'Modern',
       decorative: 'Decorative'
+    },
+    iconPicker: {
+      standard: 'Стандартные',
+      custom: 'Пользовательские',
+      searchPlaceholderBootstrap: 'Поиск среди 2000+ иконок...',
+      searchPlaceholderCustom: 'Поиск пользовательских иконок...',
+      found: 'Найдено',
+      total: 'Всего',
+      notFound: 'Иконки не найдены',
+      iconUrl: 'URL иконки',
+      uploadFile: 'Загрузить файл',
+      noCustomIcons: 'Нет пользов��тельских иконок',
+      deleteConfirm: 'Удалить эту иконку?'
     }
   };

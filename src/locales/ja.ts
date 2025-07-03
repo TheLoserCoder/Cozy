@@ -27,7 +27,9 @@ export const ja = {
       create: '作成',
       enterName: '名前を入力...',
       sidebar: 'サイドバー',
-      sidebarDescription: '設定や追加コンテンツを含むサイドバー'
+      sidebarDescription: '設定や追加コンテンツを含むサイドバー',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: '設定',
@@ -49,6 +51,9 @@ export const ja = {
       cleanModeDescription: 'リスト開閉ボタンを非表示',
       colorScheme: '配色',
       borderRounding: '要素の丸み',
+      icon: 'アイコン',
+      selection: '選択',
+      iconColor: 'アイコンの色',
       showClock: '時計を表示',
       showSeconds: '秒を表示',
       showDate: '日付を表示',
@@ -393,5 +398,18 @@ export const ja = {
       terminal: 'ターミナル',
       modern: 'モダン',
       decorative: '装飾'
-    }
-  };
+    },
+    iconPicker: {
+    standard: '標準',
+    custom: 'カスタム',
+    searchPlaceholderBootstrap: '2000以上のアイコンから検索...',
+    searchPlaceholderCustom: 'カスタムアイコンを検索...',
+    found: '見つかりました',
+    total: '合計',
+    notFound: 'アイコンが見つかりません',
+    iconUrl: 'アイコンURL',
+    uploadFile: 'ファイルをアップロード',
+    noCustomIcons: 'カスタムアイコンはありません',
+    deleteConfirm: 'このアイコンを削除しますか？',
+  },
+};

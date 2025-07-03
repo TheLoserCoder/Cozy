@@ -27,7 +27,9 @@ export const es = {
       create: 'Crear',
       enterName: 'Introducir nombre...',
       sidebar: 'Barra lateral',
-      sidebarDescription: 'Barra lateral con ajustes y contenido adicional'
+      sidebarDescription: 'Barra lateral con ajustes y contenido adicional',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'Ajustes',
@@ -49,6 +51,9 @@ export const es = {
       cleanModeDescription: 'Oculta los botones para abrir listas',
       colorScheme: 'Esquema de color',
       borderRounding: 'Redondeo de elementos',
+      icon: 'Icono',
+      selection: 'Selección',
+      iconColor: 'Color del icono',
       showClock: 'Mostrar reloj',
       showSeconds: 'Mostrar segundos',
       showDate: 'Mostrar fecha',
@@ -393,5 +398,18 @@ export const es = {
       terminal: 'Terminal',
       modern: 'Moderna',
       decorative: 'Decorativa'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'Estándar',
+    custom: 'Personalizado',
+    searchPlaceholderBootstrap: 'Buscar entre más de 2000 iconos...',
+    searchPlaceholderCustom: 'Buscar iconos personalizados...',
+    found: 'Encontrado',
+    total: 'Total',
+    notFound: 'Iconos no encontrados',
+    iconUrl: 'URL del icono',
+    uploadFile: 'Subir archivo',
+    noCustomIcons: 'No hay iconos personalizados',
+    deleteConfirm: '¿Eliminar este icono?',
+  },
+};

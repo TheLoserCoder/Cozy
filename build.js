@@ -16,6 +16,18 @@ if (!browser || !['chrome', 'firefox', 'edge'].includes(browser)) {
 
 console.log(`🚀 Building for ${browser}...`);
 
+// Ensure Bootstrap Icons data exists
+const bootstrapIconsPath = path.join(__dirname, 'public', 'bootstrap-icons-data.json');
+if (!fs.existsSync(bootstrapIconsPath)) {
+  console.log('📦 Generating Bootstrap Icons data...');
+  try {
+    execSync('node scripts/generate-all-bootstrap-icons.js', { stdio: 'inherit' });
+  } catch (error) {
+    console.error('❌ Failed to generate Bootstrap Icons data');
+    process.exit(1);
+  }
+}
+
 // Paths
 const distDir = path.join(__dirname, 'dist');
 const buildDir = path.join(__dirname, 'build', browser);

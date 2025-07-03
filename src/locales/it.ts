@@ -27,7 +27,9 @@ export const it = {
       create: 'Crea',
       enterName: 'Inserisci nome...',
       sidebar: 'Barra laterale',
-      sidebarDescription: 'Barra laterale con impostazioni e contenuti aggiuntivi'
+      sidebarDescription: 'Barra laterale con impostazioni e contenuti aggiuntivi',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'Impostazioni',
@@ -49,6 +51,9 @@ export const it = {
       cleanModeDescription: 'Nasconde i pulsanti di apertura elenco',
       colorScheme: 'Schema colori',
       borderRounding: 'Arrotondamento elementi',
+      icon: 'Icona',
+      selection: 'Selezione',
+      iconColor: 'Colore icona',
       showClock: 'Mostra orologio',
       showSeconds: 'Mostra secondi',
       showDate: 'Mostra data',
@@ -393,5 +398,18 @@ export const it = {
       terminal: 'Terminale',
       modern: 'Moderno',
       decorative: 'Decorativo'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'Standard',
+    custom: 'Personalizzato',
+    searchPlaceholderBootstrap: 'Cerca tra oltre 2000 icone...',
+    searchPlaceholderCustom: 'Cerca icone personalizzate...',
+    found: 'Trovato',
+    total: 'Totale',
+    notFound: 'Icone non trovate',
+    iconUrl: 'URL icona',
+    uploadFile: 'Carica file',
+    noCustomIcons: 'Nessuna icona personalizzata',
+    deleteConfirm: 'Eliminare questa icona?',
+  },
+};

@@ -3,12 +3,16 @@ import { Flex, IconButton, Link } from "@radix-ui/themes";
 import { Pencil2Icon, TrashIcon } from "@radix-ui/react-icons";
 import { useAppSelector } from "../store/hooks";
 import { EditLinkDialog } from "./EditLinkDialog";
+import { Icon } from "./Icon";
 
 interface LinkItemProps {
   id: string;
   url: string;
   title: string;
   iconUrl?: string;
+  iconId?: string;
+  iconType?: 'standard' | 'custom' | 'pack' | 'favicon';
+  iconColor?: string;
   color?: string;
   customColor?: string;
   listLinkColor?: string; // Индивидуальный цвет ссылок списка
@@ -28,6 +32,9 @@ export const LinkItem: React.FC<LinkItemProps> = ({
   url,
   title,
   iconUrl,
+  iconId,
+  iconType,
+  iconColor,
   color,
   customColor,
   listLinkColor,
@@ -79,24 +86,39 @@ export const LinkItem: React.FC<LinkItemProps> = ({
             transform: showButtons ? "translateX(4px)" : "translateX(0px)"
           }}
         >
-          {iconUrl && !lists.hideIcons && (
+          {!lists.hideIcons && (
             <span style={{
               cursor: "grab",
               display: "flex",
               alignItems: "center",
               flexShrink: 0
             }}>
-              <img
-                src={iconUrl}
-                alt="icon"
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 4,
-                  objectFit: "contain",
-                  background: "transparent"
-                }}
-              />
+              {iconId ? (
+                <Icon
+                  iconId={iconId}
+                  iconType={iconType || 'favicon'}
+                  fallbackText={title}
+                  size={20}
+                  color={iconColor}
+                />
+              ) : iconUrl ? (
+                <img
+                  src={iconUrl}
+                  alt="icon"
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 4,
+                    objectFit: "contain",
+                    background: "transparent"
+                  }}
+                />
+              ) : (
+                <Icon
+                  fallbackText={title}
+                  size={20}
+                />
+              )}
             </span>
           )}
           <Link
@@ -172,6 +194,9 @@ export const LinkItem: React.FC<LinkItemProps> = ({
           initialTitle={title}
           initialUrl={url}
           initialColor={customColor}
+          initialIconId={iconId}
+          initialIconType={iconType}
+          initialIconColor={iconColor}
         />
       )}
     </>

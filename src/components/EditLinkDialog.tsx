@@ -2,6 +2,7 @@ import * as React from "react";
 import { TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
 import { ColorPicker } from "./ColorPicker";
+import { IconPicker } from "./IconPicker";
 import { DeleteIconButton, CancelButton, PrimaryButton } from "./ActionButtons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { editLink, deleteLink, setLinkColor } from "../store/listsSlice";
@@ -16,6 +17,9 @@ interface EditLinkDialogProps {
   initialTitle: string;
   initialUrl: string;
   initialColor?: string;
+  initialIconId?: string;
+  initialIconType?: 'standard' | 'custom';
+  initialIconColor?: string;
 }
 
 export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
@@ -25,26 +29,59 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
   linkId,
   initialTitle,
   initialUrl,
-  initialColor
+  initialColor,
+  initialIconId,
+  initialIconType,
+  initialIconColor
 }) => {
   const dispatch = useAppDispatch();
   const { lists, radixTheme } = useAppSelector((state) => state.theme);
   const [title, setTitle] = React.useState(initialTitle);
   const [url, setUrl] = React.useState(initialUrl);
   const [customColor, setCustomColor] = React.useState(initialColor || "");
+  const [iconId, setIconId] = React.useState<string | null>(null);
+  const [iconType, setIconType] = React.useState<'standard' | 'custom' | null>(null);
+  const [iconColor, setIconColor] = React.useState<string>("");
   const { t } = useTranslation();
 
   React.useEffect(() => {
     setTitle(initialTitle);
     setUrl(initialUrl);
     setCustomColor(initialColor || "");
-  }, [initialTitle, initialUrl, initialColor, open]);
+    setIconId(initialIconId || null);
+    setIconType(initialIconType || null);
+    setIconColor(initialIconColor || "");
+  }, [initialTitle, initialUrl, initialColor, initialIconId, initialIconType, initialIconColor, open]);
+
+  // Загружаем данные ссылки для получения iconId и iconType
+  React.useEffect(() => {
+    if (open && listId && linkId) {
+      const allLists = JSON.parse(localStorage.getItem('lists') || '[]');
+      const list = allLists.find((l: any) => l.id === listId);
+      const link = list?.links.find((l: any) => l.id === linkId);
+      if (link) {
+        setIconId(link.iconId || null);
+        setIconType(link.iconType || null);
+        setIconColor(link.iconColor || "");
+      }
+    }
+  }, [open, listId, linkId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim() && url.trim()) {
-      // Автоматически извлекаем домен для заголовка, если заголовок пустой
-      const finalTitle = title.trim() || extractDomainFromUrl(url.trim());
+      // Автоматически извлекаем заголовок из URL, если заголовок пустой
+      let finalTitle = title.trim();
+      if (!finalTitle && url.trim()) {
+        try {
+          finalTitle = url.trim()
+            .replace(/^.*?:\/\/([^\/?#]+).*$/, '$1')
+            .replace(/\.[^\.]+$/, '')
+            .replace(/\./g, ' ');
+        } catch {
+          finalTitle = url.trim();
+        }
+      }
 
       // Применяем изменения ссылки
       dispatch(editLink({
@@ -53,7 +90,10 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
         updates: {
           title: finalTitle,
           url: url.trim(),
-          iconUrl: getFaviconUrl(url.trim())
+          iconUrl: iconId ? undefined : getFaviconUrl(url.trim()),
+          iconId: iconId || undefined,
+          iconType: iconType || undefined,
+          iconColor: iconColor || undefined
         }
       }));
 
@@ -68,6 +108,9 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
     setTitle(initialTitle);
     setUrl(initialUrl);
     setCustomColor(initialColor || "");
+    setIconId(null);
+    setIconType(null);
+    setIconColor("");
     onOpenChange(false);
   };
 
@@ -86,22 +129,40 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
     setCustomColor("");
   };
 
-  const extractDomainFromUrl = (url: string): string => {
-    try {
-      const urlObj = new URL(url);
-      return urlObj.hostname.replace('www.', '');
-    } catch {
-      return url;
-    }
+  const handleIconIdChange = (iconId: string | null, iconType: 'standard' | 'custom' | null) => {
+    setIconId(iconId);
+    setIconType(iconType);
+  };
+
+  const handleIconReset = () => {
+    setIconId(null);
+    setIconType(null);
+  };
+
+  const handleIconColorChange = (color: string) => {
+    setIconColor(color);
+  };
+
+  const handleIconColorReset = () => {
+    setIconColor("");
   };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = e.target.value;
     setUrl(newUrl);
     
-    // Если заголовок пустой, автоматически заполняем его доменом
+    // Автоподстановка заголовка только если поле пустое
     if (!title.trim() && newUrl.trim()) {
-      setTitle(extractDomainFromUrl(newUrl.trim()));
+      try {
+        const extractedTitle = newUrl
+          .replace(/^.*?:\/\/([^\/?#]+).*$/, '$1') // hostname
+          .replace(/\.[^\.]+$/, '')                // убираем последнюю .xxx
+          .replace(/\./g, ' ');                     // заменяем точки на пробелы
+        
+        if (extractedTitle && extractedTitle !== newUrl) {
+          setTitle(extractedTitle);
+        }
+      } catch {}
     }
   };
 
@@ -134,11 +195,11 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
         <form onSubmit={handleSubmit} aria-describedby="edit-link-desc">
           <Flex direction="column" gap="4">
             <label>
-              <Text as="div" size="2" mb="1" weight="medium">URL</Text>
+              <Text as="div" size="2" mb="1" weight="medium">{t('common.url')}</Text>
               <TextField.Root
                 value={url}
                 onChange={handleUrlChange}
-                placeholder="https://example.com"
+                placeholder={t('common.urlPlaceholder')}
                 color="gray"
                 required
                 type="url"
@@ -165,6 +226,26 @@ export const EditLinkDialog: React.FC<EditLinkDialogProps> = ({
               showReset={!!customColor}
               disableAlpha={false}
             />
+            
+            <IconPicker
+              label={t('settings.icon')}
+              iconId={iconId || undefined}
+              iconType={iconType || undefined}
+              onIconChange={handleIconIdChange}
+              onReset={handleIconReset}
+              showReset={!!iconId}
+            />
+            
+            {(iconId) && (
+              <ColorPicker
+                label={t('settings.iconColor')}
+                value={iconColor || customColor || lists.linkColor || `color-mix(in srgb, ${radixTheme} 70%, var(--gray-12) 30%)`}
+                onChange={handleIconColorChange}
+                onReset={handleIconColorReset}
+                showReset={!!iconColor}
+                disableAlpha={false}
+              />
+            )}
             
             <Flex gap="3" justify="between" mt="2">
               <DeleteIconButton onClick={handleDelete} aria-label={t('tooltips.deleteItem')} />

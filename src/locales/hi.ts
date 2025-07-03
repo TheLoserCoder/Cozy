@@ -27,7 +27,9 @@ export const hi = {
       create: 'बनाएँ',
       enterName: 'नाम दर्ज करें...',
       sidebar: 'साइडबार',
-      sidebarDescription: 'सेटिंग्स और अतिरिक्त सामग्री के साथ साइडबार'
+      sidebarDescription: 'सेटिंग्स और अतिरिक्त सामग्री के साथ साइडबार',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'सेटिंग्स',
@@ -49,6 +51,9 @@ export const hi = {
       cleanModeDescription: 'सूची खोलने वाले बटन छुपाता है',
       colorScheme: 'रंग योजना',
       borderRounding: 'एलिमेंट राउंडिंग',
+      icon: 'आइकन',
+      selection: 'चयन',
+      iconColor: 'आइकन का रंग',
       showClock: 'घड़ी दिखाएँ',
       showSeconds: 'सेकंड दिखाएँ',
       showDate: 'दिनांक दिखाएँ',
@@ -393,5 +398,18 @@ export const hi = {
       terminal: 'टर्मिनल',
       modern: 'आधुनिक',
       decorative: 'सजावटी'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'मानक',
+    custom: 'कस्टम',
+    searchPlaceholderBootstrap: '2000+ आइकन में खोजें...',
+    searchPlaceholderCustom: 'कस्टम आइकन खोजें...',
+    found: 'मिला',
+    total: 'कुल',
+    notFound: 'आइकन नहीं मिले',
+    iconUrl: 'आइकन URL',
+    uploadFile: 'फ़ाइल अपलोड करें',
+    noCustomIcons: 'कोई कस्टम आइकन नहीं',
+    deleteConfirm: 'क्या आप इस आइकन को हटाना चाहते हैं?',
+  },
+};

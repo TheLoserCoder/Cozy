@@ -43,6 +43,8 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
   const [customSeparatorColor, setCustomSeparatorColor] = React.useState(initialSeparatorColor || "");
   const [customLinkColor, setCustomLinkColor] = React.useState(initialLinkColor || "");
   const [icon, setIcon] = React.useState(initialIcon || "");
+  const [iconId, setIconId] = React.useState<string | null>(null);
+  const [iconType, setIconType] = React.useState<'standard' | 'custom' | null>(null);
   const [iconColor, setIconColor] = React.useState(initialIconColor || "");
 
   React.useEffect(() => {
@@ -52,6 +54,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
     setCustomLinkColor(initialLinkColor || "");
     setIcon(initialIcon || "");
     setIconColor(initialIconColor || "");
+    // TODO: Загрузить iconId и iconType из стора
   }, [initialTitle, initialColor, initialSeparatorColor, initialLinkColor, initialIcon, initialIconColor, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -61,7 +64,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
       dispatch(setListColor({ id: listId, color: customColor || undefined }));
       dispatch(setListSeparatorColor({ id: listId, color: customSeparatorColor || undefined }));
       dispatch(setListLinkColor({ id: listId, color: customLinkColor || undefined }));
-      dispatch(setListIcon({ id: listId, icon: icon || undefined }));
+      dispatch(setListIcon({ id: listId, icon: icon || undefined, iconId: iconId || undefined, iconType: iconType || undefined }));
       dispatch(setListIconColor({ id: listId, color: iconColor || undefined }));
 
       onSubmit(title.trim());
@@ -114,8 +117,18 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
     setIcon(iconName || "");
   };
 
+  const handleIconIdChange = (iconId: string | null, iconType: 'standard' | 'custom' | null) => {
+    setIconId(iconId);
+    setIconType(iconType);
+    if (iconId) {
+      setIcon(""); // Очищаем старую иконку
+    }
+  };
+
   const handleIconReset = () => {
     setIcon("");
+    setIconId(null);
+    setIconType(null);
   };
 
   const handleIconColorChange = (color: string) => {
@@ -155,11 +168,11 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
         <form onSubmit={handleSubmit} aria-describedby="edit-list-desc">
           <Flex direction="column" gap="4">
             <label>
-              <Text as="div" size="2" mb="1" weight="medium">{t('dialogs.newName')}</Text>
+              <Text as="div" size="2" mb="1" weight="medium">{t('lists.title')}</Text>
               <TextField.Root
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder={t('dialogs.newListName')}
+                placeholder={t('lists.listName')}
                 color="gray"
                 required
                 autoFocus
@@ -167,7 +180,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
             </label>
 
             <ColorPicker
-              label={t('dialogs.titleColor')}
+              label={t('settings.titleColor')}
               value={customColor || lists.titleColor || radixTheme}
               onChange={handleColorChange}
               onReset={handleColorReset}
@@ -176,7 +189,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
             />
 
             <ColorPicker
-              label={t('dialogs.separatorColor')}
+              label={t('settings.separatorColor')}
               value={customSeparatorColor || lists.separatorColor || radixTheme}
               onChange={handleSeparatorColorChange}
               onReset={handleSeparatorColorReset}
@@ -185,7 +198,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
             />
 
             <ColorPicker
-              label={t('dialogs.linkColor')}
+              label={t('lists.linkColor')}
               value={customLinkColor || lists.linkColor || `color-mix(in srgb, ${radixTheme} 70%, var(--gray-12) 30%)`}
               onChange={handleLinkColorChange}
               onReset={handleLinkColorReset}
@@ -196,12 +209,15 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
             <IconPicker
               label={t('lists.listIcon')}
               value={icon || undefined}
+              iconId={iconId || undefined}
+              iconType={iconType || undefined}
               onChange={handleIconChange}
+              onIconChange={handleIconIdChange}
               onReset={handleIconReset}
-              showReset={true}
+              showReset={!!(icon || iconId)}
             />
 
-            {icon && (
+            {(icon || iconId) && (
               <ColorPicker
                 label={t('lists.iconColor')}
                 value={iconColor || customColor || lists.titleColor || radixTheme}

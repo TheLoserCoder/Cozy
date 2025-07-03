@@ -4,8 +4,8 @@ import { PlusIcon, Pencil2Icon, TrashIcon, CheckIcon, Cross2Icon, UpdateIcon } f
 import { createPortal } from "react-dom";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { createPreset, applyPreset, deletePreset, renamePreset, updatePreset, resetToStandardSettings } from "../store/themeSlice";
-import { applyPresetBackground } from "../store/backgroundSlice";
-import { setListColor, setListIcon, setListIconColor, setLinkColor, resetAllCustomStyles, applyListStates } from "../store/listsSlice";
+import { applyPresetBackground, setBorderlessBackground } from "../store/backgroundSlice";
+import { setListColor, setListIcon, setListIconColor, setListSeparatorColor, setListLinkColor, setLinkColor, editLink, resetAllCustomStyles, applyListStates } from "../store/listsSlice";
 import { resetAllFastLinkIndividualColors, applyFastLinkStyles } from "../store/fastLinksSlice";
 import { PresetPreview } from "./PresetPreview";
 import { useTranslation } from "../locales";
@@ -83,33 +83,48 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
     const linkStyles: { [key: string]: any } = {};
     const fastLinkStyles: { [key: string]: any } = {};
 
-    // Собираем стили всех списков (включая отсутствие стилей)
+    // Собираем стили списков (только если есть кастомные настройки)
     allLists.forEach(list => {
-      listStyles[list.id] = {
-        customColor: list.customColor || undefined,
-        iconColor: list.iconColor || undefined,
-        icon: list.icon || undefined, // Важно: сохраняем undefined если иконки нет
-        customSeparatorColor: list.customSeparatorColor || undefined,
-        customLinkColor: list.customLinkColor || undefined
-      };
+      const hasCustomStyles = list.customColor || list.iconColor || list.icon || list.iconId || list.iconType || list.customSeparatorColor || list.customLinkColor;
+      if (hasCustomStyles) {
+        listStyles[list.id] = {
+          customColor: list.customColor || undefined,
+          iconColor: list.iconColor || undefined,
+          icon: list.icon || undefined,
+          iconId: list.iconId || undefined,
+          iconType: list.iconType || undefined,
+          customSeparatorColor: list.customSeparatorColor || undefined,
+          customLinkColor: list.customLinkColor || undefined
+        };
+      }
 
       // Собираем индивидуальные стили ссылок
       list.links.forEach(link => {
-        if (link.customColor) {
+        const hasCustomStyles = link.customColor || link.iconId || link.iconType || link.iconColor;
+        if (hasCustomStyles) {
           linkStyles[link.id] = {
-            customColor: link.customColor
+            customColor: link.customColor || undefined,
+            iconId: link.iconId || undefined,
+            iconType: link.iconType || undefined,
+            iconColor: link.iconColor || undefined
           };
         }
       });
     });
 
-    // Собираем индивидуальные стили быстрых ссылок
+    // Собираем индивидуальные стили быстрых ссылок (только если есть кастомные настройки)
     fastLinks.forEach(fastLink => {
-      if (fastLink.customTextColor || fastLink.customBackdropColor || fastLink.customIconBackgroundColor) {
+      const hasCustomStyles = fastLink.customTextColor || fastLink.customBackdropColor || 
+                             fastLink.customIconBackgroundColor || fastLink.iconId || 
+                             fastLink.iconType || fastLink.iconColor;
+      if (hasCustomStyles) {
         fastLinkStyles[fastLink.id] = {
           customTextColor: fastLink.customTextColor || undefined,
           customBackdropColor: fastLink.customBackdropColor || undefined,
-          customIconBackgroundColor: fastLink.customIconBackgroundColor || undefined
+          customIconBackgroundColor: fastLink.customIconBackgroundColor || undefined,
+          iconId: fastLink.iconId || undefined,
+          iconType: fastLink.iconType || undefined,
+          iconColor: fastLink.iconColor || undefined
         };
       }
     });
@@ -204,7 +219,20 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
             dispatch(setListIconColor({ id: listId, color: styles.iconColor }));
 
             // Применяем иконку (может быть undefined для сброса)
-            dispatch(setListIcon({ id: listId, icon: styles.icon }));
+            dispatch(setListIcon({ 
+              id: listId, 
+              icon: styles.icon,
+              iconId: styles.iconId,
+              iconType: styles.iconType
+            }));
+
+            // Применяем цвет разделителя и ссылок списка
+            if (styles.customSeparatorColor !== undefined) {
+              dispatch(setListSeparatorColor({ id: listId, color: styles.customSeparatorColor }));
+            }
+            if (styles.customLinkColor !== undefined) {
+              dispatch(setListLinkColor({ id: listId, color: styles.customLinkColor }));
+            }
 
             // TODO: Добавить применение других стилей списков (customSeparatorColor, customLinkColor)
           });
@@ -213,18 +241,22 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
         // Применяем стили ссылок
         if (linkStyles) {
           Object.entries(linkStyles).forEach(([linkId, styles]: [string, any]) => {
-            if (styles.customColor) {
-              // Нужно найти listId для этой ссылки
-              const listWithLink = allLists.find(list =>
-                list.links.some(link => link.id === linkId)
-              );
-              if (listWithLink) {
-                dispatch(setLinkColor({
-                  listId: listWithLink.id,
-                  linkId,
-                  color: styles.customColor
-                }));
-              }
+            // Нужно найти listId для этой ссылки
+            const listWithLink = allLists.find(list =>
+              list.links.some(link => link.id === linkId)
+            );
+            if (listWithLink) {
+              // Применяем все стили ссылки
+              dispatch(editLink({
+                listId: listWithLink.id,
+                linkId,
+                updates: {
+                  customColor: styles.customColor,
+                  iconId: styles.iconId,
+                  iconType: styles.iconType,
+                  iconColor: styles.iconColor
+                }
+              }));
             }
           });
         }

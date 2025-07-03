@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Bootstrap Icons</title>
+</head>
+<body>
+    <h1>Тест Bootstrap Icons</h1>
+    
+    <h2>Проверка загрузки данных:</h2>
+    <div id="test-results"></div>
+    
+    <script>
+        async function testBootstrapIcons() {
+            const resultsDiv = document.getElementById('test-results');
+            
+            try {
+                // Тест загрузки данных иконок
+                const dataResponse = await fetch('/bootstrap-icons-data.json');
+                if (dataResponse.ok) {
+                    const data = await dataResponse.json();
+                    resultsDiv.innerHTML += `<p>✅ Загружено ${Object.keys(data).length} предзагруженных иконок</p>`;
+                    
+                    // Показываем первые 5 иконок
+                    const iconNames = Object.keys(data).slice(0, 5);
+                    for (const iconName of iconNames) {
+                        const iconDiv = document.createElement('div');
+                        iconDiv.innerHTML = `<strong>${iconName}:</strong> ${data[iconName]}`;
+                        iconDiv.style.margin = '10px 0';
+                        resultsDiv.appendChild(iconDiv);
+                    }
+                } else {
+                    resultsDiv.innerHTML += '<p>❌ Не удалось загрузить bootstrap-icons-data.json</p>';
+                }
+                
+                // Тест загрузки списка иконок
+                const listResponse = await fetch('/bootstrap-icons-list.json');
+                if (listResponse.ok) {
+                    const list = await listResponse.json();
+                    resultsDiv.innerHTML += `<p>✅ Загружен список из ${list.length} иконок</p>`;
+                } else {
+                    resultsDiv.innerHTML += '<p>❌ Не удалось загрузить bootstrap-icons-list.json</p>';
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `<p>❌ Ошибка: ${error.message}</p>`;
+            }
+        }
+        
+        testBootstrapIcons();
+    </script>
+</body>
+</html>

@@ -27,7 +27,9 @@ export const zh = {
       create: '创建',
       enterName: '输入名称...',
       sidebar: '侧边栏',
-      sidebarDescription: '包含设置和附加内容的侧边栏'
+      sidebarDescription: '包含设置和附加内容的侧边栏',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: '设置',
@@ -49,6 +51,9 @@ export const zh = {
       cleanModeDescription: '隐藏列表展开按钮',
       colorScheme: '配色方案',
       borderRounding: '元素圆角',
+      icon: '图标',
+      selection: '选择',
+      iconColor: '图标颜色',
       showClock: '显示时钟',
       showSeconds: '显示秒数',
       showDate: '显示日期',
@@ -393,5 +398,18 @@ export const zh = {
       terminal: '终端',
       modern: '现代',
       decorative: '装饰'
-    }
-  };
+    },
+    iconPicker: {
+    standard: '标准',
+    custom: '自定义',
+    searchPlaceholderBootstrap: '在2000多个图标中搜索...',
+    searchPlaceholderCustom: '搜索自定义图标...',
+    found: '已找到',
+    total: '总计',
+    notFound: '未找到图标',
+    iconUrl: '图标URL',
+    uploadFile: '上传文件',
+    noCustomIcons: '没有自定义图标',
+    deleteConfirm: '删除此图标？',
+  },
+};

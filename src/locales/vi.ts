@@ -27,7 +27,9 @@ export const vi = {
       create: 'Tạo',
       enterName: 'Nhập tên...',
       sidebar: 'Thanh bên',
-      sidebarDescription: 'Thanh bên với cài đặt và nội dung bổ sung'
+      sidebarDescription: 'Thanh bên với cài đặt và nội dung bổ sung',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'Cài đặt',
@@ -49,6 +51,9 @@ export const vi = {
       cleanModeDescription: 'Ẩn các nút mở danh sách',
       colorScheme: 'Sơ đồ màu',
       borderRounding: 'Bo tròn các yếu tố',
+      icon: 'Biểu tượng',
+      selection: 'Lựa chọn',
+      iconColor: 'Màu biểu tượng',
       showClock: 'Hiển thị đồng hồ',
       showSeconds: 'Hiển thị giây',
       showDate: 'Hiển thị ngày',
@@ -393,5 +398,18 @@ export const vi = {
       terminal: 'Thiết bị đầu cuối',
       modern: 'Hiện đại',
       decorative: 'Trang trí'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'Tiêu chuẩn',
+    custom: 'Tùy chỉnh',
+    searchPlaceholderBootstrap: 'Tìm kiếm trong số hơn 2000 biểu tượng...',
+    searchPlaceholderCustom: 'Tìm kiếm biểu tượng tùy chỉnh...',
+    found: 'Tìm thấy',
+    total: 'Tổng số',
+    notFound: 'Không tìm thấy biểu tượng',
+    iconUrl: 'URL biểu tượng',
+    uploadFile: 'Tải lên tệp',
+    noCustomIcons: 'Không có biểu tượng tùy chỉnh',
+    deleteConfirm: 'Xóa biểu tượng này?',
+  },
+};

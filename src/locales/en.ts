@@ -29,6 +29,8 @@ export const en = {
     enterName: 'Enter name...',
     sidebar: 'Sidebar',
     sidebarDescription: 'Sidebar with settings and additional content',
+    url: 'URL',
+    urlPlaceholder: 'https://example.com',
   },
 
   // Settings
@@ -54,6 +56,9 @@ export const en = {
     cleanModeDescription: 'Hides list open buttons',
     colorScheme: 'Color Scheme',
     borderRounding: 'Element Rounding',
+    icon: 'Icon',
+    selection: 'Selection',
+    iconColor: 'Icon Color',
     
     // Clock
     showClock: 'Show Clock',
@@ -241,6 +246,21 @@ export const en = {
     // Reset and export
     resetAllColors: 'Reset All Colors to Accent',
     resetAllSettings: 'Reset All Settings',
+  },
+
+  // Icon Picker
+  iconPicker: {
+    standard: 'Standard',
+    custom: 'Custom',
+    searchPlaceholderBootstrap: 'Search among 2000+ icons...',
+    searchPlaceholderCustom: 'Search custom icons...',
+    found: 'Found',
+    total: 'Total',
+    notFound: 'Icons not found',
+    iconUrl: 'Icon URL',
+    uploadFile: 'Upload File',
+    noCustomIcons: 'No custom icons',
+    deleteConfirm: 'Delete this icon?',
   },
 
   // Lists

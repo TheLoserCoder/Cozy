@@ -1,5 +1,5 @@
 import * as React from "react";
-import { TextField, Flex, Text, Box, Switch, Slider, Separator, Tabs, Select, Theme } from "@radix-ui/themes";
+import { TextField, Flex, Text, Box, Switch, Slider, Separator, Tabs, Select, Theme, Button } from "@radix-ui/themes";
 
 import { SimpleTooltip } from "./SimpleTooltip";
 import { GalleryImage } from "./GalleryImage";
@@ -50,6 +50,7 @@ import {
   setListBorderHidden,
   setListBorderThickness,
   setListHideIcons,
+  setListIconColor,
   setListGridColumns,
   setSearchVisible,
   setSearchBackgroundColor,
@@ -65,6 +66,7 @@ import {
   setFastLinksGlobalTextColor,
   setFastLinksGlobalBackdropColor,
   setFastLinksGlobalIconBackgroundColor,
+  setFastLinksGlobalIconColor,
   setFastLinksHideIcons,
   setFastLinksHideText,
   setFastLinksBackdropBlur,
@@ -91,6 +93,7 @@ import { RadixRadiusPicker } from "./RadixRadiusPicker";
 import { AutoColorButton } from "./AutoColorButton";
 import { FontSelector } from "./FontSelector";
 import { PresetManager } from "./PresetManager";
+
 import { SEARCH_ENGINES } from "../data/searchEngines";
 import { nanoid } from "nanoid";
 import { SettingsThemeProvider } from "./ThemeProvider";
@@ -108,12 +111,45 @@ interface ExportData {
   localStorage: Record<string, string>;
 }
 
-// Функция для сбора всех данных из localStorage
-const collectAllData = (): ExportData => {
-  const data: ExportData = {
-    version: '1.0.0',
+// Расширенный интерфейс для экспортируемых данных
+interface ExtendedExportData extends ExportData {
+  indexedDB?: {
+    icons?: any[];
+  };
+}
+
+// Функция для сбора данных из IndexedDB
+const collectIndexedDBData = async (): Promise<{ icons: any[] }> => {
+  return new Promise((resolve) => {
+    const port = chrome?.runtime?.connect({ name: 'icon-manager' });
+    if (port) {
+      port.postMessage({ type: 'EXPORT_ALL_DATA' });
+      
+      port.onMessage.addListener((response) => {
+        if (response.success) {
+          resolve({
+            icons: response.icons || []
+          });
+        } else {
+          resolve({ icons: [] });
+        }
+        port.disconnect();
+      });
+    } else {
+      resolve({ icons: [] });
+    }
+  });
+};
+
+// Функция для сбора всех данных из localStorage и IndexedDB
+const collectAllData = async (): Promise<ExtendedExportData> => {
+  const data: ExtendedExportData = {
+    version: '2.0.0',
     timestamp: Date.now(),
-    localStorage: {}
+    localStorage: {},
+    indexedDB: {
+      icons: []
+    }
   };
 
   try {
@@ -128,7 +164,12 @@ const collectAllData = (): ExportData => {
       }
     }
 
+    // Собираем данные из IndexedDB
+    const indexedDBData = await collectIndexedDBData();
+    data.indexedDB = indexedDBData;
+
     console.log('Collected data from localStorage:', Object.keys(data.localStorage).length, 'keys');
+    console.log('Collected data from IndexedDB:', indexedDBData.icons.length, 'icons');
   } catch (error) {
     console.error('Error collecting data for export:', error);
   }
@@ -137,9 +178,9 @@ const collectAllData = (): ExportData => {
 };
 
 // Функция экспорта настроек
-const exportSettings = () => {
+const exportSettings = async () => {
   try {
-    const data = collectAllData();
+    const data = await collectAllData();
     const jsonString = JSON.stringify(data, null, 2);
 
     // Создаем blob и скачиваем файл
@@ -148,7 +189,7 @@ const exportSettings = () => {
 
     const link = document.createElement('a');
     link.href = url;
-    link.download = `listify-settings-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `cozy-settings-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -160,6 +201,31 @@ const exportSettings = () => {
     console.error('Error exporting settings:', error);
     localizedAlert('errors.exportError');
   }
+};
+
+// Функция импорта данных в IndexedDB
+const importIndexedDBData = async (indexedDBData: { icons: any[] }) => {
+  return new Promise<void>((resolve) => {
+    const port = chrome?.runtime?.connect({ name: 'icon-manager' });
+    if (port) {
+      port.postMessage({
+        type: 'IMPORT_ALL_DATA',
+        icons: indexedDBData.icons
+      });
+      
+      port.onMessage.addListener((response) => {
+        if (response.success) {
+          console.log('IndexedDB data imported successfully');
+        } else {
+          console.warn('Failed to import IndexedDB data');
+        }
+        resolve();
+        port.disconnect();
+      });
+    } else {
+      resolve();
+    }
+  });
 };
 
 // Функция импорта настроек
@@ -175,11 +241,16 @@ const importSettings = (dispatch: any) => {
 
       try {
         const text = await file.text();
-        const data: ExportData = JSON.parse(text);
+        const data: ExtendedExportData = JSON.parse(text);
 
         // Проверяем версию и структуру данных
         if (!data.version || !data.timestamp || !data.localStorage) {
           throw new Error('Неверный формат файла настроек');
+        }
+
+        // Импортируем данные IndexedDB если они есть
+        if (data.indexedDB) {
+          await importIndexedDBData(data.indexedDB);
         }
 
         console.log('Importing data:', Object.keys(data.localStorage).length, 'keys');
@@ -195,8 +266,42 @@ const importSettings = (dispatch: any) => {
           return Date.now().toString(36) + Math.random().toString(36).substring(2);
         };
 
-        // Создаем маппинг старых ID фонов на новые
+        // Создаем маппинг старых ID на новые
         const backgroundIdMapping: Record<string, string> = {};
+        const listIdMapping: Record<string, string> = {};
+        const linkIdMapping: Record<string, string> = {};
+        const fastLinkIdMapping: Record<string, string> = {};
+        
+        // Получаем импортируемые данные
+        const importedLists = data.localStorage['lists'];
+        const importedFastLinks = data.localStorage['fast-links'];
+        
+        // Создаем маппинг для пресетов
+        if (importedLists) {
+          const newLists = JSON.parse(importedLists);
+          if (Array.isArray(newLists)) {
+            newLists.forEach((list: any) => {
+              const newListId = generateNewId();
+              listIdMapping[list.id] = newListId;
+              if (list.links) {
+                list.links.forEach((link: any) => {
+                  const newLinkId = generateNewId();
+                  linkIdMapping[link.id] = newLinkId;
+                });
+              }
+            });
+          }
+        }
+
+        if (importedFastLinks) {
+          const newFastLinks = JSON.parse(importedFastLinks);
+          if (Array.isArray(newFastLinks)) {
+            newFastLinks.forEach((fastLink: any) => {
+              const newFastLinkId = generateNewId();
+              fastLinkIdMapping[fastLink.id] = newFastLinkId;
+            });
+          }
+        }
 
         // Импортируем фоновые изображения (добавляем к существующим)
         const importedImages = data.localStorage['background-images'];
@@ -240,8 +345,58 @@ const importSettings = (dispatch: any) => {
               const newBackgroundId = backgroundIdMapping[oldBackgroundId];
               if (newBackgroundId) {
                 updatedPreset.data.background.value = newBackgroundId;
-                console.log(`Updated preset "${preset.name}" background ID: ${oldBackgroundId} -> ${newBackgroundId}`);
               }
+            }
+
+            // Обновляем ID в индивидуальных стилях
+            if (preset.data?.individualStyles) {
+              // Обновляем стили списков
+              if (preset.data.individualStyles.lists) {
+                const updatedListStyles: Record<string, any> = {};
+                Object.entries(preset.data.individualStyles.lists).forEach(([oldListId, styles]) => {
+                  const newListId = listIdMapping[oldListId];
+                  if (newListId) {
+                    updatedListStyles[newListId] = styles;
+                  }
+                });
+                updatedPreset.data.individualStyles.lists = updatedListStyles;
+              }
+
+              // Обновляем стили ссылок
+              if (preset.data.individualStyles.links) {
+                const updatedLinkStyles: Record<string, any> = {};
+                Object.entries(preset.data.individualStyles.links).forEach(([oldLinkId, styles]) => {
+                  const newLinkId = linkIdMapping[oldLinkId];
+                  if (newLinkId) {
+                    updatedLinkStyles[newLinkId] = styles;
+                  }
+                });
+                updatedPreset.data.individualStyles.links = updatedLinkStyles;
+              }
+
+              // Обновляем стили быстрых ссылок
+              if (preset.data.individualStyles.fastLinks) {
+                const updatedFastLinkStyles: Record<string, any> = {};
+                Object.entries(preset.data.individualStyles.fastLinks).forEach(([oldFastLinkId, styles]) => {
+                  const newFastLinkId = fastLinkIdMapping[oldFastLinkId];
+                  if (newFastLinkId) {
+                    updatedFastLinkStyles[newFastLinkId] = styles;
+                  }
+                });
+                updatedPreset.data.individualStyles.fastLinks = updatedFastLinkStyles;
+              }
+            }
+
+            // Обновляем состояния списков
+            if (preset.data?.listStates) {
+              const updatedListStates: Record<string, boolean> = {};
+              Object.entries(preset.data.listStates).forEach(([oldListId, enabled]) => {
+                const newListId = listIdMapping[oldListId];
+                if (newListId) {
+                  updatedListStates[newListId] = enabled as boolean;
+                }
+              });
+              updatedPreset.data.listStates = updatedListStates;
             }
 
             return updatedPreset;
@@ -278,51 +433,39 @@ const importSettings = (dispatch: any) => {
         // Обрабатываем current-background отдельно, чтобы обновить ID если нужно
         const importedCurrentBackground = data.localStorage['current-background'];
         if (importedCurrentBackground) {
-          // Проверяем, есть ли маппинг для этого ID фона
           const newBackgroundId = backgroundIdMapping[importedCurrentBackground];
           if (newBackgroundId) {
-            // Используем новый ID
             localStorage.setItem('current-background', newBackgroundId);
-            console.log(`Updated current background ID: ${importedCurrentBackground} -> ${newBackgroundId}`);
           } else {
-            // Используем оригинальный ID (возможно, это не импортированное изображение)
             localStorage.setItem('current-background', importedCurrentBackground);
           }
         }
 
         // Импортируем списки (добавляем к существующим)
-        const importedLists = data.localStorage['lists'];
         if (importedLists) {
           const newLists = JSON.parse(importedLists);
           if (Array.isArray(newLists) && newLists.length > 0) {
-            // Генерируем новые ID для импортируемых списков и их ссылок
             const listsWithNewIds = newLists.map((list: any) => ({
               ...list,
-              id: generateNewId(),
+              id: listIdMapping[list.id],
               links: list.links ? list.links.map((link: any) => ({
                 ...link,
-                id: generateNewId()
+                id: linkIdMapping[link.id]
               })) : []
             }));
-
-            // Объединяем списки с новыми ID
             const mergedLists = [...currentLists, ...listsWithNewIds];
             localStorage.setItem('lists', JSON.stringify(mergedLists));
           }
         }
 
         // Импортируем быстрые ссылки (добавляем к существующим)
-        const importedFastLinks = data.localStorage['fast-links'];
         if (importedFastLinks) {
           const newFastLinks = JSON.parse(importedFastLinks);
           if (Array.isArray(newFastLinks) && newFastLinks.length > 0) {
-            // Генерируем новые ID для импортируемых быстрых ссылок
             const fastLinksWithNewIds = newFastLinks.map((fastLink: any) => ({
               ...fastLink,
-              id: generateNewId()
+              id: fastLinkIdMapping[fastLink.id]
             }));
-
-            // Объединяем быстрые ссылки с новыми ID
             const mergedFastLinks = [...currentFastLinks, ...fastLinksWithNewIds];
             localStorage.setItem('fast-links', JSON.stringify(mergedFastLinks));
           }
@@ -354,6 +497,7 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange, onAddList }) =>
   }, []);
 
   const [presetDialogOpen, setPresetDialogOpen] = React.useState(false);
+
   const dispatch = useAppDispatch();
   const { images, currentBackground, filters, backgroundType, solidBackground, gradientBackground, parallaxEnabled, shadowOverlay, autoSwitch, borderlessBackground } = useAppSelector((state) => state.background);
   const { colors, clock, lists, search, font, fastLinks, radixTheme, radixRadius, cleanMode, language } = useAppSelector((state) => state.theme);
@@ -692,6 +836,21 @@ const accardionStyle = {
                     onCheckedChange={(checked) => dispatch(setCleanMode(checked))}
                   />
                 </Flex>
+
+                {/* Настройки шрифтов */}
+                <Flex align="center" justify="between">
+                  <Text size="3" weight="medium">
+                    {t('settings.font')}
+                  </Text>
+                  <Box style={{ minWidth: '200px' }}>
+                    <FontSelector
+                      value={font.fontFamily}
+                      onValueChange={(fontId) => dispatch(setFontFamily(fontId))}
+                    />
+                  </Box>
+                </Flex>
+
+
               </Flex>
             </Box>
 
@@ -944,12 +1103,22 @@ const accardionStyle = {
 
                         <ColorPicker
                           label={t('settings.iconBackgroundColor')}
-                          value={fastLinks.globalIconBackgroundColor || '#FFFFFF'}
+                          value={fastLinks.globalIconBackgroundColor || (isValidHexColor(radixTheme) ? `color-mix(in srgb, ${radixTheme} 15%, white 85%)` : '#FFFFFF')}
                           onChange={(color) => dispatch(setFastLinksGlobalIconBackgroundColor(color))}
                           onReset={() => dispatch(setFastLinksGlobalIconBackgroundColor(''))}
                           showReset={!!fastLinks.globalIconBackgroundColor}
                           disableAlpha={false}
                         />
+
+                        <ColorPicker
+                          label={t('settings.iconColor')}
+                          value={fastLinks.globalIconColor || radixTheme}
+                          onChange={(color) => dispatch(setFastLinksGlobalIconColor(color))}
+                          onReset={() => dispatch(setFastLinksGlobalIconColor(''))}
+                          showReset={!!fastLinks.globalIconColor}
+                          disableAlpha={false}
+                        />
+
                       </Flex>
                     </Box>
 
@@ -1195,6 +1364,15 @@ const accardionStyle = {
                       onChange={(color) => dispatch(setListLinkColor(color))}
                       onReset={() => dispatch(setListLinkColor(''))}
                       showReset={!!lists.linkColor}
+                      disableAlpha={false}
+                    />
+
+                    <ColorPicker
+                      label={t('settings.iconColor')}
+                      value={lists.iconColor || radixTheme}
+                      onChange={(color) => dispatch(setListIconColor(color))}
+                      onReset={() => dispatch(setListIconColor(''))}
+                      showReset={!!lists.iconColor}
                       disableAlpha={false}
                     />
 
@@ -1704,7 +1882,7 @@ const accardionStyle = {
                             setCustomGradientCSSLocal(e.target.value);
                             dispatch(setCustomGradientCSS(e.target.value));
                           }}
-                          placeholder="linear-gradient(45deg, #ff0000, #0000ff)"
+                          placeholder={t('settings.customCSSPlaceholder')}
                           style={{
                             fontFamily: "monospace",
                             fontSize: "12px",
@@ -1890,21 +2068,10 @@ const accardionStyle = {
             
              
             </Box>
-              {/* Настройки шрифтов */}
-            <Box id = "font-settings">
-              <Text size="4" weight="bold" mb="3">
-                {t('settings.font')}
-              </Text>
 
-              <Flex direction="column" gap="3">
-                <FontSelector
-                  value={font.fontFamily}
-                  onValueChange={(fontId) => dispatch(setFontFamily(fontId))}
-                />
-              </Flex>
-            </Box>
+
             
-                 {/* Пресеты */}
+            {/* Пресеты */}
             <Box id = "presets">
               <PresetManager onDialogOpenChange={setPresetDialogOpen} />
             </Box>
@@ -1913,6 +2080,8 @@ const accardionStyle = {
         </Box>
       </SettingsThemeProvider>
     </Drawer>
+
+
 
     {/* CSS для управления z-index настроек */}
     <style>

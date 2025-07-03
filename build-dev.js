@@ -16,6 +16,18 @@ if (!browser || !['chrome', 'firefox', 'edge'].includes(browser)) {
 
 console.log(`🚀 Building DEV version for ${browser}...`);
 
+// Ensure Bootstrap Icons data exists
+const bootstrapIconsPath = path.join(__dirname, 'public', 'bootstrap-icons-data.json');
+if (!fs.existsSync(bootstrapIconsPath)) {
+  console.log('📦 Generating Bootstrap Icons data...');
+  try {
+    execSync('node scripts/generate-all-bootstrap-icons.js', { stdio: 'inherit' });
+  } catch (error) {
+    console.error('❌ Failed to generate Bootstrap Icons data');
+    process.exit(1);
+  }
+}
+
 // Paths
 const distDir = path.join(__dirname, 'dist-dev');
 const buildDir = path.join(__dirname, 'build-dev', browser);
@@ -105,6 +117,21 @@ function copyRecursive(src, dest) {
 
 // Copy all files from dist-dev to build directory, except manifest files
 copyRecursive(distDir, buildDir);
+
+// Copy Bootstrap Icons JSON files for dev
+const bootstrapFiles = [
+  'bootstrap-icons-data.json',
+  'bootstrap-icons-list.json'
+];
+
+bootstrapFiles.forEach(file => {
+  const srcPath = path.join(__dirname, 'public', file);
+  const destPath = path.join(buildDir, file);
+  if (fs.existsSync(srcPath)) {
+    fs.copyFileSync(srcPath, destPath);
+    console.log(`🎨 Copied ${file}`);
+  }
+});
 
 // Copy icon from icons directory
 const iconPath = path.join(__dirname, 'icons', 'icon.png');

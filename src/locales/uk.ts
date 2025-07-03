@@ -27,7 +27,9 @@ export const uk = {
       create: 'Створити',
       enterName: 'Введіть ім\'я...',
       sidebar: 'Бічна панель',
-      sidebarDescription: 'Бічна панель з налаштуваннями та додатковим вмістом'
+      sidebarDescription: 'Бічна панель з налаштуваннями та додатковим вмістом',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'Налаштування',
@@ -49,6 +51,9 @@ export const uk = {
       cleanModeDescription: 'Приховує кнопки відкриття списку',
       colorScheme: 'Колірна схема',
       borderRounding: 'Заокруглення елементів',
+      icon: 'Іконка',
+      selection: 'Виділення',
+      iconColor: 'Колір іконки',
       showClock: 'Показати годинник',
       showSeconds: 'Показати секунди',
       showDate: 'Показати дату',
@@ -393,5 +398,18 @@ export const uk = {
       terminal: 'Термінальний',
       modern: 'Сучасний',
       decorative: 'Декоративний'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'Стандартні',
+    custom: 'Користувацькі',
+    searchPlaceholderBootstrap: 'Пошук серед 2000+ іконок...',
+    searchPlaceholderCustom: 'Пошук користувацьких іконок...',
+    found: 'Знайдено',
+    total: 'Всього',
+    notFound: 'Іконки не знайдено',
+    iconUrl: 'URL іконки',
+    uploadFile: 'Завантажити файл',
+    noCustomIcons: 'Немає користувацьких іконок',
+    deleteConfirm: 'Видалити цю іконку?',
+  },
+};

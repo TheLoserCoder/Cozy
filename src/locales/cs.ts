@@ -27,7 +27,9 @@ export const cs = {
       create: 'Vytvořit',
       enterName: 'Zadejte název...',
       sidebar: 'Postranní panel',
-      sidebarDescription: 'Postranní panel s nastavením a doplňkovým obsahem'
+      sidebarDescription: 'Postranní panel s nastavením a doplňkovým obsahem',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'Nastavení',
@@ -49,6 +51,9 @@ export const cs = {
       cleanModeDescription: 'Skryje tlačítka pro otevírání seznamů',
       colorScheme: 'Barevné schéma',
       borderRounding: 'Zaoblení prvků',
+      icon: 'Ikona',
+      selection: 'Výběr',
+      iconColor: 'Barva ikony',
       showClock: 'Zobrazit hodiny',
       showSeconds: 'Zobrazit sekundy',
       showDate: 'Zobrazit datum',
@@ -370,5 +375,18 @@ export const cs = {
       terminal: 'Terminal',
       modern: 'Modern',
       decorative: 'Decorative'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'Standardní',
+    custom: 'Vlastní',
+    searchPlaceholderBootstrap: 'Hledejte mezi 2000+ ikonami...',
+    searchPlaceholderCustom: 'Hledat vlastní ikony...',
+    found: 'Nalezeno',
+    total: 'Celkem',
+    notFound: 'Ikony nenalezeny',
+    iconUrl: 'URL ikony',
+    uploadFile: 'Nahrát soubor',
+    noCustomIcons: 'Žádné vlastní ikony',
+    deleteConfirm: 'Smazat tuto ikonu?',
+  },
+};

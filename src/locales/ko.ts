@@ -27,7 +27,9 @@ export const ko = {
       create: '생성',
       enterName: '이름 입력...',
       sidebar: '사이드바',
-      sidebarDescription: '설정 및 추가 콘텐츠가 있는 사이드바'
+      sidebarDescription: '설정 및 추가 콘텐츠가 있는 사이드바',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: '설정',
@@ -49,6 +51,9 @@ export const ko = {
       cleanModeDescription: '목록 열기 버튼을 숨깁니다.',
       colorScheme: '색 구성표',
       borderRounding: '요소 둥글게 하기',
+      icon: '아이콘',
+      selection: '선택',
+      iconColor: '아이콘 색상',
       showClock: '시계 표시',
       showSeconds: '초 표시',
       showDate: '날짜 표시',
@@ -393,5 +398,18 @@ export const ko = {
       terminal: '터미널',
       modern: '현대',
       decorative: '장식'
-    }
-  };
+    },
+    iconPicker: {
+    standard: '표준',
+    custom: '사용자 정의',
+    searchPlaceholderBootstrap: '2000개 이상의 아이콘 중에서 검색...',
+    searchPlaceholderCustom: '사용자 정의 아이콘 검색...',
+    found: '찾음',
+    total: '총',
+    notFound: '아이콘을 찾을 수 없음',
+    iconUrl: '아이콘 URL',
+    uploadFile: '파일 업로드',
+    noCustomIcons: '사용자 정의 아이콘 없음',
+    deleteConfirm: '이 아이콘을 삭제하시겠습니까?',
+  },
+};

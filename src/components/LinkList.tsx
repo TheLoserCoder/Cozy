@@ -10,6 +10,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Card, Flex, Text, Heading, Box, IconButton } from "@radix-ui/themes";
 import { Pencil2Icon, PlusIcon, ExternalLinkIcon } from "@radix-ui/react-icons";
 import * as RadixIcons from "@radix-ui/react-icons";
+import { Icon } from "./Icon";
 import { AddLinkDialog } from "./AddLinkDialog";
 import { EditListDialog } from "./EditListDialog";
 import { LinkListItem } from "../entities/list/list.types";
@@ -175,23 +176,15 @@ export function LinkList({
               onMouseDown={handleListMouseDown}
               onDoubleClick={handleListDoubleClick}
             >
-              {currentList?.icon && (() => {
-                const IconComponent = (RadixIcons as any)[currentList.icon];
-                if (IconComponent) {
-                  const iconColor = currentList.iconColor || titleColor;
-                  return (
-                    <IconComponent
-                      style={{
-                        width: 20,
-                        height: 20,
-                        color: iconColor,
-                        flexShrink: 0
-                      }}
-                    />
-                  );
-                }
-                return null;
-              })()}
+              {(currentList?.icon || currentList?.iconId) && (
+                <Icon
+                  iconId={currentList?.iconId || currentList?.icon}
+                  iconType={currentList?.iconType || (currentList?.icon ? 'standard' : undefined)}
+                  size={20}
+                  color={currentList?.iconColor || titleColor}
+                  style={{ flexShrink: 0 }}
+                />
+              )}
               <Heading className="list-title" size="4" as="h2" style={{ color: titleColor, background: 'transparent', fontFamily: "var(--app-font-family, inherit)" }}>{title}</Heading>
             </Flex>
             <Flex gap="1" style={{ background: 'transparent' }}>

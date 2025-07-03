@@ -27,7 +27,9 @@ export const nl = {
       create: 'Maken',
       enterName: 'Voer naam in...',
       sidebar: 'Zijbalk',
-      sidebarDescription: 'Zijbalk met instellingen en extra inhoud'
+      sidebarDescription: 'Zijbalk met instellingen en extra inhoud',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'Instellingen',
@@ -49,6 +51,9 @@ export const nl = {
       cleanModeDescription: 'Verbergt knoppen voor het openen van lijsten',
       colorScheme: 'Kleurenschema',
       borderRounding: 'Elementafronding',
+      icon: 'Icoon',
+      selection: 'Selectie',
+      iconColor: 'Icoonkleur',
       showClock: 'Klok weergeven',
       showSeconds: 'Seconden weergeven',
       showDate: 'Datum weergeven',
@@ -393,5 +398,18 @@ export const nl = {
       terminal: 'Terminal',
       modern: 'Modern',
       decorative: 'Decoratief'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'Standaard',
+    custom: 'Aangepast',
+    searchPlaceholderBootstrap: 'Zoek tussen 2000+ pictogrammen...',
+    searchPlaceholderCustom: 'Zoek aangepaste pictogrammen...',
+    found: 'Gevonden',
+    total: 'Totaal',
+    notFound: 'Pictogrammen niet gevonden',
+    iconUrl: 'Pictogram-URL',
+    uploadFile: 'Bestand uploaden',
+    noCustomIcons: 'Geen aangepaste pictogrammen',
+    deleteConfirm: 'Dit pictogram verwijderen?',
+  },
+};

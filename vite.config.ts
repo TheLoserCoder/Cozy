@@ -10,7 +10,10 @@ export default defineConfig({
     copy({
       targets: [
         // Copy manifest files from manifests directory
-        { src: 'manifests/manifest.*.json', dest: 'dist' }
+        { src: 'manifests/manifest.*.json', dest: 'dist' },
+        // Copy Bootstrap Icons JSON data
+        { src: 'public/bootstrap-icons-data.json', dest: 'dist' },
+        { src: 'public/bootstrap-icons-list.json', dest: 'dist' }
       ],
       hook: 'writeBundle'
     })
@@ -26,8 +29,23 @@ export default defineConfig({
       output: {
         // Ensure consistent naming for WebExtension
         entryFileNames: '[name].js',
-        chunkFileNames: '[name].js',
-        assetFileNames: '[name].[ext]'
+        chunkFileNames: (chunkInfo) => {
+          // Prevent files starting with underscore
+          const name = chunkInfo.name || 'chunk';
+          return name.startsWith('_') ? name.substring(1) + '.js' : name + '.js';
+        },
+        assetFileNames: (assetInfo) => {
+          // Prevent assets starting with underscore
+          const name = assetInfo.name || 'asset';
+          const ext = name.split('.').pop() || 'unknown';
+          const baseName = name.replace(/\.[^/.]+$/, '');
+          return baseName.startsWith('_') ? baseName.substring(1) + '.' + ext : name;
+        },
+        manualChunks: {
+          // Explicitly name common chunks to avoid underscore prefixes
+          vendor: ['react', 'react-dom'],
+          utils: ['nanoid', 'tinycolor2']
+        }
       }
     },
     // Optimize for WebExtension environment

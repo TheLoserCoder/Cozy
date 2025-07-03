@@ -27,7 +27,9 @@ export const de = {
       create: 'Erstellen',
       enterName: 'Name eingeben...',
       sidebar: 'Seitenleiste',
-      sidebarDescription: 'Seitenleiste mit Einstellungen und zusätzlichen Inhalten'
+      sidebarDescription: 'Seitenleiste mit Einstellungen und zusätzlichen Inhalten',
+      url: 'URL',
+      urlPlaceholder: 'https://example.com'
     },
     settings: {
       title: 'Einstellungen',
@@ -49,6 +51,9 @@ export const de = {
       cleanModeDescription: 'Blendet die Schaltflächen zum Öffnen von Listen aus',
       colorScheme: 'Farbschema',
       borderRounding: 'Abgerundete Elemente',
+      icon: 'Symbol',
+      selection: 'Auswahl',
+      iconColor: 'Symbolfarbe',
       showClock: 'Uhr anzeigen',
       showSeconds: 'Sekunden anzeigen',
       showDate: 'Datum anzeigen',
@@ -393,5 +398,18 @@ export const de = {
       terminal: 'Terminal',
       modern: 'Modern',
       decorative: 'Decorative'
-    }
-  };
+    },
+    iconPicker: {
+    standard: 'Standard',
+    custom: 'Benutzerdefiniert',
+    searchPlaceholderBootstrap: 'Suche unter 2000+ Icons...',
+    searchPlaceholderCustom: 'Suche benutzerdefinierte Icons...',
+    found: 'Gefunden',
+    total: 'Gesamt',
+    notFound: 'Icons nicht gefunden',
+    iconUrl: 'Icon-URL',
+    uploadFile: 'Datei hochladen',
+    noCustomIcons: 'Keine benutzerdefinierten Icons',
+    deleteConfirm: 'Dieses Icon löschen?',
+  },
+};
