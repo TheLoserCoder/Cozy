@@ -271,7 +271,7 @@ export const App: React.FC = () => {
   return (
     <>
       <Background />
-      <Box style={{
+      <Box className="fade-in" style={{
         minHeight: "100vh",
         background: "transparent",
         display: "flex",
