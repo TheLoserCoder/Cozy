@@ -5,12 +5,16 @@ import { store } from "./store/store";
 import { App } from "./App";
 import { AppThemeProvider } from "./components/ThemeProvider";
 import { ErrorBoundary, setupGlobalErrorHandlers } from "./components/ErrorBoundary";
+import { preloadGlobalIcons } from "./utils/globalIconCache";
 import "./styles/reset.css";
 import "./index.css";
 import "./styles/radix-overrides.css";
 
 // Setup global error handlers
 setupGlobalErrorHandlers();
+
+// Предзагружаем иконки до инициализации React
+preloadGlobalIcons();
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

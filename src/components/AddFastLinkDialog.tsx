@@ -5,7 +5,8 @@ import { CancelButton, PrimaryButton } from "./ActionButtons";
 import { useAppDispatch } from "../store/hooks";
 import { addFastLink, updateFastLinkIcon } from "../store/fastLinksSlice";
 import { getFaviconUrl } from "../utils/favicon";
-import { nanoid } from "nanoid";
+import { generateLinkId } from "../store/linkId";
+import { setGlobalIcon } from "../utils/globalIconCache";
 import { useTranslation } from "../locales";
 
 interface AddFastLinkDialogProps {
@@ -46,42 +47,59 @@ export const AddFastLinkDialog: React.FC<AddFastLinkDialogProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim() && url.trim()) {
-      const fastLinkId = nanoid();
-      const iconId = nanoid();
-      
-      // Создаем быструю ссылку с fallback favicon
-      const newFastLink = {
-        id: fastLinkId,
-        title: title.trim(),
-        url: url.trim(),
-        iconUrl: getFaviconUrl(url.trim()),
-        iconId: undefined, // Начинаем без иконки
-        iconType: 'custom' as const
-      };
-      
-      dispatch(addFastLink(newFastLink));
-      
-      // Асинхронно скачиваем favicon через worker
+      const fastLinkId = generateLinkId();
+      const iconId = generateLinkId();
+
       const port = chrome?.runtime?.connect({ name: 'icon-manager' });
       if (port) {
         port.postMessage({
-          type: 'DOWNLOAD_FAVICON',
-          url: url.trim(),
-          iconId: iconId
+          type: 'SAVE_ICON',
+          payload: { iconId, url: url.trim() },
         });
-        
+
         port.onMessage.addListener((response) => {
           if (response.success) {
-            // Обновляем иконку после успешного скачивания
-            dispatch(updateFastLinkIcon({ id: fastLinkId, iconId: iconId }));
-            console.log('Favicon downloaded successfully for:', title.trim());
+            // Обновляем глобальный кэш
+            const port2 = chrome.runtime.connect({ name: 'icon-manager' });
+            port2.postMessage({ type: 'GET_ICON', iconId: response.iconId });
+            port2.onMessage.addListener((iconResponse) => {
+              if (iconResponse.success && iconResponse.icon) {
+                setGlobalIcon(response.iconId, { type: iconResponse.icon.type, data: iconResponse.icon.data });
+              }
+              port2.disconnect();
+            });
+            
+            const newFastLink = {
+              id: fastLinkId,
+              title: title.trim(),
+              url: url.trim(),
+              iconId: response.iconId,
+              iconType: 'favicon' as const,
+            };
+            dispatch(addFastLink(newFastLink));
           } else {
-            console.warn('Failed to download favicon for:', title.trim());
+            const newFastLink = {
+              id: fastLinkId,
+              title: title.trim(),
+              url: url.trim(),
+              iconUrl: getFaviconUrl(url.trim()),
+              iconType: 'favicon' as const,
+            };
+            dispatch(addFastLink(newFastLink));
           }
           port.disconnect();
         });
+      } else {
+        const newFastLink = {
+          id: fastLinkId,
+          title: title.trim(),
+          url: url.trim(),
+          iconUrl: getFaviconUrl(url.trim()),
+          iconType: 'favicon' as const,
+        };
+        dispatch(addFastLink(newFastLink));
       }
-      
+
       setTitle("");
       setUrl("");
       onOpenChange(false);

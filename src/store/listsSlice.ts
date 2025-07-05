@@ -101,6 +101,14 @@ const listsSlice = createSlice({
     deleteLink(state, action: PayloadAction<{ listId: string; linkId: string }>) {
       const list = state.find(l => l.id === action.payload.listId);
       if (list) {
+        const link = list.links.find(l => l.id === action.payload.linkId);
+        if (link && link.iconId) {
+          const port = chrome?.runtime?.connect({ name: 'icon-manager' });
+          if (port) {
+            port.postMessage({ type: 'DELETE_ICON', iconId: link.iconId });
+            port.disconnect();
+          }
+        }
         list.links = list.links.filter(l => l.id !== action.payload.linkId);
         saveListsToStorage(state);
       }

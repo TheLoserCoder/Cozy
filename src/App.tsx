@@ -7,6 +7,7 @@ import { generateLinkId } from "./store/linkId";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { useFontLoader } from "./hooks/useFontLoader";
 import { useErrorHandler } from "./hooks/useErrorHandler";
+import { useIconPreloader } from "./hooks/useIconPreloader";
 import { addList, editListTitle, addLinkToList, reorderLinksInList, moveLinkToList, deleteList, setListColor, editLink, deleteLink, setLinkColor } from "./store/listsSlice";
 import { applyAllStandardSettings } from "./store/themeSlice";
 import { syncLanguageFromRedux, useTranslation } from "./locales";
@@ -52,6 +53,9 @@ export const App: React.FC = () => {
 
   // Загружаем и применяем выбранный шрифт
   useFontLoader();
+  
+  // Предзагружаем все иконки
+  useIconPreloader();
   
 
 

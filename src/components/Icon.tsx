@@ -3,6 +3,7 @@ import { Box, Text } from "@radix-ui/themes";
 import * as RadixIcons from "@radix-ui/react-icons";
 import { useAppSelector } from "../store/hooks";
 import { getBootstrapIconSvg } from "../utils/bootstrapIcons";
+import { getGlobalIcon, addIconListener } from "../utils/globalIconCache";
 
 interface SvgIconProps {
   svgString: string;
@@ -73,55 +74,39 @@ export const Icon: React.FC<IconProps> = ({
   size = 16,
   style = {}
 }) => {
-  const [iconData, setIconData] = React.useState<{ type: 'image' | 'svg'; data: string } | null>(null);
+  const globalIcon = iconId ? getGlobalIcon(iconId) : null;
+  const [iconData, setIconData] = React.useState<{ type: 'image' | 'svg'; data: string } | null>(globalIcon);
   const [loading, setLoading] = React.useState(false);
   const [bootstrapIcon, setBootstrapIcon] = React.useState<string | null>(null);
 
-  // Получаем иконку из хранилища
+  // Слушатель обновлений глобального кэша
   React.useEffect(() => {
-    if (!iconId || iconType === 'favicon') {
-      setIconData(null);
+    if (!iconId) return;
+    
+    return addIconListener((updatedIconId, iconData) => {
+      if (updatedIconId === iconId) {
+        setIconData(iconData);
+        setLoading(false);
+      }
+    });
+  }, [iconId]);
+
+  React.useEffect(() => {
+    if (!iconId || iconType === 'standard' || globalIcon) {
+      setLoading(false);
       return;
     }
 
-    if (iconType === 'standard') {
-      // Стандартные иконки не требуют загрузки
-      setIconData(null);
-      return;
-    }
-
-    // Загружаем пользовательские иконки из IndexedDB через worker
+    setLoading(true);
     const loadIcon = async () => {
-      setLoading(true);
       try {
-        // Сначала пробуем загрузить как Bootstrap иконку
         const bootstrapSvg = await getBootstrapIconSvg(iconId);
         if (bootstrapSvg) {
           setBootstrapIcon(bootstrapSvg);
           setLoading(false);
           return;
         }
-        
-        // Если не Bootstrap иконка, загружаем из хранилища
-        const port = chrome?.runtime?.connect({ name: 'icon-manager' });
-        if (port) {
-          port.postMessage({
-            type: 'GET_ICON',
-            iconId
-          });
-          port.onMessage.addListener((response) => {
-            if (response.success && response.icon) {
-              setIconData({
-                type: response.icon.type,
-                data: response.icon.data
-              });
-            }
-            setLoading(false);
-            port.disconnect();
-          });
-        } else {
-          setLoading(false);
-        }
+        setLoading(false);
       } catch (error) {
         console.error('Error loading icon:', error);
         setLoading(false);
@@ -129,9 +114,36 @@ export const Icon: React.FC<IconProps> = ({
     };
 
     loadIcon();
-  }, [iconId, iconType]);
+  }, [iconId, iconType, globalIcon]);
 
-  // Если это стандартная иконка
+  // Мгновенное отображение из глобального кэша
+  if (globalIcon || iconData) {
+    const icon = globalIcon || iconData;
+    if (icon.type === 'svg') {
+      return (
+        <SvgIcon
+          svgString={icon.data}
+          color={color}
+          size={size}
+        />
+      );
+    } else {
+      return (
+        <img
+          src={icon.data}
+          alt=""
+          style={{
+            width: size,
+            height: size,
+            objectFit: 'contain',
+            ...style
+          }}
+        />
+      );
+    }
+  }
+
+  // Стандартные иконки
   if (iconType === 'standard' && iconId) {
     const IconComponent = (RadixIcons as any)[iconId];
     if (IconComponent) {
@@ -148,7 +160,7 @@ export const Icon: React.FC<IconProps> = ({
     }
   }
 
-  // Если это Bootstrap иконка
+  // Bootstrap иконки
   if (bootstrapIcon) {
     return (
       <SvgIcon
@@ -159,7 +171,7 @@ export const Icon: React.FC<IconProps> = ({
     );
   }
 
-  // Если это пользовательская иконка
+  // Иконки из состояния (загруженные асинхронно)
   if (iconData) {
     if (iconData.type === 'svg') {
       return (

@@ -2,6 +2,8 @@ import * as React from "react";
 import { TextField, Flex, Text, Box } from "@radix-ui/themes";
 import { ThemedDialog } from "./ThemedDialog";
 import { CancelButton, PrimaryButton } from "./ActionButtons";
+import { generateLinkId } from "../store/linkId";
+import { setGlobalIcon } from "../utils/globalIconCache";
 import { useTranslation } from "../locales";
 
 interface AddLinkDialogProps {
@@ -39,7 +41,35 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim() && url.trim()) {
-      onSubmit({ title: title.trim(), url: url.trim() });
+      const iconId = generateLinkId();
+      const port = chrome?.runtime?.connect({ name: 'icon-manager' });
+      if (port) {
+        port.postMessage({
+          type: 'SAVE_ICON',
+          payload: { iconId, url: url.trim() },
+        });
+        port.onMessage.addListener((response) => {
+          if (response.success) {
+            // Обновляем глобальный кэш
+            const port2 = chrome.runtime.connect({ name: 'icon-manager' });
+            port2.postMessage({ type: 'GET_ICON', iconId: response.iconId });
+            port2.onMessage.addListener((iconResponse) => {
+              if (iconResponse.success && iconResponse.icon) {
+                setGlobalIcon(response.iconId, { type: iconResponse.icon.type, data: iconResponse.icon.data });
+              }
+              port2.disconnect();
+            });
+            
+            onSubmit({ title: title.trim(), url: url.trim(), iconId: response.iconId, iconType: 'favicon' });
+          } else {
+            onSubmit({ title: title.trim(), url: url.trim() });
+          }
+          port.disconnect();
+        });
+      } else {
+        onSubmit({ title: title.trim(), url: url.trim() });
+      }
+
       setTitle("");
       setUrl("");
       onOpenChange(false);

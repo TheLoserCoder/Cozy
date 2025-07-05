@@ -87,6 +87,14 @@ const fastLinksSlice = createSlice({
     deleteFastLink(state, action: PayloadAction<string>) {
       const index = state.findIndex(link => link.id === action.payload);
       if (index !== -1) {
+        const link = state[index];
+        if (link.iconId) {
+          const port = chrome?.runtime?.connect({ name: 'icon-manager' });
+          if (port) {
+            port.postMessage({ type: 'DELETE_ICON', iconId: link.iconId });
+            port.disconnect();
+          }
+        }
         state.splice(index, 1);
         saveFastLinksToStorage(state);
       }

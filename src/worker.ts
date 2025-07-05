@@ -196,27 +196,19 @@ async function applyTheme(imageUrl: string, filters: any) {
 // Функции для работы с иконками
 async function downloadFavicon(url: string): Promise<{ type: 'image' | 'svg'; data: string } | null> {
   try {
-    // Простое получение favicon URL без импорта
     const domain = new URL(url).origin;
-    const faviconUrl = `${domain}/favicon.ico`;
+    const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
     
     const response = await fetch(faviconUrl);
     if (!response.ok) return null;
     
-    const contentType = response.headers.get('content-type') || '';
-    
-    if (contentType.includes('svg')) {
-      const svgText = await response.text();
-      return { type: 'svg', data: svgText };
-    } else {
-      const blob = await response.blob();
-      const dataUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-      return { type: 'image', data: dataUrl };
-    }
+    const blob = await response.blob();
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+    return { type: 'image', data: dataUrl };
   } catch (error) {
     console.error('Error downloading favicon:', error);
     return null;
@@ -439,6 +431,95 @@ if (typeof browser !== 'undefined' && browser.runtime) {
               port.postMessage({ success: true });
             } catch (error) {
               console.error('Error deleting custom icon:', error);
+              port.postMessage({ success: false });
+            }
+            break;
+
+          case 'SAVE_ICON':
+            const { iconId, url, svg } = message.payload;
+            let iconToSave = null;
+
+            if (url) {
+              const downloadedIcon = await downloadFavicon(url);
+              if (downloadedIcon) {
+                iconToSave = {
+                  id: iconId,
+                  name: `Favicon for ${url}`,
+                  type: downloadedIcon.type,
+                  data: downloadedIcon.data,
+                  addedAt: Date.now(),
+                };
+              }
+            } else if (svg) {
+              iconToSave = {
+                id: iconId,
+                name: 'Custom SVG Icon',
+                type: 'svg',
+                data: svg,
+                addedAt: Date.now(),
+              };
+            }
+
+            if (iconToSave) {
+              const saved = await saveIcon(iconToSave);
+              port.postMessage({ success: saved, iconId });
+            } else {
+              port.postMessage({ success: false });
+            }
+            break;
+
+          case 'DELETE_ICON':
+            try {
+              const transaction = db.transaction(['icons'], 'readwrite');
+              const store = transaction.objectStore('icons');
+              await new Promise((resolve, reject) => {
+                const request = store.delete(message.iconId);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+              });
+              port.postMessage({ success: true });
+            } catch (error) {
+              console.error('Error deleting icon:', error);
+              port.postMessage({ success: false });
+            }
+            break;
+            
+          case 'GET_ALL_ICONS':
+            try {
+              const transaction = db.transaction(['icons'], 'readonly');
+              const store = transaction.objectStore('icons');
+              const request = store.getAll();
+              
+              const icons = await new Promise(resolve => {
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => resolve([]);
+              });
+              
+              port.postMessage({ success: true, icons });
+            } catch (error) {
+              console.error('Error getting all icons:', error);
+              port.postMessage({ success: false });
+            }
+            break;
+            
+          case 'GET_MULTIPLE_ICONS':
+            try {
+              const transaction = db.transaction(['icons'], 'readonly');
+              const store = transaction.objectStore('icons');
+              const icons = [];
+              
+              for (const iconId of message.iconIds) {
+                const request = store.get(iconId);
+                const icon = await new Promise(resolve => {
+                  request.onsuccess = () => resolve(request.result);
+                  request.onerror = () => resolve(null);
+                });
+                if (icon) icons.push(icon);
+              }
+              
+              port.postMessage({ success: true, icons });
+            } catch (error) {
+              console.error('Error getting multiple icons:', error);
               port.postMessage({ success: false });
             }
             break;

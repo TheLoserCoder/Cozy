@@ -93,32 +93,13 @@ export const LinkItem: React.FC<LinkItemProps> = ({
               alignItems: "center",
               flexShrink: 0
             }}>
-              {iconId ? (
-                <Icon
-                  iconId={iconId}
-                  iconType={iconType || 'favicon'}
-                  fallbackText={title}
-                  size={20}
-                  color={iconColor}
-                />
-              ) : iconUrl ? (
-                <img
-                  src={iconUrl}
-                  alt="icon"
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 4,
-                    objectFit: "contain",
-                    background: "transparent"
-                  }}
-                />
-              ) : (
-                <Icon
-                  fallbackText={title}
-                  size={20}
-                />
-              )}
+              <Icon
+                iconId={iconId || iconUrl}
+                iconType={iconType || (iconUrl ? 'favicon' : undefined)}
+                fallbackText={title}
+                size={20}
+                color={iconColor}
+              />
             </span>
           )}
           <Link
