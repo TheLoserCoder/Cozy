@@ -58,17 +58,8 @@ export const AddFastLinkDialog: React.FC<AddFastLinkDialogProps> = ({
         });
 
         port.onMessage.addListener((response) => {
-          if (response.success) {
-            // Обновляем глобальный кэш
-            const port2 = chrome.runtime.connect({ name: 'icon-manager' });
-            port2.postMessage({ type: 'GET_ICON', iconId: response.iconId });
-            port2.onMessage.addListener((iconResponse) => {
-              if (iconResponse.success && iconResponse.icon) {
-                setGlobalIcon(response.iconId, { type: iconResponse.icon.type, data: iconResponse.icon.data });
-              }
-              port2.disconnect();
-            });
-            
+          if (response.success && response.icon) {
+            setGlobalIcon(response.iconId, { type: response.icon.type, data: response.icon.data });
             const newFastLink = {
               id: fastLinkId,
               title: title.trim(),

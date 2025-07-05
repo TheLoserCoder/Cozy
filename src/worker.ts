@@ -562,7 +562,11 @@ if (typeof browser !== 'undefined' && browser.runtime) {
 
             if (iconToSave) {
               const saved = await saveIcon(iconToSave);
-              port.postMessage({ success: saved, iconId });
+              port.postMessage({ 
+                success: saved, 
+                iconId,
+                icon: saved ? iconToSave : null
+              });
             } else {
               port.postMessage({ success: false });
             }

@@ -49,17 +49,8 @@ export const AddLinkDialog: React.FC<AddLinkDialogProps> = ({ open, onOpenChange
           payload: { iconId, url: url.trim() },
         });
         port.onMessage.addListener((response) => {
-          if (response.success) {
-            // Обновляем глобальный кэш
-            const port2 = chrome.runtime.connect({ name: 'icon-manager' });
-            port2.postMessage({ type: 'GET_ICON', iconId: response.iconId });
-            port2.onMessage.addListener((iconResponse) => {
-              if (iconResponse.success && iconResponse.icon) {
-                setGlobalIcon(response.iconId, { type: iconResponse.icon.type, data: iconResponse.icon.data });
-              }
-              port2.disconnect();
-            });
-            
+          if (response.success && response.icon) {
+            setGlobalIcon(response.iconId, { type: response.icon.type, data: response.icon.data });
             onSubmit({ title: title.trim(), url: url.trim(), iconId: response.iconId, iconType: 'favicon' });
           } else {
             onSubmit({ title: title.trim(), url: url.trim() });
