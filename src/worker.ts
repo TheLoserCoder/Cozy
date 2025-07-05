@@ -145,6 +145,106 @@ async function processImage(imageUrl: string, filters: any) {
     } else{
       filtered = ImageFilters.default.BrightnessContrastPhotoshop(ImageFilters.default.StackBlur(filtered, 50), -30, -10);
     }
+
+    // Brightness
+    if (filters.brightness && filters.brightness !== 100) {
+      const bMul = filters.brightness / 100;
+      filtered = ImageFilters.ColorTransformFilter(
+        filtered,
+        bMul, bMul, bMul, 1,
+        0,    0,    0,    0
+      );
+    }
+    
+    // Contrast
+    if (filters.contrast && filters.contrast !== 100) {
+      const cMul = filters.contrast / 100;
+      const cOff = 128 * (1 - cMul);
+      filtered = ImageFilters.ColorTransformFilter(
+        filtered,
+        cMul, cMul, cMul, 1,
+        cOff, cOff, cOff, 0
+      );
+    }
+    
+    // Saturation via HSLAdjustment
+    if (filters.saturate && filters.saturate !== 100) {
+      // delta = +n или −n
+      const satDelta = filters.saturate - 100;
+      filtered = ImageFilters.HSLAdjustment(
+        filtered,
+        0,
+        satDelta,
+        0
+      );
+    }
+    
+    // Общие матрицы для смешения
+    const I = [ // identity
+      1,0,0,0,0,
+      0,1,0,0,0,
+      0,0,1,0,0,
+      0,0,0,1,0
+    ];
+    const M_gray = [ // полная серость
+      0.2126,0.7152,0.0722,0,0,
+      0.2126,0.7152,0.0722,0,0,
+      0.2126,0.7152,0.0722,0,0,
+      0,     0,     0,     1,0
+    ];
+    const M_sepia = [
+      0.393,0.769,0.189,0,0,
+      0.349,0.686,0.168,0,0,
+      0.272,0.534,0.131,0,0,
+      0,    0,    0,    1,0
+    ];
+    const M_invert = [
+      -1,0, 0, 0,255,
+       0,-1,0, 0,255,
+       0,0,-1,0,255,
+       0,0, 0,1,  0
+    ];
+    // функция смешения матриц
+    function mixMatrix(M, t) {
+      return I.map((v, i) => v * (1 - t) + M[i] * t);
+    }
+    
+    // Grayscale
+    if (filters.grayscale && filters.grayscale > 0) {
+      const t = filters.grayscale / 100;
+      filtered = ImageFilters.ColorMatrixFilter(
+        filtered,
+        mixMatrix(M_gray, t)
+      );
+    }
+    
+    // Sepia
+    if (filters.sepia && filters.sepia > 0) {
+      const t = filters.sepia / 100;
+      filtered = ImageFilters.ColorMatrixFilter(
+        filtered,
+        mixMatrix(M_sepia, t)
+      );
+    }
+    
+    // Invert
+    if (filters.invert && filters.invert > 0) {
+      const t = filters.invert / 100;
+      filtered = ImageFilters.ColorMatrixFilter(
+        filtered,
+        mixMatrix(M_invert, t)
+      );
+    }
+    
+    // Hue‑rotate
+    if (filters.hueRotate && filters.hueRotate > 0) {
+      filtered = ImageFilters.HSLAdjustment(
+        filtered,
+        filters.hueRotate,
+        0,
+        0
+      );
+    }
     
     const textColor = averageColor.isLight() ? "black" : "white";
     averageColor.lighten(40);

@@ -124,7 +124,7 @@ const collectIndexedDBData = async (): Promise<{ icons: any[] }> => {
   return new Promise((resolve) => {
     const port = chrome?.runtime?.connect({ name: 'icon-manager' });
     if (port) {
-      port.postMessage({ type: 'EXPORT_ALL_DATA' });
+      port.postMessage({ type: 'GET_ALL_ICONS' });
       
       port.onMessage.addListener((response) => {
         if (response.success) {
@@ -206,23 +206,36 @@ const exportSettings = async () => {
 
 // Функция импорта данных в IndexedDB
 const importIndexedDBData = async (indexedDBData: { icons: any[] }) => {
+  if (!indexedDBData.icons || indexedDBData.icons.length === 0) return;
+  
   return new Promise<void>((resolve) => {
     const port = chrome?.runtime?.connect({ name: 'icon-manager' });
     if (port) {
-      port.postMessage({
-        type: 'IMPORT_ALL_DATA',
-        icons: indexedDBData.icons
-      });
+      // Импортируем каждую иконку отдельно
+      let imported = 0;
+      const total = indexedDBData.icons.length;
+      
+      const importNext = () => {
+        if (imported >= total) {
+          console.log('IndexedDB data imported successfully:', total, 'icons');
+          resolve();
+          port.disconnect();
+          return;
+        }
+        
+        const icon = indexedDBData.icons[imported];
+        port.postMessage({
+          type: 'SAVE_CUSTOM_ICON',
+          icon
+        });
+      };
       
       port.onMessage.addListener((response) => {
-        if (response.success) {
-          console.log('IndexedDB data imported successfully');
-        } else {
-          console.warn('Failed to import IndexedDB data');
-        }
-        resolve();
-        port.disconnect();
+        imported++;
+        importNext();
       });
+      
+      importNext();
     } else {
       resolve();
     }
@@ -1967,6 +1980,50 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange, onAddList }) =>
                           onValueChange={([value]) => dispatch(setFilter({ key: 'contrast', value }))}
                           min={0}
                           max={200}
+                          step={5}
+                        />
+                      </Box>
+
+                      <Box>
+                        <Text size="2" mb="1" as="div">{t('settings.saturation')}: {filters.saturate}%</Text>
+                        <Slider
+                          value={[filters.saturate]}
+                          onValueChange={([value]) => dispatch(setFilter({ key: 'saturate', value }))}
+                          min={0}
+                          max={200}
+                          step={5}
+                        />
+                      </Box>
+
+                      <Box>
+                        <Text size="2" mb="1" as="div">{t('settings.grayscale')}: {filters.grayscale}%</Text>
+                        <Slider
+                          value={[filters.grayscale]}
+                          onValueChange={([value]) => dispatch(setFilter({ key: 'grayscale', value }))}
+                          min={0}
+                          max={100}
+                          step={5}
+                        />
+                      </Box>
+
+                      <Box>
+                        <Text size="2" mb="1" as="div">{t('settings.sepia')}: {filters.sepia}%</Text>
+                        <Slider
+                          value={[filters.sepia]}
+                          onValueChange={([value]) => dispatch(setFilter({ key: 'sepia', value }))}
+                          min={0}
+                          max={100}
+                          step={5}
+                        />
+                      </Box>
+
+                      <Box>
+                        <Text size="2" mb="1" as="div">{t('settings.invert')}: {filters.invert}%</Text>
+                        <Slider
+                          value={[filters.invert]}
+                          onValueChange={([value]) => dispatch(setFilter({ key: 'invert', value }))}
+                          min={0}
+                          max={100}
                           step={5}
                         />
                       </Box>
