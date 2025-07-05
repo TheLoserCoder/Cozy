@@ -551,21 +551,29 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange, onAddList }) =>
   const [imageUrl, setImageUrl] = React.useState("");
   const [isValidating, setIsValidating] = React.useState(false);
   const [error, setError] = React.useState("");
-  const [filtersExpanded, setFiltersExpanded] = React.useState(false);
   const [customGradientCSS, setCustomGradientCSSLocal] = React.useState(gradientBackground.customCSS || "");
 
-const accardionStyle = {
-              width: '100%',
-              padding: '12px 0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: 'bold'
-    }
+  const [basicSettingsExpanded, setBasicSettingsExpanded] = React.useState(false);
+  const [clockSettingsExpanded, setClockSettingsExpanded] = React.useState(false);
+  const [searchSettingsExpanded, setSearchSettingsExpanded] = React.useState(false);
+  const [fastLinksSettingsExpanded, setFastLinksSettingsExpanded] = React.useState(false);
+  const [listsSettingsExpanded, setListsSettingsExpanded] = React.useState(false);
+  const [backgroundSettingsExpanded, setBackgroundSettingsExpanded] = React.useState(false);
+  const [filtersExpanded, setFiltersExpanded] = React.useState(false);
+
+  const accardionStyle = {
+    width: '100%',
+    padding: '12px 0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 'bold'
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (imageUrl.trim() === "") return;
@@ -617,8 +625,6 @@ const accardionStyle = {
   const handleRemoveImage = (imageId: string) => {
     dispatch(removeImage(imageId));
   };
-
-
 
   const handleSetBackground = async (imageId: string) => {
     dispatch(setCurrentBackground(imageId));
@@ -713,17 +719,16 @@ const accardionStyle = {
             }}
             className="settings-scroll"
           >
-     
-         
-
-            {/* Основные настройки */}
             <Box id="basic">
-              <Text size="4" weight="bold" mb="3">
-                {t('settings.basicSettings')}
-              </Text>
+              <button onClick={() => setBasicSettingsExpanded(!basicSettingsExpanded)} style={accardionStyle}>
+                <Text size="4" weight="bold">
+                  {t('settings.basicSettings')}
+                </Text>
+                {basicSettingsExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              </button>
 
-              <Flex direction="column" gap="4">
-                {/* Выбор языка */}
+              {basicSettingsExpanded && (
+              <Flex direction="column" gap="4" pt="2">
                 <Box>
                   <Flex align="center" justify="between" mb="1">
                     <Text size="3" weight="medium">
@@ -734,7 +739,6 @@ const accardionStyle = {
                       onValueChange={(value) => {
                         const newLanguage = value as LanguageCode;
                         dispatch(setLanguage(newLanguage));
-                        // Синхронизация произойдет автоматически через useEffect
                       }}
                     >
                       <Select.Trigger style={{ minWidth: '120px' }} />
@@ -752,7 +756,6 @@ const accardionStyle = {
                   </Text>
                 </Box>
 
-                {/* Кнопки экспорта и импорта */}
                 <Flex align="center" justify="between">
                   <Text size="3" weight="medium">
                     {t('settings.exportSettings')}/{t('settings.importSettings')}
@@ -780,7 +783,6 @@ const accardionStyle = {
                     </SimpleTooltip>
                   </Flex>
                 </Flex>
-                {/* Цветовая схема */}
                 <Box>
                   <Text size="3" weight="medium" mb="2">
                     {t('settings.colorScheme')}
@@ -813,7 +815,6 @@ const accardionStyle = {
                   </Flex>
                 </Box>
 
-                {/* Скругление элементов */}
                 <Box>
                   <Text size="3" weight="medium" mb="2">
                     {t('settings.borderRounding')}
@@ -826,7 +827,6 @@ const accardionStyle = {
                   />
                 </Box>
 
-                {/* Чистый режим */}
                 <Flex align="center" justify="between">
                   <Text size="3" weight="medium">
                     {t('settings.cleanMode')}
@@ -837,7 +837,6 @@ const accardionStyle = {
                   />
                 </Flex>
 
-                {/* Настройки шрифтов */}
                 <Flex align="center" justify="between">
                   <Text size="3" weight="medium">
                     {t('settings.font')}
@@ -849,21 +848,20 @@ const accardionStyle = {
                     />
                   </Box>
                 </Flex>
-
-
               </Flex>
+              )}
             </Box>
 
-            <Separator size="4" />
-
-            {/* Настройки часов */}
             <Box id="clock">
-              <Text size="4" weight="bold" mb="3">
-                {t('settings.clockSettings')}
-              </Text>
+              <button onClick={() => setClockSettingsExpanded(!clockSettingsExpanded)} style={accardionStyle}>
+                <Text size="4" weight="bold">
+                  {t('settings.clockSettings')}
+                </Text>
+                {clockSettingsExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              </button>
 
-              <Flex direction="column" gap="4">
-                {/* Включение/отключение часов */}
+              {clockSettingsExpanded && (
+              <Flex direction="column" gap="4" pt="2">
                 <Flex align="center" justify="between">
                   <Text size="2" weight="medium">
                     {t('settings.showClock')}
@@ -876,7 +874,6 @@ const accardionStyle = {
 
                 {clock.enabled && (
                   <>
-                    {/* Показ секунд */}
                     <Flex align="center" justify="between">
                       <Text size="2" weight="medium">
                         {t('settings.showSeconds')}
@@ -887,7 +884,6 @@ const accardionStyle = {
                       />
                     </Flex>
 
-                    {/* Показ даты */}
                     <Flex align="center" justify="between">
                       <Text size="2" weight="medium">
                         {t('settings.showDate')}
@@ -898,7 +894,6 @@ const accardionStyle = {
                       />
                     </Flex>
 
-                    {/* Размер часов */}
                     <Box>
                       <Flex align="center" justify="between" mb="2">
                         <Text size="2" weight="medium">
@@ -917,7 +912,6 @@ const accardionStyle = {
                       />
                     </Box>
 
-                    {/* Цвет часов */}
                     <ColorPicker
                       label={t('settings.clockColor')}
                       value={clock.color || (isValidHexColor(radixTheme) ? createLinkColorFromAccent(radixTheme) : radixTheme)}
@@ -929,16 +923,19 @@ const accardionStyle = {
                   </>
                 )}
               </Flex>
+              )}
             </Box>
 
-            {/* Настройки поиска */}
             <Box id = "search">
-              <Text size="4" weight="bold" mb="3">
-                {t('settings.searchSettings')}
-              </Text>
+              <button onClick={() => setSearchSettingsExpanded(!searchSettingsExpanded)} style={accardionStyle}>
+                <Text size="4" weight="bold">
+                  {t('settings.searchSettings')}
+                </Text>
+                {searchSettingsExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              </button>
 
-              <Flex direction="column" gap="3">
-                {/* Видимость поисковика */}
+              {searchSettingsExpanded && (
+              <Flex direction="column" gap="3" pt="2">
                 <Flex align="center" justify="between">
                   <Text size="2" weight="medium">
                     {t('settings.showSearch')}
@@ -951,7 +948,6 @@ const accardionStyle = {
 
                 {search.visible && (
                   <>
-                    {/* Выбор поисковой системы */}
                     <Box>
                       <Text size="2" mb="2" weight="medium" as="div">
                         {t('settings.searchEngine')}
@@ -973,7 +969,6 @@ const accardionStyle = {
                     
                     </Box>
 
-                    {/* Цветовые настройки */}
                     <ColorPicker
                       label={t('settings.searchBackgroundColor')}
                       value={search.backgroundColor || 'rgba(255, 255, 255, 0.1)'}
@@ -1001,7 +996,6 @@ const accardionStyle = {
                       disableAlpha={false}
                     />
 
-                    {/* Размытие фона */}
                     <Flex align="center" justify="between">
                       <Text size="2" weight="medium">
                         {t('settings.searchBackdropBlur')}
@@ -1012,7 +1006,6 @@ const accardionStyle = {
                       />
                     </Flex>
 
-                    {/* Размер поисковика */}
                     <Box>
                       <Flex align="center" justify="between" mb="2">
                         <Text size="2" weight="medium">
@@ -1034,16 +1027,19 @@ const accardionStyle = {
                   </>
                 )}
               </Flex>
+              )}
             </Box>
 
-             {/* Настройки быстрых ссылок */}
             <Box>
-              <Text size="4" weight="bold" mb="3">
-                {t('settings.fastLinksSettings')}
-              </Text>
+              <button onClick={() => setFastLinksSettingsExpanded(!fastLinksSettingsExpanded)} style={accardionStyle}>
+                <Text size="4" weight="bold">
+                  {t('settings.fastLinksSettings')}
+                </Text>
+                {fastLinksSettingsExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              </button>
 
-              <Flex direction="column" gap="4">
-                {/* Включение/отключение быстрых ссылок */}
+              {fastLinksSettingsExpanded && (
+              <Flex direction="column" gap="4" pt="2">
                 <Flex align="center" justify="between">
                   <Text size="2" weight="medium">
                     {t('settings.showFastLinks')}
@@ -1056,7 +1052,6 @@ const accardionStyle = {
 
                 {fastLinks.enabled && (
                   <>
-                    {/* Количество колонок */}
                     <Flex align="center" justify="between">
                       <Text size="2" weight="medium">
                         {t('settings.fastLinksColumns')}
@@ -1077,7 +1072,6 @@ const accardionStyle = {
                       </Flex>
                     </Flex>
 
-                    {/* Глобальные цвета */}
                     <Box>
                       <Text size="3" weight="medium" mb="2" color="gray">
                         {t('settings.colors')}
@@ -1122,13 +1116,11 @@ const accardionStyle = {
                       </Flex>
                     </Box>
 
-                    {/* Настройки отображения */}
                     <Box>
                       <Text size="3" weight="medium" mb="2" as="div">
                         {t('settings.display')}
                       </Text>
                       <Flex direction="column" gap="3">
-                        {/* Скрытие иконок */}
                         <Flex align="center" justify="between">
                           <Text size="2" weight="medium">
                             {t('settings.hideIcons')}
@@ -1140,7 +1132,6 @@ const accardionStyle = {
                           />
                         </Flex>
 
-                        {/* Скрытие текста */}
                         <Flex align="center" justify="between">
                           <Text size="2" weight="medium">
                             {t('settings.hideText')}
@@ -1154,13 +1145,11 @@ const accardionStyle = {
                       </Flex>
                     </Box>
 
-                    {/* Эффекты фона */}
                     <Box>
                       <Text size="3" weight="medium" mb="2" as="div">
                         {t('settings.backgroundEffects')}
                       </Text>
                       <Flex direction="column" gap="3">
-                        {/* Размытие фона */}
                         <Flex align="center" justify="between">
                           <Text size="2" weight="medium">
                             {t('settings.backgroundBlur')}
@@ -1175,16 +1164,19 @@ const accardionStyle = {
                   </>
                 )}
               </Flex>
+              )}
             </Box>
 
-            {/* Настройки списков */}
             <Box id = "lists">
-              <Text size="4" weight="bold" mb="3">
-                {t('settings.listsSettings')}
-              </Text>
+              <button onClick={() => setListsSettingsExpanded(!listsSettingsExpanded)} style={accardionStyle}>
+                <Text size="4" weight="bold">
+                  {t('settings.listsSettings')}
+                </Text>
+                {listsSettingsExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              </button>
 
-              <Flex direction="column" gap="4">
-                {/* Включение/отключение списков */}
+              {listsSettingsExpanded && (
+              <Flex direction="column" gap="4" pt="2">
                 <Flex align="center" justify="between">
                   <Text size="2" weight="medium">
                     {t('settings.showLists')}
@@ -1197,7 +1189,6 @@ const accardionStyle = {
 
                 {lists.enabled && (
                   <>
-                    {/* Кнопка добавления списка */}
                     <Flex align="center" justify="between">
                       <Text size="2" weight="medium">
                         {t('settings.addNewList')}
@@ -1212,7 +1203,6 @@ const accardionStyle = {
                       </ActionIconButton>
                     </Flex>
 
-                    {/* Группа: Фон списков */}
                 <Box>
                   <Text size="3" weight="medium" mb="2" color="gray">
                     {t('settings.listBackground')}
@@ -1292,7 +1282,6 @@ const accardionStyle = {
                   </Flex>
                 </Box>
 
-                {/* Группа: Разделитель */}
                 <Box>
                   <Text size="3" weight="medium" mb="2" color="gray">
                     {t('settings.separator')}
@@ -1343,7 +1332,6 @@ const accardionStyle = {
                   </Flex>
                 </Box>
 
-                {/* Группа: Содержимое */}
                 <Box>
                   <Text size="3" weight="medium" mb="2" color="gray">
                     {t('settings.colorsAndIcons')}
@@ -1390,7 +1378,6 @@ const accardionStyle = {
                   </Flex>
                 </Box>
 
-                {/* Группа: Сетка списков */}
                 <Box>
                   <Text size="3" weight="medium" mb="2" color="gray">
                     {t('settings.listGrid')}
@@ -1418,13 +1405,11 @@ const accardionStyle = {
                   </Flex>
                 </Box>
 
-                {/* Группа: Управление списками */}
                 <Box>
                   <Text size="3" weight="medium" mb="2" color="gray">
                     {t('settings.listManagement')}
                   </Text>
                   <Flex direction="column" gap="2">
-                    {/* Список всех списков с переключателями */}
                     {allLists.map((list) => (
                       <Flex key={list.id} align="center" justify="between">
                         <Text size="2" weight="medium" style={{ opacity: list.enabled === false ? 0.5 : 1 }}>
@@ -1441,14 +1426,19 @@ const accardionStyle = {
                   </>
                 )}
               </Flex>
+              )}
             </Box>
 
-            <Separator size="4" />
             <Box>
-              <Text size="4" weight="bold" mb="2">
-                {t('settings.backgroundSettings')}
-              </Text>
+              <button onClick={() => setBackgroundSettingsExpanded(!backgroundSettingsExpanded)} style={accardionStyle}>
+                <Text size="4" weight="bold">
+                  {t('settings.backgroundSettings')}
+                </Text>
+                {backgroundSettingsExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              </button>
 
+              {backgroundSettingsExpanded && (
+              <Box pt="2">
               <Tabs.Root value={backgroundType} onValueChange={(value) => dispatch(setBackgroundType(value as any))}>
                 <Tabs.List>
                   <Tabs.Trigger value="image">{t('settings.image')}</Tabs.Trigger>
@@ -1456,7 +1446,6 @@ const accardionStyle = {
                   <Tabs.Trigger value="gradient">{t('settings.gradient')}</Tabs.Trigger>
                 </Tabs.List>
 
-                {/* Вкладка изображений */}
                 <Tabs.Content value="image">
 
                   <Box mt="3">
@@ -1492,7 +1481,6 @@ const accardionStyle = {
                           {isValidating ? t('settings.checking') : t('settings.addImage')}
                         </PrimaryButton>
 
-                        {/* Кнопка добавления случайного фото */}
                         <SimpleTooltip content={t('settings.addRandomPhoto')}>
                           <ActionIconButton
                             variant="soft"
@@ -1509,7 +1497,6 @@ const accardionStyle = {
                         </SimpleTooltip>
                       </Flex>
                          </form>
-                      {/* Переключатель безграничного фона для Firefox */}
                       {isFirefox && (
                         <Box>
                           <Flex align="center" gap="2">
@@ -1519,7 +1506,6 @@ const accardionStyle = {
                                 dispatch(setBorderlessBackground(checked));
                                 
                                 if (checked) {
-                                  // Включаем режим - применяем текущий фон
                                   if (currentBackground) {
                                     const selectedImage = images.find(img => img.id === currentBackground);
                                     if (selectedImage) {
@@ -1531,7 +1517,6 @@ const accardionStyle = {
                                     }
                                   }
                                 } else {
-                                  // Отключаем режим - сбрасываем тему
                                   const { resetFirefoxTheme } = await import('../utils/firefoxBackground');
                                   await resetFirefoxTheme();
                                 }
@@ -1547,7 +1532,6 @@ const accardionStyle = {
                         </Box>
                       )}
 
-                      {/* Переключатель параллакса */}
                       <Box>
                         <Flex align="center" gap="2">
                           <Switch
@@ -1563,7 +1547,6 @@ const accardionStyle = {
                         </Text>
                       </Box>
                       
-                      {/* Настройки затенения */}
                       <Box>
                         <Flex align="center" gap="2" mb="2">
                           <Switch
@@ -1618,7 +1601,6 @@ const accardionStyle = {
                       </Box>
                     </Flex>
                       
-              {/* Мини-галерея */}
               {images.length > 0 && (
                 <Box mt="4">
                   <Flex align="center" justify="between" mb="3">
@@ -1626,7 +1608,6 @@ const accardionStyle = {
                       {t('settings.gallery')} ({images.length})
                     </Text>
 
-                    {/* Автоматическое переключение */}
                     <Flex align="center" gap="2">
                       <SimpleTooltip content={autoSwitch.enabled ? t('settings.stopAutoSwitch') : t('settings.startAutoSwitch')}>
                         <ActionIconButton
@@ -1708,7 +1689,6 @@ const accardionStyle = {
                   </Box>
                 </Tabs.Content>
 
-                {/* Вкладка цвета */}
                 <Tabs.Content value="solid">
                   <Box mt="3" style={{ padding: "0 8px" }}>
                     <ColorPicker
@@ -1722,7 +1702,6 @@ const accardionStyle = {
                   </Box>
                 </Tabs.Content>
 
-                {/* Вкладка градиента */}
                 <Tabs.Content value="gradient">
                   <Box mt="3" style={{ padding: "0 8px" }}>
                     <Flex direction="column" gap="3">
@@ -1744,7 +1723,6 @@ const accardionStyle = {
                         </Tabs.Root>
                       </Box>
 
-                      {/* Цвета градиента */}
                       <Box>
                         <Flex align="center" justify="between" mb="2">
                           <Text size="2" weight="medium">{t('settings.colors')}</Text>
@@ -1871,7 +1849,6 @@ const accardionStyle = {
                         </Box>
                       )}
 
-                      {/* Поле для кастомного CSS градиента */}
                       <Box>
                         <Text size="2" mb="2" weight="medium" as="div">
                           {t('settings.customCSS')}
@@ -1898,7 +1875,6 @@ const accardionStyle = {
                 </Tabs.Content>
               </Tabs.Root>
 
-              {/* Фильтры фона */}
               <Box mt="4" id="filters-section">
                 <Flex
                   align="center"
@@ -1906,7 +1882,6 @@ const accardionStyle = {
                   style={{ cursor: "pointer" }}
                   onClick={() => {
                     setFiltersExpanded(!filtersExpanded);
-                    // Автоматическая прокрутка к фильтрам при раскрытии
                     if (!filtersExpanded) {
                       setTimeout(() => {
                         document.getElementById('filters-section')?.scrollIntoView({
@@ -1939,7 +1914,6 @@ const accardionStyle = {
                       onClick={(e) => {
                         e?.stopPropagation();
                         setFiltersExpanded(!filtersExpanded);
-                        // Автоматическая прокрутка к фильтрам при раскрытии
                         if (!filtersExpanded) {
                           setTimeout(() => {
                             document.getElementById('filters-section')?.scrollIntoView({
@@ -1963,7 +1937,6 @@ const accardionStyle = {
                     padding: "8px"
                   }}>
                     <Flex direction="column" gap="3">
-                      {/* Размытие */}
                       <Box>
                         <Text size="2" mb="1" as="div">{t('settings.blur')}: {filters.blur}px</Text>
                         <Slider
@@ -1974,7 +1947,6 @@ const accardionStyle = {
                         />
                       </Box>
 
-                      {/* Яркость */}
                       <Box>
                         <Text size="2" mb="1" as="div">{t('settings.brightness')}: {filters.brightness}%</Text>
                         <Slider
@@ -1986,7 +1958,6 @@ const accardionStyle = {
                         />
                       </Box>
 
-                      {/* Контрастность */}
                       <Box>
                         <Text size="2" mb="1" as="div">{t('settings.contrast')}: {filters.contrast}%</Text>
                         <Slider
@@ -1997,304 +1968,19 @@ const accardionStyle = {
                           step={5}
                         />
                       </Box>
-
-                      {/* Насыщенность */}
-                      <Box>
-                        <Text size="2" mb="1" as="div">{t('settings.saturation')}: {filters.saturate}%</Text>
-                        <Slider
-                          value={[filters.saturate]}
-                          onValueChange={([value]) => dispatch(setFilter({ key: 'saturate', value }))}
-                          min={0}
-                          max={200}
-                          step={5}
-                        />
-                      </Box>
-
-                      {/* Поворот оттенка */}
-                      <Box>
-                        <Text size="2" mb="1" as="div">{t('settings.hueRotate')}: {filters.hueRotate}°</Text>
-                        <Slider
-                          value={[filters.hueRotate]}
-                          onValueChange={([value]) => dispatch(setFilter({ key: 'hueRotate', value }))}
-                          min={0}
-                          max={360}
-                          step={5}
-                        />
-                      </Box>
-
-                      {/* Сепия */}
-                      <Box>
-                        <Text size="2" mb="1" as="div">{t('settings.sepia')}: {filters.sepia}%</Text>
-                        <Slider
-                          value={[filters.sepia]}
-                          onValueChange={([value]) => dispatch(setFilter({ key: 'sepia', value }))}
-                          min={0}
-                          max={100}
-                          step={5}
-                        />
-                      </Box>
-
-                      {/* Черно-белое */}
-                      <Box>
-                        <Text size="2" mb="1" as="div">{t('settings.grayscale')}: {filters.grayscale}%</Text>
-                        <Slider
-                          value={[filters.grayscale]}
-                          onValueChange={([value]) => dispatch(setFilter({ key: 'grayscale', value }))}
-                          min={0}
-                          max={100}
-                          step={5}
-                        />
-                      </Box>
-
-                      {/* Инверсия */}
-                      <Box>
-                        <Text size="2" mb="1" as="div">{t('settings.invert')}: {filters.invert}%</Text>
-                        <Slider
-                          value={[filters.invert]}
-                          onValueChange={([value]) => dispatch(setFilter({ key: 'invert', value }))}
-                          min={0}
-                          max={100}
-                          step={5}
-                        />
-                      </Box>
-
-
-
-
-                  </Flex>
-                </Box>
-              )}
+                    </Flex>
+                  </Box>
+                )}
               </Box>
-            
-             
-            </Box>
-
-
-            
-            {/* Пресеты */}
-            <Box id = "presets">
-              <PresetManager onDialogOpenChange={setPresetDialogOpen} />
+              </Box>
+              )}
             </Box>
           </Flex>
-
         </Box>
-      </SettingsThemeProvider>
-    </Drawer>
-
-
-
-    {/* CSS для управления z-index настроек */}
-    <style>
-      {`
-        /* Уменьшаем z-index настроек когда открыт диалог пресета */
-        ${presetDialogOpen ? `
-          [data-radix-drawer-content] {
-            z-index: 5000 !important;
-          }
-          [data-radix-drawer-overlay] {
-            z-index: 4999 !important;
-          }
-        ` : ''}
-      `}
-    </style>
-  </>
+        </SettingsThemeProvider>
+      </Drawer>
+    </>
   );
 };
 
 export default Settings;
-
-// Добавляем стили для скроллбара и исправления Select
-const scrollStyle = document.createElement('style');
-scrollStyle.textContent = `
-
-
-  /* Исправляем проблему с масштабированием Select в настройках */
-  .settings-scroll [data-radix-select-trigger],
-  .settings-scroll [data-radix-select-trigger] *,
-  [data-radix-select-content],
-  [data-radix-select-content] *,
-  [data-radix-select-viewport],
-  [data-radix-select-viewport] *,
-  [data-radix-select-item],
-  [data-radix-select-item] * {
-    transform: none !important;
-    scale: 1 !important;
-  }
-
-  /* Портал для Select должен игнорировать родительские transform */
-  [data-radix-popper-content-wrapper] {
-    transform: none !important;
-    scale: 1 !important;
-  }
-
-  /* Высокий z-index для Select и Tooltip в диалоге */
-  [data-radix-select-content],
-  [data-radix-tooltip-content],
-  [data-radix-popper-content] {
-    z-index: 2147483647 !important;
-    transform: none !important;
-    scale: 1 !important;
-    position: fixed !important;
-  }
-
-  /* Специально для Tooltip */
-  [data-radix-tooltip-content] {
-    z-index: 2147483648 !important;
-    position: fixed !important;
-    pointer-events: none !important;
-  }
-
-  /* Tooltip портал */
-  [data-radix-tooltip-portal] {
-    z-index: 2147483648 !important;
-  }
-
-  /* Анимация для аккордеона */
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Анимация для элементов галереи */
-  @keyframes slideInGallery {
-    from {
-      opacity: 0;
-      transform: translateY(20px) scale(0.9);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  /* Hover эффекты для галереи */
-  .gallery-item:hover img {
-    transform: scale(1.1) !important;
-  }
-
-  .gallery-item:active img {
-    transform: scale(1.05) !important;
-  }
-
-  /* Анимация для кнопки автоподбора цветов */
-  @keyframes pulse {
-    0% {
-      transform: scale(1);
-      opacity: 1;
-    }
-    50% {
-      transform: scale(1.1);
-      opacity: 0.8;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-`;
-
-if (!document.head.querySelector('style[data-settings-scroll]')) {
-  scrollStyle.setAttribute('data-settings-scroll', 'true');
-  document.head.appendChild(scrollStyle);
-}
-
-// Добавляем стили для hover эффекта
-const hoverStyle = document.createElement('style');
-hoverStyle.textContent = `
-  .delete-btn {
-    opacity: 0 !important;
-    transition: opacity 0.2s ease !important;
-  }
-
-  .delete-btn:hover,
-  .delete-btn:focus {
-    opacity: 1 !important;
-  }
-
-  [style*="position: relative"]:hover .delete-btn {
-    opacity: 1 !important;
-  }
-`;
-
-if (!document.head.querySelector('style[data-settings-hover]')) {
-  hoverStyle.setAttribute('data-settings-hover', 'true');
-  document.head.appendChild(hoverStyle);
-}
-
-// Стили для Accordion
-const accordionStyle = document.createElement('style');
-accordionStyle.textContent = `
-  [data-radix-accordion-trigger] {
-    all: unset;
-    font-family: inherit;
-    background-color: transparent;
-    padding: 0 20px;
-    height: 45px;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 15px;
-    line-height: 1;
-    color: var(--gray-12);
-    box-shadow: 0 1px 0 var(--gray-6);
-    background-color: white;
-    cursor: pointer;
-  }
-  [data-radix-accordion-trigger]:hover {
-    background-color: var(--gray-2);
-  }
-  [data-radix-accordion-trigger]:focus {
-    position: relative;
-    box-shadow: 0 0 0 2px var(--accent-8);
-  }
-  [data-radix-accordion-trigger][data-state="closed"] > .ChevronIcon {
-    transform: rotate(0deg);
-  }
-  [data-radix-accordion-trigger][data-state="open"] > .ChevronIcon {
-    transform: rotate(180deg);
-  }
-  .ChevronIcon {
-    color: var(--accent-10);
-    transition: transform 300ms cubic-bezier(0.87, 0, 0.13, 1);
-  }
-  [data-radix-accordion-content] {
-    overflow: hidden;
-    font-size: 14px;
-    color: var(--gray-11);
-    background-color: var(--gray-2);
-  }
-  [data-radix-accordion-content][data-state="open"] {
-    animation: slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1);
-  }
-  [data-radix-accordion-content][data-state="closed"] {
-    animation: slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1);
-  }
-  @keyframes slideDown {
-    from {
-      height: 0;
-    }
-    to {
-      height: var(--radix-accordion-content-height);
-    }
-  }
-  @keyframes slideUp {
-    from {
-      height: var(--radix-accordion-content-height);
-    }
-    to {
-      height: 0;
-    }
-  }
-`;
-
-if (!document.head.querySelector('style[data-accordion-styles]')) {
-  accordionStyle.setAttribute('data-accordion-styles', 'true');
-  document.head.appendChild(accordionStyle);
-}
