@@ -93,6 +93,7 @@ import { RadixRadiusPicker } from "./RadixRadiusPicker";
 import { AutoColorButton } from "./AutoColorButton";
 import { FontSelector } from "./FontSelector";
 import { PresetManager } from "./PresetManager";
+import { Separator } from "@radix-ui/themes";
 
 import { SEARCH_ENGINES } from "../data/searchEngines";
 import { nanoid } from "nanoid";
@@ -559,6 +560,7 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange, onAddList }) =>
   const [fastLinksSettingsExpanded, setFastLinksSettingsExpanded] = React.useState(false);
   const [listsSettingsExpanded, setListsSettingsExpanded] = React.useState(false);
   const [backgroundSettingsExpanded, setBackgroundSettingsExpanded] = React.useState(false);
+  const [presetSettingsExpanded, setPresetSettingsExpanded] = React.useState(false);
   const [filtersExpanded, setFiltersExpanded] = React.useState(false);
 
   const accardionStyle = {
@@ -1973,6 +1975,21 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange, onAddList }) =>
                 )}
               </Box>
               </Box>
+              )}
+            </Box>
+
+            <Box>
+              <button onClick={() => setPresetSettingsExpanded(!presetSettingsExpanded)} style={accardionStyle}>
+                <Text size="4" weight="bold">
+                  {t('settings.presets')}
+                </Text>
+                {presetSettingsExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              </button>
+
+              {presetSettingsExpanded && (
+                <Box pt="2">
+                  <PresetManager />
+                </Box>
               )}
             </Box>
           </Flex>

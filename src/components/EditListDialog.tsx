@@ -58,8 +58,16 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
     setCustomBorderColor(initialBorderColor || "");
     setIcon(initialIcon || "");
     setIconColor(initialIconColor || "");
-    // TODO: Загрузить iconId и iconType из стора
-  }, [initialTitle, initialColor, initialSeparatorColor, initialLinkColor, initialBorderColor, initialIcon, initialIconColor, open]);
+    
+    if (open && listId) {
+      const allLists = JSON.parse(localStorage.getItem('lists') || '[]');
+      const list = allLists.find((l: any) => l.id === listId);
+      if (list) {
+        setIconId(list.iconId || null);
+        setIconType(list.iconType || null);
+      }
+    }
+  }, [initialTitle, initialColor, initialSeparatorColor, initialLinkColor, initialBorderColor, initialIcon, initialIconColor, open, listId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -231,10 +239,8 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
 
             <IconPicker
               label={t('lists.listIcon')}
-              value={icon || undefined}
               iconId={iconId || undefined}
               iconType={iconType || undefined}
-              onChange={handleIconChange}
               onIconChange={handleIconIdChange}
               onReset={handleIconReset}
               showReset={!!(icon || iconId)}
