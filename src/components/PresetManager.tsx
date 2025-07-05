@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { createPreset, applyPreset, deletePreset, renamePreset, updatePreset, resetToStandardSettings } from "../store/themeSlice";
 import { applyPresetBackground, setBorderlessBackground } from "../store/backgroundSlice";
-import { setListColor, setListIcon, setListIconColor, setListSeparatorColor, setListLinkColor, setLinkColor, editLink, resetAllCustomStyles, applyListStates } from "../store/listsSlice";
+import { setListColor, setListIcon, setListIconColor, setListSeparatorColor, setListLinkColor, setListBorderColor, setLinkColor, editLink, resetAllCustomStyles, applyListStates } from "../store/listsSlice";
 import { resetAllFastLinkIndividualColors, applyFastLinkStyles } from "../store/fastLinksSlice";
 import { PresetPreview } from "./PresetPreview";
 import { useTranslation } from "../locales";
@@ -85,7 +85,7 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
 
     // Собираем стили списков (только если есть кастомные настройки)
     allLists.forEach(list => {
-      const hasCustomStyles = list.customColor || list.iconColor || list.icon || list.iconId || list.iconType || list.customSeparatorColor || list.customLinkColor;
+      const hasCustomStyles = list.customColor || list.iconColor || list.icon || list.iconId || list.iconType || list.customSeparatorColor || list.customLinkColor || list.customBorderColor;
       if (hasCustomStyles) {
         listStyles[list.id] = {
           customColor: list.customColor || undefined,
@@ -94,7 +94,8 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
           iconId: list.iconId || undefined,
           iconType: list.iconType || undefined,
           customSeparatorColor: list.customSeparatorColor || undefined,
-          customLinkColor: list.customLinkColor || undefined
+          customLinkColor: list.customLinkColor || undefined,
+          customBorderColor: list.customBorderColor || undefined
         };
       }
 
@@ -226,12 +227,15 @@ export const PresetManager: React.FC<PresetManagerProps> = ({ onDialogOpenChange
               iconType: styles.iconType
             }));
 
-            // Применяем цвет разделителя и ссылок списка
+            // Применяем цвет разделителя, ссылок и границы списка
             if (styles.customSeparatorColor !== undefined) {
               dispatch(setListSeparatorColor({ id: listId, color: styles.customSeparatorColor }));
             }
             if (styles.customLinkColor !== undefined) {
               dispatch(setListLinkColor({ id: listId, color: styles.customLinkColor }));
+            }
+            if (styles.customBorderColor !== undefined) {
+              dispatch(setListBorderColor({ id: listId, color: styles.customBorderColor }));
             }
 
             // TODO: Добавить применение других стилей списков (customSeparatorColor, customLinkColor)

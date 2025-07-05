@@ -229,6 +229,7 @@ export const ru = {
       listIcon: 'Иконка списка',
       listColor: 'Цвет списка',
       linkColor: 'Цвет ссылки',
+      borderColor: 'Цвет границы',
       hideIcons: 'Скрыть иконки ссылок',
       openInNewWindow: 'Открыть в новом окне',
       copyLink: 'Копировать ссылку',

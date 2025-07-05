@@ -18,6 +18,7 @@ export interface LinkList {
   customColor?: string; // Индивидуальный цвет заголовка списка
   customSeparatorColor?: string; // Индивидуальный цвет разделителя списка
   customLinkColor?: string; // Индивидуальный цвет ссылок в списке
+  customBorderColor?: string; // Индивидуальный цвет границы списка
   icon?: string; // Название иконки из @radix-ui/react-icons (устаревшее)
   iconId?: string; // ID иконки в новой системе
   iconType?: 'standard' | 'custom'; // Тип иконки в новой системе

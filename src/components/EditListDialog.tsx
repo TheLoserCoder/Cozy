@@ -5,7 +5,7 @@ import { ColorPicker } from "./ColorPicker";
 import { IconPicker } from "./IconPicker";
 import { DeleteIconButton, CancelButton, PrimaryButton } from "./ActionButtons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setListColor, setListSeparatorColor, setListLinkColor, setListIcon, setListIconColor } from "../store/listsSlice";
+import { setListColor, setListSeparatorColor, setListLinkColor, setListBorderColor, setListIcon, setListIconColor } from "../store/listsSlice";
 import { useTranslation } from "../locales";
 
 interface EditListDialogProps {
@@ -16,6 +16,7 @@ interface EditListDialogProps {
   initialColor?: string;
   initialSeparatorColor?: string;
   initialLinkColor?: string;
+  initialBorderColor?: string;
   initialIcon?: string;
   initialIconColor?: string;
   onSubmit: (title: string) => void;
@@ -30,6 +31,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
   initialColor,
   initialSeparatorColor,
   initialLinkColor,
+  initialBorderColor,
   initialIcon,
   initialIconColor,
   onSubmit,
@@ -42,6 +44,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
   const [customColor, setCustomColor] = React.useState(initialColor || "");
   const [customSeparatorColor, setCustomSeparatorColor] = React.useState(initialSeparatorColor || "");
   const [customLinkColor, setCustomLinkColor] = React.useState(initialLinkColor || "");
+  const [customBorderColor, setCustomBorderColor] = React.useState(initialBorderColor || "");
   const [icon, setIcon] = React.useState(initialIcon || "");
   const [iconId, setIconId] = React.useState<string | null>(null);
   const [iconType, setIconType] = React.useState<'standard' | 'custom' | null>(null);
@@ -52,10 +55,11 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
     setCustomColor(initialColor || "");
     setCustomSeparatorColor(initialSeparatorColor || "");
     setCustomLinkColor(initialLinkColor || "");
+    setCustomBorderColor(initialBorderColor || "");
     setIcon(initialIcon || "");
     setIconColor(initialIconColor || "");
     // TODO: Загрузить iconId и iconType из стора
-  }, [initialTitle, initialColor, initialSeparatorColor, initialLinkColor, initialIcon, initialIconColor, open]);
+  }, [initialTitle, initialColor, initialSeparatorColor, initialLinkColor, initialBorderColor, initialIcon, initialIconColor, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +68,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
       dispatch(setListColor({ id: listId, color: customColor || undefined }));
       dispatch(setListSeparatorColor({ id: listId, color: customSeparatorColor || undefined }));
       dispatch(setListLinkColor({ id: listId, color: customLinkColor || undefined }));
+      dispatch(setListBorderColor({ id: listId, color: customBorderColor || undefined }));
       dispatch(setListIcon({ id: listId, icon: icon || undefined, iconId: iconId || undefined, iconType: iconType || undefined }));
       dispatch(setListIconColor({ id: listId, color: iconColor || undefined }));
 
@@ -77,6 +82,7 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
     setCustomColor(initialColor || "");
     setCustomSeparatorColor(initialSeparatorColor || "");
     setCustomLinkColor(initialLinkColor || "");
+    setCustomBorderColor(initialBorderColor || "");
     setIcon(initialIcon || "");
     setIconColor(initialIconColor || "");
     onOpenChange(false);
@@ -111,6 +117,14 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
 
   const handleLinkColorReset = () => {
     setCustomLinkColor("");
+  };
+
+  const handleBorderColorChange = (color: string) => {
+    setCustomBorderColor(color);
+  };
+
+  const handleBorderColorReset = () => {
+    setCustomBorderColor("");
   };
 
   const handleIconChange = (iconName: string | undefined) => {
@@ -203,6 +217,15 @@ export const EditListDialog: React.FC<EditListDialogProps> = ({
               onChange={handleLinkColorChange}
               onReset={handleLinkColorReset}
               showReset={!!customLinkColor}
+              disableAlpha={false}
+            />
+
+            <ColorPicker
+              label={t('settings.borderColor')}
+              value={customBorderColor || lists.borderColor || radixTheme}
+              onChange={handleBorderColorChange}
+              onReset={handleBorderColorReset}
+              showReset={!!customBorderColor}
               disableAlpha={false}
             />
 

@@ -67,6 +67,13 @@ const listsSlice = createSlice({
         saveListsToStorage(state);
       }
     },
+    setListBorderColor(state, action: PayloadAction<{ id: string; color?: string }>) {
+      const list = state.find(l => l.id === action.payload.id);
+      if (list) {
+        list.customBorderColor = action.payload.color;
+        saveListsToStorage(state);
+      }
+    },
     deleteList(state, action: PayloadAction<string>) {
       const idx = state.findIndex(l => l.id === action.payload);
       if (idx !== -1) {
@@ -136,6 +143,8 @@ const listsSlice = createSlice({
         list.customSeparatorColor = undefined;
         // Сбрасываем цвет ссылок списка
         list.customLinkColor = undefined;
+        // Сбрасываем цвет границы списка
+        list.customBorderColor = undefined;
         // Сбрасываем цвет иконки списка
         list.iconColor = undefined;
         // НЕ сбрасываем саму иконку списка - только цвета!
@@ -154,6 +163,7 @@ const listsSlice = createSlice({
         list.customColor = undefined;
         list.customSeparatorColor = undefined;
         list.customLinkColor = undefined;
+        list.customBorderColor = undefined;
         list.iconColor = undefined;
         list.icon = undefined; // Сбрасываем и саму иконку
         list.iconId = undefined;
@@ -201,6 +211,7 @@ export const {
   setListColor,
   setListSeparatorColor,
   setListLinkColor,
+  setListBorderColor,
   setListIcon,
   setListIconColor,
   addLinkToList,

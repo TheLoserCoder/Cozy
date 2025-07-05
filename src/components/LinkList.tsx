@@ -148,7 +148,7 @@ export function LinkList({
     '--card-background-hover': 'transparent',
     // Границы: скрываем когда фон скрыт или когда границы отключены
     border: lists.hideBackground || lists.borderHidden ? 'none' :
-      `${lists.borderThickness}px solid ${lists.borderColor || 'var(--accent-9)'}`,
+      `${lists.borderThickness}px solid ${currentList?.customBorderColor || lists.borderColor || 'var(--accent-9)'}`,
     boxShadow: lists.hideBackground ? 'none' : undefined,
   } as React.CSSProperties;
 
@@ -243,6 +243,7 @@ export function LinkList({
           initialColor={currentList?.customColor}
           initialSeparatorColor={currentList?.customSeparatorColor}
           initialLinkColor={currentList?.customLinkColor}
+          initialBorderColor={currentList?.customBorderColor}
           initialIcon={currentList?.icon}
           initialIconColor={currentList?.iconColor}
           onSubmit={handleEditList}
