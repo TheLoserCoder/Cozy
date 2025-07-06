@@ -627,6 +627,22 @@ if (typeof browser !== 'undefined' && browser.runtime) {
               port.postMessage({ success: false });
             }
             break;
+            
+          case 'CLEAR_ALL_ICONS':
+            try {
+              const transaction = db.transaction(['icons'], 'readwrite');
+              const store = transaction.objectStore('icons');
+              await new Promise((resolve, reject) => {
+                const request = store.clear();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+              });
+              port.postMessage({ success: true });
+            } catch (error) {
+              console.error('Error clearing all icons:', error);
+              port.postMessage({ success: false });
+            }
+            break;
         }
       });
     }

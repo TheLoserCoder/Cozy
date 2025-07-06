@@ -142,6 +142,23 @@ const collectIndexedDBData = async (): Promise<{ icons: any[] }> => {
   });
 };
 
+// Функция для очистки всех пользовательских иконок из IndexedDB
+const clearAllCustomIcons = async (): Promise<void> => {
+  return new Promise((resolve) => {
+    const port = chrome?.runtime?.connect({ name: 'icon-manager' });
+    if (port) {
+      port.postMessage({ type: 'CLEAR_ALL_ICONS' });
+      
+      port.onMessage.addListener((response) => {
+        resolve();
+        port.disconnect();
+      });
+    } else {
+      resolve();
+    }
+  });
+};
+
 // Функция для сбора всех данных из localStorage и IndexedDB
 const collectAllData = async (): Promise<ExtendedExportData> => {
   const data: ExtendedExportData = {
@@ -543,7 +560,7 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange, onAddList }) =>
   };
 
   // Функция для полного сброса всех настроек к стандартным значениям
-  const handleResetAllSettings = () => {
+  const handleResetAllSettings = async () => {
     if (confirm(t('errors.resetConfirm'))) {
       // Комплексный сброс с полной очисткой localStorage
       dispatch(resetToStandardSettings());
@@ -555,6 +572,9 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange, onAddList }) =>
       dispatch(resetToStandardLists());
       // Сбрасываем быстрые ссылки к стандартным (с README)
       dispatch(resetToStandardFastLinks());
+
+      // Очищаем все пользовательские иконки из IndexedDB
+      await clearAllCustomIcons();
 
       // Перезагружаем страницу для полного применения изменений
       setTimeout(() => {
