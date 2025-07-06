@@ -69,3 +69,8 @@ body, html {
 .settings-theme-provider{
   overflow: scroll;
 }
+
+/* Показываем кнопку удаления при наведении на изображение в галерее */
+.gallery-item:hover .delete-btn {
+  opacity: 1 !important;
+}

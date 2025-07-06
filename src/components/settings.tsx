@@ -1659,44 +1659,15 @@ const Settings: React.FC<SettingsProps> = ({ open, onOpenChange, onAddList }) =>
                     }}
                   >
                     {images.map((image, index) => (
-                      <Box
+                      <GalleryImage
                         key={image.id}
-                        style={{
-                          position: "relative"
-                        }}
-                      >
-                        <GalleryImage
-                          src={image.url}
-                          alt="Background"
-                          isSelected={currentBackground === image.id}
-                          onClick={() => handleSetBackground(image.id)}
-                          index={index}
-                        />
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "4px",
-                            right: "4px",
-                            opacity: 0,
-                            transition: "opacity 0.2s",
-                            zIndex: 10
-                          }}
-                          className="delete-btn"
-                        >
-                          <ActionIconButton
-                            variant="solid"
-                            color="red"
-                            size="1"
-                            onClick={(e) => {
-                              e?.stopPropagation();
-                              handleRemoveImage(image.id);
-                            }}
-                            aria-label={t('settings.deleteImage')}
-                          >
-                            <TrashIcon />
-                          </ActionIconButton>
-                        </div>
-                      </Box>
+                        src={image.url}
+                        alt="Background"
+                        isSelected={currentBackground === image.id}
+                        onClick={() => handleSetBackground(image.id)}
+                        onDelete={() => handleRemoveImage(image.id)}
+                        index={index}
+                      />
                     ))}
                   </Box>
                 </Box>

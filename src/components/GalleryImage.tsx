@@ -1,5 +1,7 @@
 import * as React from "react";
 import { Box, Skeleton } from "@radix-ui/themes";
+import { TrashIcon } from "@radix-ui/react-icons";
+import { ActionIconButton } from "./ActionButtons";
 import { useTranslation } from "../locales";
 
 interface GalleryImageProps {
@@ -7,6 +9,7 @@ interface GalleryImageProps {
   alt: string;
   isSelected: boolean;
   onClick: () => void;
+  onDelete?: () => void;
   index: number;
 }
 
@@ -15,6 +18,7 @@ export const GalleryImage: React.FC<GalleryImageProps> = ({
   alt,
   isSelected,
   onClick,
+  onDelete,
   index
 }) => {
   const [isLoaded, setIsLoaded] = React.useState(false);
@@ -131,6 +135,34 @@ export const GalleryImage: React.FC<GalleryImageProps> = ({
         >
           {t('errors.loadingError')}
         </Box>
+      )}
+
+      {/* Кнопка удаления */}
+      {onDelete && (
+        <div
+          style={{
+            position: "absolute",
+            top: "4px",
+            right: "4px",
+            opacity: 0,
+            transition: "opacity 0.2s",
+            zIndex: 10
+          }}
+          className="delete-btn"
+        >
+          <ActionIconButton
+            variant="solid"
+            color="red"
+            size="1"
+            onClick={(e) => {
+              e?.stopPropagation();
+              onDelete();
+            }}
+            aria-label={t('settings.deleteImage')}
+          >
+            <TrashIcon />
+          </ActionIconButton>
+        </div>
       )}
     </Box>
   );
