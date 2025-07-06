@@ -188,10 +188,19 @@ manifestWatcher.on('change', (filePath) => {
   buildExtensionForBrowser();
 });
 
-// Initial build after delay
-setTimeout(() => {
-  buildExtensionForBrowser();
-}, 5000); // Увеличенная задержка для стабильности
+// Wait for dist-dev to be created, then build
+const waitForDistAndBuild = () => {
+  if (fs.existsSync(distDir)) {
+    console.log('📁 dist-dev directory found, building extension...');
+    buildExtensionForBrowser();
+  } else {
+    console.log('⏳ Waiting for dist-dev directory...');
+    setTimeout(waitForDistAndBuild, 1000);
+  }
+};
+
+// Start checking after a short delay
+setTimeout(waitForDistAndBuild, 2000);
 
 // Handle process termination
 process.on('SIGINT', () => {

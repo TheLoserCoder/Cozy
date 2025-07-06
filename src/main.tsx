@@ -14,9 +14,8 @@ import "./styles/radix-overrides.css";
 setupGlobalErrorHandlers();
 
 // Предзагружаем иконки до инициализации React
-preloadGlobalIcons();
-
-createRoot(document.getElementById("root")!).render(
+preloadGlobalIcons().then(() => {
+  createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ErrorBoundary maxRetries={3} autoReloadDelay={5000}>
       <Provider store={store}>
@@ -28,4 +27,5 @@ createRoot(document.getElementById("root")!).render(
       </Provider>
     </ErrorBoundary>
   </React.StrictMode>
-);
+  );
+});

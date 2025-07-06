@@ -590,6 +590,9 @@ if (typeof browser !== 'undefined' && browser.runtime) {
             
           case 'GET_ALL_ICONS':
             try {
+              if (!db) {
+                await initDB();
+              }
               const transaction = db.transaction(['icons'], 'readonly');
               const store = transaction.objectStore('icons');
               const request = store.getAll();
@@ -602,7 +605,7 @@ if (typeof browser !== 'undefined' && browser.runtime) {
               port.postMessage({ success: true, icons });
             } catch (error) {
               console.error('Error getting all icons:', error);
-              port.postMessage({ success: false });
+              port.postMessage({ success: false, icons: [] });
             }
             break;
             

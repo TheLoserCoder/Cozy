@@ -14,24 +14,28 @@ export const addIconListener = (listener: (iconId: string, iconData: { type: 'im
   return () => listeners.delete(listener);
 };
 
-export const preloadGlobalIcons = async () => {
+export const preloadGlobalIcons = async (): Promise<void> => {
   if (typeof chrome === 'undefined' || !chrome.runtime) return;
   
-  try {
-    const port = chrome.runtime.connect({ name: 'icon-manager' });
-    port.postMessage({ type: 'GET_ALL_ICONS' });
-    
-    port.onMessage.addListener((response) => {
-      if (response.success && response.icons) {
-        response.icons.forEach((icon: any) => {
-          if (icon && icon.id) {
-            globalIconCache.set(icon.id, { type: icon.type, data: icon.data });
-          }
-        });
-      }
-      port.disconnect();
-    });
-  } catch (error) {
-    console.error('Error preloading global icons:', error);
-  }
+  return new Promise((resolve) => {
+    try {
+      const port = chrome.runtime.connect({ name: 'icon-manager' });
+      port.postMessage({ type: 'GET_ALL_ICONS' });
+      
+      port.onMessage.addListener((response) => {
+        if (response.success && response.icons) {
+          response.icons.forEach((icon: any) => {
+            if (icon && icon.id) {
+              setGlobalIcon(icon.id, { type: icon.type, data: icon.data });
+            }
+          });
+        }
+        port.disconnect();
+        resolve();
+      });
+    } catch (error) {
+      console.error('Error preloading global icons:', error);
+      resolve();
+    }
+  });
 };
