@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cozy - new tab",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A cozy and stylish replacement for your new tab page with customizable widgets and beautiful backgrounds.",
   "author": "TheLoserCoder",
   "homepage_url": "https://github.com/TheLoserCoder/Cozy",
