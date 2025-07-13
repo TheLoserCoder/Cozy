@@ -78,6 +78,7 @@ export const Icon: React.FC<IconProps> = ({
   const [iconData, setIconData] = React.useState<{ type: 'image' | 'svg'; data: string } | null>(globalIcon);
   const [loading, setLoading] = React.useState(false);
   const [bootstrapIcon, setBootstrapIcon] = React.useState<string | null>(null);
+  const [forceUpdate, setForceUpdate] = React.useState(0);
 
   // Слушатель обновлений глобального кэша
   React.useEffect(() => {
@@ -87,12 +88,21 @@ export const Icon: React.FC<IconProps> = ({
       if (updatedIconId === iconId) {
         setIconData(iconData);
         setLoading(false);
+        setForceUpdate(prev => prev + 1);
       }
     });
   }, [iconId]);
 
   React.useEffect(() => {
-    if (!iconId || iconType === 'standard' || globalIcon) {
+    if (!iconId || iconType === 'standard') {
+      setLoading(false);
+      return;
+    }
+
+    // Проверяем глобальный кэш еще раз
+    const cachedIcon = getGlobalIcon(iconId);
+    if (cachedIcon) {
+      setIconData(cachedIcon);
       setLoading(false);
       return;
     }
@@ -106,7 +116,32 @@ export const Icon: React.FC<IconProps> = ({
           setLoading(false);
           return;
         }
-        setLoading(false);
+        
+        // Если это favicon и нет в кэше, запрашиваем загрузку
+        if (iconType === 'favicon' && typeof chrome !== 'undefined' && chrome.runtime) {
+          try {
+            const port = chrome.runtime.connect({ name: 'icon-manager' });
+            port.postMessage({ 
+              type: 'GET_ICON', 
+              iconId 
+            });
+            
+            port.onMessage.addListener((response) => {
+              if (response.success && response.icon) {
+                const iconData = { type: response.icon.type, data: response.icon.data };
+                setIconData(iconData);
+                setForceUpdate(prev => prev + 1);
+              }
+              setLoading(false);
+              port.disconnect();
+            });
+          } catch (error) {
+            console.error('Error loading icon from storage:', error);
+            setLoading(false);
+          }
+        } else {
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Error loading icon:', error);
         setLoading(false);
@@ -114,7 +149,7 @@ export const Icon: React.FC<IconProps> = ({
     };
 
     loadIcon();
-  }, [iconId, iconType, globalIcon]);
+  }, [iconId, iconType, forceUpdate]);
 
   // Мгновенное отображение из глобального кэша
   if (globalIcon || iconData) {

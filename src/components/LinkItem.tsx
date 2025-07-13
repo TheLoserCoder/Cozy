@@ -49,6 +49,7 @@ export const LinkItem: React.FC<LinkItemProps> = ({
   const { lists, radixTheme } = useAppSelector((state) => state.theme);
   const [editOpen, setEditOpen] = React.useState(false);
   const [showButtons, setShowButtons] = React.useState(false);
+  const [iconRefresh, setIconRefresh] = React.useState(0);
 
 
 
@@ -69,7 +70,11 @@ export const LinkItem: React.FC<LinkItemProps> = ({
         style={linkStyle}
         className={className}
         {...dragHandleProps}
-        onMouseEnter={() => setShowButtons(true)}
+        onMouseEnter={() => {
+          setShowButtons(true);
+          // Принудительно обновляем иконку при наведении
+          setIconRefresh(prev => prev + 1);
+        }}
         onMouseLeave={() => setShowButtons(false)}
       >
         <Flex
@@ -94,6 +99,7 @@ export const LinkItem: React.FC<LinkItemProps> = ({
               flexShrink: 0
             }}>
               <Icon
+                key={`${iconId || iconUrl}-${iconRefresh}`}
                 iconId={iconId || iconUrl}
                 iconType={iconType || (iconUrl ? 'favicon' : undefined)}
                 fallbackText={title}

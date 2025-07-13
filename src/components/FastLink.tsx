@@ -31,6 +31,7 @@ export const FastLink = React.forwardRef<HTMLDivElement, FastLinkProps>(({
   const [showButtons, setShowButtons] = React.useState(false);
   const [isDragActive, setIsDragActive] = React.useState(false);
   const [hoverTimeout, setHoverTimeout] = React.useState<NodeJS.Timeout | null>(null);
+  const [iconRefresh, setIconRefresh] = React.useState(0);
   const { t } = useTranslation();
 
   // Функция для получения CSS значения радиуса из темы Radix
@@ -175,6 +176,8 @@ export const FastLink = React.forwardRef<HTMLDivElement, FastLinkProps>(({
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'scale(1.05)';
+          // Принудительно обновляем иконку при наведении
+          setIconRefresh(prev => prev + 1);
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'scale(1)';
@@ -209,6 +212,7 @@ export const FastLink = React.forwardRef<HTMLDivElement, FastLinkProps>(({
             >
               {fastLink.iconId ? (
                 <Icon
+                  key={`${fastLink.iconId}-${iconRefresh}`}
                   iconId={fastLink.iconId}
                   iconType={fastLink.iconType || 'favicon'}
                   fallbackText={fastLink.title}

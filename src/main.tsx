@@ -13,19 +13,22 @@ import "./styles/radix-overrides.css";
 // Setup global error handlers
 setupGlobalErrorHandlers();
 
-// Предзагружаем иконки до инициализации React
-preloadGlobalIcons().then(() => {
-  createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <ErrorBoundary maxRetries={3} autoReloadDelay={5000}>
-      <Provider store={store}>
-        <AppThemeProvider>
-          <ErrorBoundary maxRetries={2} autoReloadDelay={3000}>
-            <App />
-          </ErrorBoundary>
-        </AppThemeProvider>
-      </Provider>
-    </ErrorBoundary>
-  </React.StrictMode>
-  );
+// Запускаем предзагрузку иконок параллельно с инициализацией React
+preloadGlobalIcons().catch(error => {
+  console.warn('Icon preloading failed, but app will continue:', error);
 });
+
+// Инициализируем React немедленно
+createRoot(document.getElementById("root")!).render(
+<React.StrictMode>
+  <ErrorBoundary maxRetries={3} autoReloadDelay={5000}>
+    <Provider store={store}>
+      <AppThemeProvider>
+        <ErrorBoundary maxRetries={2} autoReloadDelay={3000}>
+          <App />
+        </ErrorBoundary>
+      </AppThemeProvider>
+    </Provider>
+  </ErrorBoundary>
+</React.StrictMode>
+);
